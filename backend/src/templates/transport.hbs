@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.6; }
+    .header { border-bottom: 3px solid #1a56db; padding-bottom: 20px; margin-bottom: 30px; }
+    .header h1 { color: #1a56db; font-size: 24px; }
+    .header .subtitle { color: #ef4444; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
+    .section { margin-bottom: 24px; }
+    .section h2 { font-size: 16px; color: #1a56db; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .field { margin-bottom: 6px; }
+    .field .label { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field .value { font-weight: 600; }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .badge-yes { background: #dcfce7; color: #16a34a; }
+    .badge-no { background: #f3f4f6; color: #6b7280; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    thead th { background: #1e40af; color: white; padding: 10px 12px; text-align: left; font-size: 13px; }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    .notes-box { background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 4px solid #f59e0b; margin-top: 8px; }
+    .footer { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>TRANSPORT DETAILS</h1>
+    <span class="subtitle">Internal Use Only</span>
+  </div>
+
+  <div class="section">
+    <h2>Booking Information</h2>
+    <div class="grid">
+      <div class="field"><span class="label">Booking ID</span><div class="value">{{booking.bookingId}}</div></div>
+      <div class="field"><span class="label">Client</span><div class="value">{{client.name}}</div></div>
+      <div class="field"><span class="label">Travel Dates</span><div class="value">{{formatDate booking.arrivalDate}} — {{formatDate booking.departureDate}}</div></div>
+      <div class="field"><span class="label">Duration</span><div class="value">{{booking.numberOfDays}} Days</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Vehicle & Driver</h2>
+    <div class="grid">
+      <div class="field"><span class="label">Vehicle Model</span><div class="value">{{transport.vehicleModel}}</div></div>
+      <div class="field"><span class="label">Driver</span><div class="value">{{transport.driverName}}</div></div>
+      <div class="field"><span class="label">Driver Language</span><div class="value">{{transport.driverLanguage}}</div></div>
+      <div class="field"><span class="label">Baby Seat</span><div class="value">{{#if transport.babySeatRequired}}<span class="badge badge-yes">Required</span>{{else}}<span class="badge badge-no">Not Required</span>{{/if}}</div></div>
+    </div>
+    {{#if transport.vehicleNotes}}
+    <div class="notes-box">{{transport.vehicleNotes}}</div>
+    {{/if}}
+  </div>
+
+  <div class="section">
+    <h2>Arrival Pickup</h2>
+    <div class="grid">
+      <div class="field"><span class="label">Location</span><div class="value">{{transport.arrivalPickupLocation}}</div></div>
+      <div class="field"><span class="label">Time</span><div class="value">{{transport.arrivalPickupTime}}</div></div>
+    </div>
+    {{#if transport.arrivalPickupNotes}}
+    <div class="notes-box">{{transport.arrivalPickupNotes}}</div>
+    {{/if}}
+  </div>
+
+  <div class="section">
+    <h2>Departure Drop-off</h2>
+    <div class="grid">
+      <div class="field"><span class="label">Location</span><div class="value">{{transport.departureDropLocation}}</div></div>
+      <div class="field"><span class="label">Time</span><div class="value">{{transport.departureDropTime}}</div></div>
+    </div>
+    {{#if transport.departureDropNotes}}
+    <div class="notes-box">{{transport.departureDropNotes}}</div>
+    {{/if}}
+  </div>
+
+  {{#if transport.dayPlans.length}}
+  <div class="section">
+    <h2>Day-by-Day Transport Plan</h2>
+    <table>
+      <thead>
+        <tr><th>Day</th><th>Description</th><th>Pickup</th><th>Drop</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        {{#each transport.dayPlans}}
+        <tr>
+          <td>Day {{this.dayNumber}}</td>
+          <td>{{this.description}}</td>
+          <td>{{this.pickupLocation}}{{#if this.pickupTime}} ({{this.pickupTime}}){{/if}}</td>
+          <td>{{this.dropLocation}}</td>
+          <td>{{this.notes}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{/if}}
+
+  {{#if transport.internalNotes}}
+  <div class="section">
+    <h2>Internal Notes</h2>
+    <div class="notes-box">{{transport.internalNotes}}</div>
+  </div>
+  {{/if}}
+
+  <div class="footer"><p>VSL 360 — Internal Transport Document</p></div>
+</body>
+</html>

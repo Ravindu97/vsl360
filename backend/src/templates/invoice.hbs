@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.6; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1a56db; padding-bottom: 20px; margin-bottom: 30px; }
+    .logo { font-size: 28px; font-weight: bold; color: #1a56db; }
+    .logo span { color: #f59e0b; }
+    .invoice-title { font-size: 32px; color: #1a56db; font-weight: bold; }
+    .info-section { display: flex; justify-content: space-between; margin-bottom: 30px; }
+    .info-block h3 { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .info-block p { margin-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    thead th { background: #1a56db; color: white; padding: 12px 16px; text-align: left; font-weight: 600; }
+    tbody td { padding: 12px 16px; border-bottom: 1px solid #e5e7eb; }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    .total-row td { font-weight: bold; font-size: 16px; border-top: 2px solid #1a56db; }
+    .notes { background: #f3f4f6; padding: 16px; border-radius: 8px; margin-top: 20px; }
+    .notes h3 { font-size: 14px; color: #374151; margin-bottom: 8px; }
+    .footer { margin-top: 40px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">VSL <span>360</span></div>
+    <div class="invoice-title">INVOICE</div>
+  </div>
+
+  <div class="info-section">
+    <div class="info-block">
+      <h3>Bill To</h3>
+      <p><strong>{{client.name}}</strong></p>
+      <p>{{client.email}}</p>
+      <p>{{client.contactNumber}}</p>
+      <p>Citizenship: {{client.citizenship}}</p>
+    </div>
+    <div class="info-block" style="text-align: right;">
+      <h3>Invoice Details</h3>
+      <p><strong>Invoice #:</strong> {{invoice.invoiceNumber}}</p>
+      <p><strong>Date:</strong> {{formatDate invoice.invoiceDate}}</p>
+      <p><strong>Booking ID:</strong> {{booking.bookingId}}</p>
+    </div>
+  </div>
+
+  <div class="info-block" style="margin-bottom: 20px;">
+    <h3>Tour Details</h3>
+    <p><strong>Duration:</strong> {{booking.numberOfDays}} Days</p>
+    <p><strong>Travel Dates:</strong> {{formatDate booking.arrivalDate}} — {{formatDate booking.departureDate}}</p>
+    <p><strong>Number of Guests:</strong> {{paxCount}}</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th style="text-align: right;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Cost per person</td>
+        <td style="text-align: right;">{{formatCurrency invoice.costPerPerson}}</td>
+      </tr>
+      <tr>
+        <td>Total ({{paxCount}} guests)</td>
+        <td style="text-align: right;">{{formatCurrency invoice.totalAmount}}</td>
+      </tr>
+      <tr>
+        <td>Advance Paid</td>
+        <td style="text-align: right;">- {{formatCurrency invoice.advancePaid}}</td>
+      </tr>
+      <tr class="total-row">
+        <td>Balance Due</td>
+        <td style="text-align: right;">{{formatCurrency invoice.balanceAmount}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  {{#if invoice.paymentInstructions}}
+  <div class="notes">
+    <h3>Payment Instructions</h3>
+    <p>{{invoice.paymentInstructions}}</p>
+  </div>
+  {{/if}}
+
+  {{#if invoice.paymentNotes}}
+  <div class="notes" style="margin-top: 12px;">
+    <h3>Notes</h3>
+    <p>{{invoice.paymentNotes}}</p>
+  </div>
+  {{/if}}
+
+  <div class="footer">
+    <p>VSL 360 Tour Operations | Thank you for choosing us</p>
+  </div>
+</body>
+</html>

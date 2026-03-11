@@ -1,0 +1,243 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum Role {
+  SALES
+  RESERVATION
+  TRANSPORT
+  OPS_MANAGER
+}
+
+enum BookingStatus {
+  INQUIRY_RECEIVED
+  CLIENT_PROFILE_CREATED
+  PAX_DETAILS_ADDED
+  COSTING_COMPLETED
+  SALES_CONFIRMED
+  RESERVATION_PENDING
+  RESERVATION_COMPLETED
+  TRANSPORT_PENDING
+  TRANSPORT_COMPLETED
+  DOCUMENTS_READY
+  OPS_APPROVED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaxType {
+  ADULT
+  CHILD
+  INFANT
+}
+
+enum DocumentType {
+  INVOICE
+  TRANSPORT_DETAILS
+  HOTEL_RESERVATION
+  FULL_ITINERARY
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(SALES)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[] @relation("SalesOwner")
+}
+
+model Booking {
+  id       String        @id @default(uuid())
+  bookingId String       @unique
+  status    BookingStatus @default(INQUIRY_RECEIVED)
+
+  // Tour Information
+  numberOfDays         Int
+  tourMonth            String
+  arrivalDate          DateTime
+  arrivalTime          String
+  departureDate        DateTime
+  departureTime        String
+  additionalActivities String?
+  specialCelebrations  String?
+  generalNotes         String?
+
+  // Sales Owner
+  salesOwnerId String
+  salesOwner   User   @relation("SalesOwner", fields: [salesOwnerId], references: [id])
+
+  // Relations
+  client        Client?
+  paxList       Pax[]
+  hotelPlan     HotelBooking[]
+  transportPlan TransportPlan?
+  invoice       Invoice?
+  attachments   Attachment[]
+  documents     GeneratedDocument[]
+  statusHistory StatusHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id        String  @id @default(uuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  name          String
+  citizenship   String
+  email         String
+  contactNumber String
+  passportCopy  String?
+  flightTicket  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Pax {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  name         String
+  relationship String?
+  type         PaxType
+  age          Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HotelBooking {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  nightNumber        Int
+  hotelName          String
+  roomCategory       String
+  numberOfRooms      Int
+  roomPreference     String?
+  mealPlan           String
+  mealPreference     String?
+  mobilityNotes      String?
+  confirmationStatus String  @default("PENDING")
+  reservationNotes   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TransportPlan {
+  id        String  @id @default(uuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  vehicleModel          String
+  vehicleNotes          String?
+  babySeatRequired      Boolean @default(false)
+  driverName            String?
+  driverLanguage        String
+
+  arrivalPickupLocation String?
+  arrivalPickupTime     String?
+  arrivalPickupNotes    String?
+
+  departureDropLocation String?
+  departureDropTime     String?
+  departureDropNotes    String?
+
+  internalNotes String?
+
+  dayPlans TransportDayPlan[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TransportDayPlan {
+  id              String        @id @default(uuid())
+  transportPlanId String
+  transportPlan   TransportPlan @relation(fields: [transportPlanId], references: [id], onDelete: Cascade)
+
+  dayNumber      Int
+  description    String
+  pickupTime     String?
+  pickupLocation String?
+  dropLocation   String?
+  notes          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+  id        String  @id @default(uuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  invoiceNumber       String   @unique
+  invoiceDate         DateTime @default(now())
+  costPerPerson       Decimal  @db.Decimal(10, 2)
+  totalAmount         Decimal  @db.Decimal(10, 2)
+  advancePaid         Decimal  @default(0) @db.Decimal(10, 2)
+  balanceAmount       Decimal  @db.Decimal(10, 2)
+  paymentNotes        String?
+  paymentInstructions String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Attachment {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  fileName   String
+  fileType   String
+  filePath   String
+  fileSize   Int
+  uploadedBy String
+
+  createdAt DateTime @default(now())
+}
+
+model GeneratedDocument {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  type        DocumentType
+  filePath    String
+  version     Int    @default(1)
+  generatedBy String
+
+  createdAt DateTime @default(now())
+}
+
+model StatusHistory {
+  id        String  @id @default(uuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  fromStatus BookingStatus?
+  toStatus   BookingStatus
+  changedBy  String
+  notes      String?
+
+  createdAt DateTime @default(now())
+}

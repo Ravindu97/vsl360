@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.6; }
+    .header { border-bottom: 3px solid #1a56db; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { font-size: 24px; font-weight: bold; color: #1a56db; }
+    .logo span { color: #f59e0b; }
+    .title { font-size: 24px; color: #1a56db; }
+    .section { margin-bottom: 24px; }
+    .section h2 { font-size: 16px; color: #1a56db; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .field { margin-bottom: 6px; }
+    .field .label { color: #6b7280; font-size: 12px; text-transform: uppercase; }
+    .field .value { font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    thead th { background: #1e40af; color: white; padding: 10px 12px; text-align: left; font-size: 13px; }
+    tbody td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    .status { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .status-confirmed { background: #dcfce7; color: #16a34a; }
+    .status-pending { background: #fef3c7; color: #d97706; }
+    .notes-box { background: #f3f4f6; padding: 12px; border-radius: 6px; margin-top: 8px; }
+    .footer { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">VSL <span>360</span></div>
+    <div class="title">HOTEL RESERVATION</div>
+  </div>
+
+  <div class="section">
+    <h2>Guest Information</h2>
+    <div class="grid">
+      <div class="field"><span class="label">Client Name</span><div class="value">{{client.name}}</div></div>
+      <div class="field"><span class="label">Contact</span><div class="value">{{client.contactNumber}}</div></div>
+      <div class="field"><span class="label">Travel Dates</span><div class="value">{{formatDate booking.arrivalDate}} — {{formatDate booking.departureDate}}</div></div>
+      <div class="field"><span class="label">Booking ID</span><div class="value">{{booking.bookingId}}</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Guest Count</h2>
+    <div class="grid-3">
+      <div class="field"><span class="label">Adults</span><div class="value">{{adults}}</div></div>
+      <div class="field"><span class="label">Children</span><div class="value">{{children}}</div></div>
+      <div class="field"><span class="label">Infants</span><div class="value">{{infants}}</div></div>
+    </div>
+  </div>
+
+  {{#if booking.specialCelebrations}}
+  <div class="section">
+    <h2>Special Celebrations</h2>
+    <div class="notes-box">{{booking.specialCelebrations}}</div>
+  </div>
+  {{/if}}
+
+  <div class="section">
+    <h2>Night-by-Night Hotel Plan</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Night</th>
+          <th>Hotel</th>
+          <th>Room Category</th>
+          <th>Rooms</th>
+          <th>Meal Plan</th>
+          <th>Preference</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each hotels}}
+        <tr>
+          <td>Night {{this.nightNumber}}</td>
+          <td>{{this.hotelName}}</td>
+          <td>{{this.roomCategory}}</td>
+          <td>{{this.numberOfRooms}}</td>
+          <td>{{this.mealPlan}}</td>
+          <td>{{this.mealPreference}}</td>
+          <td>
+            {{#if (eq this.confirmationStatus "CONFIRMED")}}
+              <span class="status status-confirmed">Confirmed</span>
+            {{else}}
+              <span class="status status-pending">Pending</span>
+            {{/if}}
+          </td>
+        </tr>
+        {{#if this.mobilityNotes}}
+        <tr><td colspan="7" style="background:#fef3c7; font-size:12px;">Mobility: {{this.mobilityNotes}}</td></tr>
+        {{/if}}
+        {{#if this.reservationNotes}}
+        <tr><td colspan="7" style="background:#f3f4f6; font-size:12px;">Notes: {{this.reservationNotes}}</td></tr>
+        {{/if}}
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer"><p>VSL 360 Tour Operations | Hotel Reservation Document</p></div>
+</body>
+</html>

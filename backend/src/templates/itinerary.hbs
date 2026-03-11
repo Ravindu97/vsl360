@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.6; }
+    .header { text-align: center; border-bottom: 3px solid #1a56db; padding-bottom: 24px; margin-bottom: 30px; }
+    .logo { font-size: 32px; font-weight: bold; color: #1a56db; }
+    .logo span { color: #f59e0b; }
+    .header h1 { font-size: 22px; color: #374151; margin-top: 8px; }
+    .welcome { background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+    .welcome h2 { font-size: 20px; margin-bottom: 8px; }
+    .welcome p { opacity: 0.9; }
+    .day-card { border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+    .day-header { background: #1e40af; color: white; padding: 12px 16px; font-weight: bold; font-size: 16px; }
+    .day-body { padding: 16px; }
+    .day-body .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .detail { margin-bottom: 8px; }
+    .detail .label { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail .value { font-weight: 600; color: #111827; }
+    .icon { margin-right: 6px; }
+    .notes-section { background: #f3f4f6; padding: 16px; border-radius: 8px; margin-top: 24px; }
+    .notes-section h3 { font-size: 15px; color: #374151; margin-bottom: 8px; }
+    .footer { margin-top: 40px; text-align: center; padding: 20px; background: #f9fafb; border-radius: 10px; }
+    .footer p { color: #6b7280; font-size: 13px; }
+    .footer .brand { font-size: 18px; font-weight: bold; color: #1a56db; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">VSL <span>360</span></div>
+    <h1>Your Tour Itinerary</h1>
+  </div>
+
+  <div class="welcome">
+    <h2>Dear {{client.name}},</h2>
+    <p>Welcome to your {{booking.numberOfDays}}-day tour experience!</p>
+    <p>{{formatDate booking.arrivalDate}} — {{formatDate booking.departureDate}}</p>
+  </div>
+
+  {{#if transport}}
+  <div class="day-card">
+    <div class="day-header">🛬 Arrival Details</div>
+    <div class="day-body">
+      <div class="grid">
+        <div class="detail"><span class="label">Pickup Location</span><div class="value">{{transport.arrivalPickupLocation}}</div></div>
+        <div class="detail"><span class="label">Pickup Time</span><div class="value">{{transport.arrivalPickupTime}}</div></div>
+        <div class="detail"><span class="label">Vehicle</span><div class="value">{{transport.vehicleModel}}</div></div>
+        <div class="detail"><span class="label">Driver</span><div class="value">{{transport.driverName}} ({{transport.driverLanguage}})</div></div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
+  {{#each days}}
+  <div class="day-card">
+    <div class="day-header">Day {{this.dayNumber}}</div>
+    <div class="day-body">
+      <div class="grid">
+        {{#if this.hotel}}
+        <div class="detail"><span class="label">🏨 Hotel</span><div class="value">{{this.hotel.hotelName}}</div></div>
+        <div class="detail"><span class="label">Room</span><div class="value">{{this.hotel.roomCategory}}</div></div>
+        <div class="detail"><span class="label">Meal Plan</span><div class="value">{{this.hotel.mealPlan}}</div></div>
+        {{#if this.hotel.mealPreference}}
+        <div class="detail"><span class="label">Meal Preference</span><div class="value">{{this.hotel.mealPreference}}</div></div>
+        {{/if}}
+        {{/if}}
+        {{#if this.transport}}
+        <div class="detail"><span class="label">🚗 Activities</span><div class="value">{{this.transport.description}}</div></div>
+        {{#if this.transport.pickupTime}}
+        <div class="detail"><span class="label">Pickup</span><div class="value">{{this.transport.pickupTime}} — {{this.transport.pickupLocation}}</div></div>
+        {{/if}}
+        {{/if}}
+      </div>
+    </div>
+  </div>
+  {{/each}}
+
+  {{#if transport}}
+  <div class="day-card">
+    <div class="day-header">🛫 Departure Details</div>
+    <div class="day-body">
+      <div class="grid">
+        <div class="detail"><span class="label">Drop-off Location</span><div class="value">{{transport.departureDropLocation}}</div></div>
+        <div class="detail"><span class="label">Drop-off Time</span><div class="value">{{transport.departureDropTime}}</div></div>
+      </div>
+    </div>
+  </div>
+  {{/if}}
+
+  {{#if booking.generalNotes}}
+  <div class="notes-section">
+    <h3>📝 Important Notes</h3>
+    <p>{{booking.generalNotes}}</p>
+  </div>
+  {{/if}}
+
+  {{#if booking.specialCelebrations}}
+  <div class="notes-section" style="margin-top: 12px;">
+    <h3>🎉 Special Celebrations</h3>
+    <p>{{booking.specialCelebrations}}</p>
+  </div>
+  {{/if}}
+
+  <div class="footer">
+    <div class="brand">VSL 360</div>
+    <p>Thank you for choosing VSL 360 for your tour. We wish you a wonderful experience!</p>
+    <p style="margin-top: 8px;">For any queries, please contact your tour coordinator.</p>
+  </div>
+</body>
+</html>
