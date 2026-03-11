@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type { User } from '@/types';
 
 interface AuthState {
@@ -10,17 +11,33 @@ interface AuthState {
   logout: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  accessToken: null,
-  isAuthenticated: false,
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
 
-  setAuth: (user, accessToken) =>
-    set({ user, accessToken, isAuthenticated: true }),
+      setAuth: (user, accessToken) =>
+        set({ user, accessToken, isAuthenticated: true }),
 
-  setAccessToken: (accessToken) =>
-    set({ accessToken }),
+      setAccessToken: (accessToken) =>
+        set((state) => ({
+          accessToken,
+          isAuthenticated: Boolean(accessToken && state.user),
+        })),
 
-  logout: () =>
-    set({ user: null, accessToken: null, isAuthenticated: false }),
-}));
+      logout: () =>
+        set({ user: null, accessToken: null, isAuthenticated: false }),
+    }),
+    {
+      name: 'vsl360.auth',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        user: state.user,
+        accessToken: state.accessToken,
+        isAuthenticated: state.isAuthenticated,
+      }),
+    }
+  )
+);

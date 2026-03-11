@@ -1,3 +1,4 @@
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -10,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from '@/utils/sessionDraft';
 
 const createBookingSchema = z.object({
   tourMonth: z.string().min(1, 'Required'),
@@ -31,28 +33,73 @@ const createBookingSchema = z.object({
 
 type CreateBookingForm = z.infer<typeof createBookingSchema>;
 
+const BOOKING_CREATE_DRAFT_KEY = 'vsl360.booking.create.draft';
+
+const defaultFormValues: CreateBookingForm = {
+  tourMonth: '',
+  numberOfDays: 1,
+  arrivalDate: '',
+  arrivalTime: '',
+  departureDate: '',
+  departureTime: '',
+  additionalActivities: '',
+  specialCelebrations: '',
+  generalNotes: '',
+  client: {
+    name: '',
+    citizenship: '',
+    email: '',
+    contactNumber: '',
+  },
+};
+
 export function BookingCreatePage() {
   const navigate = useNavigate();
+
+  const initialValues = useMemo(() => {
+    const draft = loadSessionDraft<CreateBookingForm>(BOOKING_CREATE_DRAFT_KEY);
+    return {
+      ...defaultFormValues,
+      ...draft,
+      client: {
+        ...defaultFormValues.client,
+        ...(draft?.client ?? {}),
+      },
+    };
+  }, []);
 
   const {
     register,
     handleSubmit,
+    watch,
+    reset,
     formState: { errors },
   } = useForm<CreateBookingForm>({
     resolver: zodResolver(createBookingSchema),
-    defaultValues: {
-      numberOfDays: 1,
-    },
+    defaultValues: initialValues,
   });
+
+  const watchedValues = watch();
+
+  useEffect(() => {
+    saveSessionDraft(BOOKING_CREATE_DRAFT_KEY, watchedValues);
+  }, [watchedValues]);
 
   const mutation = useMutation({
     mutationFn: (data: CreateBookingForm) => bookingsApi.create(data),
     onSuccess: (res) => {
+      clearSessionDraft(BOOKING_CREATE_DRAFT_KEY);
+      reset(defaultFormValues);
       navigate(`/bookings/${res.data.id}`);
     },
   });
 
   const onSubmit = (data: CreateBookingForm) => mutation.mutate(data);
+
+  const handleClearDraft = () => {
+    clearSessionDraft(BOOKING_CREATE_DRAFT_KEY);
+    reset(defaultFormValues);
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -149,6 +196,9 @@ export function BookingCreatePage() {
         </Card>
 
         <div className="flex justify-end gap-3">
+          <Button variant="ghost" type="button" onClick={handleClearDraft}>
+            Clear Draft
+          </Button>
           <Button variant="outline" type="button" onClick={() => navigate('/bookings')}>
             Cancel
           </Button>
