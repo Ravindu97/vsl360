@@ -21,7 +21,7 @@ export function BookingDetailPage() {
 
   if (isLoading) return <LoadingSpinner />;
 
-  const booking = data?.data;
+  const booking = data;
   if (!booking) return <div className="p-8 text-center text-muted-foreground">Booking not found</div>;
 
   return (
