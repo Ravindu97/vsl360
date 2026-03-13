@@ -2,14 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, FileText } from 'lucide-react';
 import { documentsApi } from '@/api/endpoints.api';
 import { useAuthStore } from '@/store/authStore';
-import { canApproveDocuments, canGenerateInvoice } from '@/utils/permissions';
 import { formatDateTime } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { DocumentType, type Booking, type GeneratedDocument } from '@/types';
+import { DocumentType, Role, type Booking, type GeneratedDocument } from '@/types';
 
 interface Props {
   booking: Booking;
@@ -20,6 +19,18 @@ const DOC_LABELS: Record<DocumentType, string> = {
   [DocumentType.TRANSPORT_DETAILS]: 'Transport Details',
   [DocumentType.HOTEL_RESERVATION]: 'Hotel Reservation',
   [DocumentType.FULL_ITINERARY]: 'Full Itinerary',
+};
+
+const ROLE_ALLOWED_TYPES: Record<Role, DocumentType[]> = {
+  [Role.SALES]: [DocumentType.INVOICE],
+  [Role.RESERVATION]: [DocumentType.HOTEL_RESERVATION],
+  [Role.TRANSPORT]: [DocumentType.TRANSPORT_DETAILS],
+  [Role.OPS_MANAGER]: [
+    DocumentType.INVOICE,
+    DocumentType.TRANSPORT_DETAILS,
+    DocumentType.HOTEL_RESERVATION,
+    DocumentType.FULL_ITINERARY,
+  ],
 };
 
 export function DocumentsTab({ booking }: Props) {
@@ -58,7 +69,8 @@ export function DocumentsTab({ booking }: Props) {
     window.URL.revokeObjectURL(url);
   };
 
-  const canGenerate = user && (canApproveDocuments(user.role) || canGenerateInvoice(user.role));
+  const allowedTypes = user ? ROLE_ALLOWED_TYPES[user.role as Role] ?? [] : [];
+  const canGenerate = allowedTypes.length > 0;
 
   return (
     <Card>
@@ -68,7 +80,7 @@ export function DocumentsTab({ booking }: Props) {
         </div>
         {canGenerate && (
           <div className="flex flex-wrap gap-2 pt-2">
-            {Object.values(DocumentType).map((type) => (
+            {allowedTypes.map((type) => (
               <Button
                 key={type}
                 variant="outline"

@@ -3,40 +3,71 @@
 <head>
   <meta charset="utf-8">
   <style>
+    @page { margin: 12mm 10mm; }
+    :root {
+      --ocean-blue: #204050;
+      --tropical-green: #3d6b54;
+      --sand-beige: #f0e0e0;
+      --sunset-gold: #c08020;
+      --paper: #f0f0f0;
+      --ink: #1f2933;
+      --muted: #687283;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.6; }
-    .header { text-align: center; border-bottom: 3px solid #1a56db; padding-bottom: 24px; margin-bottom: 30px; }
-    .logo { font-size: 32px; font-weight: bold; color: #1a56db; }
-    .logo span { color: #f59e0b; }
-    .header h1 { font-size: 22px; color: #374151; margin-top: 8px; }
-    .welcome { background: linear-gradient(135deg, #1a56db 0%, #3b82f6 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
-    .welcome h2 { font-size: 20px; margin-bottom: 8px; }
-    .welcome p { opacity: 0.9; }
-    .day-card { border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
-    .day-header { background: #1e40af; color: white; padding: 12px 16px; font-weight: bold; font-size: 16px; }
-    .day-body { padding: 16px; }
+    body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12.5px; line-height: 1.5; background: var(--paper); }
+    .page { border: 1px solid #dde2ea; border-radius: 10px; padding: 16px; background: #f5f6f8; }
+    .header { text-align: center; border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 16px; }
+    .logo { font-family: 'Alegros', Georgia, serif; font-size: 30px; font-weight: 700; color: var(--ocean-blue); }
+    .logo span { color: var(--sunset-gold); }
+    .header h1 { font-family: 'Alegros', Georgia, serif; font-size: 24px; color: var(--ocean-blue); margin-top: 6px; }
+    .header .subtitle { color: var(--muted); margin-top: 4px; }
+    .welcome { background: linear-gradient(120deg, #204050, #3d6b54); color: #fff; padding: 14px; border-radius: 10px; margin-bottom: 14px; }
+    .welcome h2 { font-family: 'Alegros', Georgia, serif; font-size: 20px; margin-bottom: 8px; }
+    .pillar { border: 1px solid #d8dde6; border-radius: 10px; margin-bottom: 10px; overflow: hidden; page-break-inside: avoid; }
+    .pillar h3 { font-family: 'Alegros', Georgia, serif; background: #f3f6f9; color: var(--ocean-blue); padding: 9px 12px; border-bottom: 1px solid #d8dde6; }
+    .pillar-body { padding: 10px 12px; }
+    .day-card { border: 1px solid #d8dde6; border-radius: 10px; margin-bottom: 10px; overflow: hidden; page-break-inside: avoid; }
+    .day-header { background: var(--ocean-blue); color: white; padding: 9px 12px; font-weight: 700; font-size: 15px; }
+    .day-body { padding: 12px; }
     .day-body .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .detail { margin-bottom: 8px; }
-    .detail .label { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail .label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     .detail .value { font-weight: 600; color: #111827; }
-    .icon { margin-right: 6px; }
-    .notes-section { background: #f3f4f6; padding: 16px; border-radius: 8px; margin-top: 24px; }
-    .notes-section h3 { font-size: 15px; color: #374151; margin-bottom: 8px; }
-    .footer { margin-top: 40px; text-align: center; padding: 20px; background: #f9fafb; border-radius: 10px; }
-    .footer p { color: #6b7280; font-size: 13px; }
-    .footer .brand { font-size: 18px; font-weight: bold; color: #1a56db; margin-bottom: 4px; }
+    .notes-section { background: #f7f0e3; border-left: 4px solid var(--sunset-gold); padding: 11px; border-radius: 8px; margin-top: 10px; page-break-inside: avoid; }
+    .notes-section h3 { font-family: 'Alegros', Georgia, serif; font-size: 15px; color: var(--ocean-blue); margin-bottom: 8px; }
+    .cta-list { margin-top: 10px; padding-left: 18px; }
+    .cta-list li { margin-bottom: 5px; color: #3f4d61; }
+    .footer { margin-top: 16px; text-align: center; padding: 12px; background: #f4f6f8; border: 1px solid #d8dde6; border-radius: 10px; page-break-inside: avoid; }
+    .footer p { color: #5f6875; font-size: 13px; }
+    .footer .brand { font-family: 'Alegros', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
   </style>
 </head>
 <body>
+  <div class="page">
   <div class="header">
     <div class="logo">VSL <span>360</span></div>
-    <h1>Your Tour Itinerary</h1>
+    <h1>Itinerary Story</h1>
+    <p class="subtitle">Experience Sri Lanka Completely</p>
   </div>
 
   <div class="welcome">
     <h2>Dear {{client.name}},</h2>
-    <p>Welcome to your {{booking.numberOfDays}}-day tour experience!</p>
-    <p>{{formatDate booking.arrivalDate}} — {{formatDate booking.departureDate}}</p>
+    <p>Welcome to a {{booking.numberOfDays}}-day journey shaped with local character, thoughtful comfort, and meaningful moments.</p>
+    <p>{{formatDate booking.arrivalDate}} - {{formatDate booking.departureDate}}</p>
+  </div>
+
+  <div class="pillar">
+    <h3>Destination Discovery</h3>
+    <div class="pillar-body">
+      Your route has been curated to balance iconic scenery with quieter corners of Sri Lanka, creating a complete sense of place from arrival to departure.
+    </div>
+  </div>
+
+  <div class="pillar">
+    <h3>Travel Experiences</h3>
+    <div class="pillar-body">
+      Each transfer and activity is arranged to keep your days seamless, so you can focus on the experience itself rather than the logistics.
+    </div>
   </div>
 
   {{#if transport}}
@@ -77,6 +108,13 @@
   </div>
   {{/each}}
 
+  <div class="pillar">
+    <h3>Luxury Stays</h3>
+    <div class="pillar-body">
+      Your stays are selected for comfort, atmosphere, and location, so each evening feels like part of the journey, not just a stop between destinations.
+    </div>
+  </div>
+
   {{#if transport}}
   <div class="day-card">
     <div class="day-header">🛫 Departure Details</div>
@@ -98,15 +136,27 @@
 
   {{#if booking.specialCelebrations}}
   <div class="notes-section" style="margin-top: 12px;">
-    <h3>🎉 Special Celebrations</h3>
+    <h3>Local Culture & Celebrations</h3>
     <p>{{booking.specialCelebrations}}</p>
   </div>
   {{/if}}
 
+  <div class="pillar">
+    <h3>Travel Moments</h3>
+    <div class="pillar-body">
+      Look out for candid moments in warm natural light: sunrise roads, tea-country air, coastal evenings, and conversations that make the island memorable.
+    </div>
+  </div>
+
   <div class="footer">
     <div class="brand">VSL 360</div>
-    <p>Thank you for choosing VSL 360 for your tour. We wish you a wonderful experience!</p>
-    <p style="margin-top: 8px;">For any queries, please contact your tour coordinator.</p>
+    <p>Curated Travel Experiences</p>
+    <ul class="cta-list">
+      <li>When you are ready, we would be delighted to design your next Sri Lankan chapter.</li>
+      <li>Share your preferred dates, and we will craft another journey around your travel style.</li>
+      <li>Let us know the moments you value most, and we will shape the itinerary around them.</li>
+    </ul>
+  </div>
   </div>
 </body>
 </html>

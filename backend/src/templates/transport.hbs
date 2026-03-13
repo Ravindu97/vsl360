@@ -3,32 +3,50 @@
 <head>
   <meta charset="utf-8">
   <style>
+    @page { margin: 14mm 12mm; }
+    :root {
+      --ocean-blue: #204050;
+      --tropical-green: #3d6b54;
+      --sand-beige: #f0e0e0;
+      --sunset-gold: #c08020;
+      --paper: #f0f0f0;
+      --ink: #1f2933;
+      --muted: #6a7280;
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #333; font-size: 14px; line-height: 1.6; }
-    .header { border-bottom: 3px solid #1a56db; padding-bottom: 20px; margin-bottom: 30px; }
-    .header h1 { color: #1a56db; font-size: 24px; }
-    .header .subtitle { color: #ef4444; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
-    .section { margin-bottom: 24px; }
-    .section h2 { font-size: 16px; color: #1a56db; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; margin-bottom: 12px; }
+    body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12.5px; line-height: 1.5; background: var(--paper); }
+    .page { border: 1px solid #dde2ea; border-radius: 10px; padding: 18px; background: #f5f6f8; }
+    .header { border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 16px; }
+    .header h1 { font-family: 'Alegros', Georgia, serif; color: var(--ocean-blue); font-size: 24px; }
+    .header .subtitle { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; }
+    .section { margin-bottom: 16px; }
+    .section h2 { font-family: 'Alegros', Georgia, serif; font-size: 16px; color: var(--ocean-blue); border-bottom: 1px solid #d9dce3; padding-bottom: 6px; margin-bottom: 10px; }
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .field { margin-bottom: 6px; }
-    .field .label { color: #6b7280; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field .label { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; }
     .field .value { font-weight: 600; }
     .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-    .badge-yes { background: #dcfce7; color: #16a34a; }
-    .badge-no { background: #f3f4f6; color: #6b7280; }
-    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-    thead th { background: #1e40af; color: white; padding: 10px 12px; text-align: left; font-size: 13px; }
-    tbody td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
-    tbody tr:nth-child(even) { background: #f9fafb; }
-    .notes-box { background: #fef3c7; padding: 12px; border-radius: 6px; border-left: 4px solid #f59e0b; margin-top: 8px; }
-    .footer { margin-top: 30px; text-align: center; color: #9ca3af; font-size: 11px; }
+    .badge-yes { background: #d7e9dc; color: #1e4f3a; }
+    .badge-no { background: #eceff3; color: #5f6875; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #d6d9df; border-radius: 8px; overflow: hidden; }
+    thead th { background: var(--ocean-blue); color: white; padding: 9px 10px; text-align: left; font-size: 12.5px; }
+    tbody td { padding: 9px 10px; border-bottom: 1px solid #dfe3ea; font-size: 12.5px; }
+    tbody tr:nth-child(even) { background: #f7f7f8; }
+    .notes-box { background: #f7f0e3; padding: 10px; border-radius: 6px; border-left: 4px solid var(--sunset-gold); margin-top: 7px; }
+    .intro { background: #f3f6f9; border: 1px solid #d7dfe8; border-radius: 8px; padding: 10px 12px; margin: 10px 0 14px; color: #384253; }
+    .footer { margin-top: 20px; text-align: center; color: var(--muted); font-size: 11.5px; border-top: 1px solid #d9dce3; padding-top: 10px; }
+    .tagline { color: var(--ocean-blue); font-weight: 600; margin-top: 4px; }
   </style>
 </head>
 <body>
+  <div class="page">
   <div class="header">
     <h1>TRANSPORT DETAILS</h1>
-    <span class="subtitle">Internal Use Only</span>
+    <span class="subtitle">Curated Travel Experiences | Internal Coordination</span>
+  </div>
+
+  <div class="intro">
+    Movement plans designed for comfort, timing precision, and a smooth journey through each chapter of the island experience.
   </div>
 
   <div class="section">
@@ -105,6 +123,10 @@
   </div>
   {{/if}}
 
-  <div class="footer"><p>VSL 360 — Internal Transport Document</p></div>
+  <div class="footer">
+    <p>VSL 360 — Internal Transport Document</p>
+    <p class="tagline">Experience Sri Lanka Completely</p>
+  </div>
+  </div>
 </body>
 </html>
