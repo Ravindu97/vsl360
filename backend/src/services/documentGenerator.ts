@@ -19,6 +19,12 @@ Handlebars.registerHelper('formatCurrency', (amount: number | string) => {
 });
 Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
 
+type PdfRenderOptions = {
+  margin?: { top: string; right: string; bottom: string; left: string };
+  scale?: number;
+  preferCSSPageSize?: boolean;
+};
+
 export class DocumentGeneratorService {
   private templatesDir: string;
   private outputDir: string;
@@ -57,7 +63,7 @@ export class DocumentGeneratorService {
     return null;
   }
 
-  private async renderPdf(html: string, filename: string): Promise<string> {
+  private async renderPdf(html: string, filename: string, options?: PdfRenderOptions): Promise<string> {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -70,7 +76,9 @@ export class DocumentGeneratorService {
       await page.pdf({
         path: outputPath,
         format: 'A4',
-        margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+        margin: options?.margin ?? { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+        scale: options?.scale ?? 1,
+        preferCSSPageSize: options?.preferCSSPageSize ?? true,
         printBackground: true,
       });
       return outputPath;
@@ -83,6 +91,59 @@ export class DocumentGeneratorService {
     const templatePath = path.join(this.templatesDir, `${templateName}.hbs`);
     const templateSource = fs.readFileSync(templatePath, 'utf-8');
     return Handlebars.compile(templateSource);
+  }
+
+  private pickTransportLayout(transportPlan: any): {
+    layoutMode: 'comfy' | 'compact' | 'ultra';
+    pdf: PdfRenderOptions;
+  } {
+    const dayPlans = transportPlan?.dayPlans ?? [];
+    const dayPlanCount = dayPlans.length;
+
+    const textBlocks = [
+      transportPlan?.vehicleNotes,
+      transportPlan?.arrivalPickupNotes,
+      transportPlan?.departureDropNotes,
+      transportPlan?.internalNotes,
+      ...dayPlans.map((d: any) => d.description),
+      ...dayPlans.map((d: any) => d.notes),
+      ...dayPlans.map((d: any) => d.pickupLocation),
+      ...dayPlans.map((d: any) => d.dropLocation),
+    ].filter(Boolean) as string[];
+
+    const totalChars = textBlocks.reduce((sum, text) => sum + text.length, 0);
+    const score = dayPlanCount * 16 + Math.ceil(totalChars / 120) * 5;
+
+    if (score >= 95) {
+      return {
+        layoutMode: 'ultra',
+        pdf: {
+          margin: { top: '5mm', right: '5mm', bottom: '5mm', left: '5mm' },
+          scale: 0.88,
+          preferCSSPageSize: true,
+        },
+      };
+    }
+
+    if (score >= 55) {
+      return {
+        layoutMode: 'compact',
+        pdf: {
+          margin: { top: '7mm', right: '7mm', bottom: '7mm', left: '7mm' },
+          scale: 0.93,
+          preferCSSPageSize: true,
+        },
+      };
+    }
+
+    return {
+      layoutMode: 'comfy',
+      pdf: {
+        margin: { top: '9mm', right: '9mm', bottom: '9mm', left: '9mm' },
+        scale: 0.98,
+        preferCSSPageSize: true,
+      },
+    };
   }
 
   async generateInvoice(bookingId: string, generatedBy: string): Promise<string> {
@@ -133,16 +194,19 @@ export class DocumentGeneratorService {
       throw new Error('Booking, client, or transport data not found');
     }
 
+    const layout = this.pickTransportLayout(booking.transportPlan);
+
     const template = this.loadTemplate('transport');
     const html = template({
       themeImage: this.themeImage,
+      layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
       transport: booking.transportPlan,
     });
 
     const filename = `transport_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
-    const filePath = await this.renderPdf(html, filename);
+    const filePath = await this.renderPdf(html, filename, layout.pdf);
 
     await prisma.generatedDocument.create({
       data: {
