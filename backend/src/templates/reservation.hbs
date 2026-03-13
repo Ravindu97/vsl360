@@ -15,7 +15,16 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12.5px; line-height: 1.5; background: var(--paper); }
-    .page { border: 1px solid #dde2ea; border-radius: 10px; padding: 18px; background: #f5f6f8; }
+    .page {
+      border: 1px solid #dde2ea;
+      border-radius: 10px;
+      padding: 18px;
+      background: #f5f6f8;
+      min-height: calc(297mm - 28mm);
+      display: flex;
+      flex-direction: column;
+    }
+    .content { flex: 1; }
     .header { border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; }
     .logo { font-family: 'Alegros', Georgia, serif; font-size: 24px; font-weight: 700; color: var(--ocean-blue); }
     .logo span { color: var(--sunset-gold); }
@@ -37,7 +46,7 @@
     .status-pending { background: #f7ebcf; color: #8a621d; }
     .notes-box { background: #f7f0e3; border-left: 4px solid var(--sunset-gold); padding: 12px; border-radius: 6px; margin-top: 8px; }
     .intro { background: linear-gradient(90deg, #f7f0e3, #f0f0f0); border: 1px solid #e3d6bc; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; color: #3f3a32; }
-    .footer { margin-top: 20px; text-align: center; color: var(--muted); font-size: 11.5px; border-top: 1px solid #d9dce3; padding-top: 10px; }
+    .footer { margin-top: auto; text-align: center; color: var(--muted); font-size: 11.5px; border-top: 1px solid #d9dce3; padding-top: 10px; }
     .tagline { color: var(--ocean-blue); font-weight: 600; }
 
     /* Safe adaptive mode: gentle density tweaks for longer reservations */
@@ -54,11 +63,12 @@
     body.compact thead th { padding: 7px 8px; font-size: 12px; }
     body.compact tbody td { padding: 7px 8px; font-size: 12px; }
     body.compact .status { padding: 2px 8px; font-size: 10.5px; }
-    body.compact .footer { margin-top: 14px; padding-top: 8px; font-size: 11px; }
+    body.compact .footer { margin-top: auto; padding-top: 8px; font-size: 11px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
   <div class="page">
+  <div class="content">
   <div class="header">
     <div class="logo">VSL <span>360</span></div>
     <div style="text-align:right;">
@@ -137,6 +147,7 @@
         {{/each}}
       </tbody>
     </table>
+  </div>
   </div>
 
   <div class="footer">

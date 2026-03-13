@@ -15,7 +15,16 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12.5px; line-height: 1.5; background: var(--paper); }
-    .page { border: 1px solid #dde2ea; border-radius: 10px; padding: 16px; background: #f5f6f8; }
+    .page {
+      border: 1px solid #dde2ea;
+      border-radius: 10px;
+      padding: 16px;
+      background: #f5f6f8;
+      min-height: calc(297mm - 24mm);
+      display: flex;
+      flex-direction: column;
+    }
+    .content { flex: 1; }
     .header { text-align: center; border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 16px; }
     .logo { font-family: 'Alegros', Georgia, serif; font-size: 30px; font-weight: 700; color: var(--ocean-blue); }
     .logo span { color: var(--sunset-gold); }
@@ -56,7 +65,7 @@
       border-radius: 50%;
       background: #42546b;
     }
-    .footer { margin-top: 16px; text-align: center; padding: 12px; background: #f4f6f8; border: 1px solid #d8dde6; border-radius: 10px; page-break-inside: avoid; }
+    .footer { margin-top: auto; text-align: center; padding: 12px; background: #f4f6f8; border: 1px solid #d8dde6; border-radius: 10px; page-break-inside: avoid; }
     .footer p { color: #5f6875; font-size: 13px; }
     .footer .brand { font-family: 'Alegros', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
 
@@ -78,7 +87,7 @@
     body.compact .detail { margin-bottom: 6px; }
     body.compact .notes-section { padding: 9px; margin-top: 8px; }
     body.compact .notes-section h3 { font-size: 14px; margin-bottom: 6px; }
-    body.compact .footer { margin-top: 12px; padding: 10px; }
+    body.compact .footer { margin-top: auto; padding: 10px; }
     body.compact .cta-list { margin-top: 10px; }
     body.compact .cta-list li { margin-bottom: 10px; padding-left: 24px; font-size: 13px; }
     body.compact .cta-list li::before { width: 7px; height: 7px; top: 0.6em; }
@@ -86,6 +95,7 @@
 </head>
 <body class="{{layoutMode}}">
   <div class="page">
+  <div class="content">
   <div class="header">
     <div class="logo">VSL <span>360</span></div>
     <h1>Itinerary Story</h1>
@@ -188,6 +198,7 @@
     <div class="pillar-body">
       Look out for candid moments in warm natural light: sunrise roads, tea-country air, coastal evenings, and conversations that make the island memorable.
     </div>
+  </div>
   </div>
 
   <div class="footer">

@@ -15,7 +15,16 @@
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12px; line-height: 1.4; background: var(--paper); }
-    .page { border: 1px solid #dde2ea; border-radius: 10px; padding: 14px; background: #f5f6f8; }
+    .page {
+      border: 1px solid #dde2ea;
+      border-radius: 10px;
+      padding: 14px;
+      background: #f5f6f8;
+      min-height: calc(297mm - 18mm);
+      display: flex;
+      flex-direction: column;
+    }
+    .content { flex: 1; }
     .header { border-bottom: 3px solid var(--ocean-blue); padding-bottom: 10px; margin-bottom: 12px; }
     .header h1 { font-family: 'Alegros', Georgia, serif; color: var(--ocean-blue); font-size: 21px; }
     .header .subtitle { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; }
@@ -36,7 +45,7 @@
     .intro { background: #f3f6f9; border: 1px solid #d7dfe8; border-radius: 8px; padding: 8px 10px; margin: 10px 0 12px; color: #384253; }
     .transfer-box { background: #f9fafc; border: 1px solid #dde2ea; border-radius: 8px; padding: 9px; }
     .transfer-title { font-family: 'Alegros', Georgia, serif; color: var(--ocean-blue); font-size: 13px; margin-bottom: 5px; }
-    .footer { margin-top: 10px; text-align: center; color: var(--muted); font-size: 10.8px; border-top: 1px solid #d9dce3; padding-top: 8px; }
+    .footer { margin-top: auto; text-align: center; color: var(--muted); font-size: 10.8px; border-top: 1px solid #d9dce3; padding-top: 8px; }
     .tagline { color: var(--ocean-blue); font-weight: 600; margin-top: 4px; }
 
     /* Adaptive layout tuning based on content density */
@@ -66,11 +75,12 @@
     body.ultra thead th { padding: 5px 6px; font-size: 10.5px; }
     body.ultra tbody td { padding: 5px 6px; font-size: 10.5px; }
     body.ultra .notes-box { padding: 6px 7px; margin-top: 4px; }
-    body.ultra .footer { margin-top: 7px; font-size: 10px; padding-top: 6px; }
+    body.ultra .footer { margin-top: auto; font-size: 10px; padding-top: 6px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
   <div class="page">
+  <div class="content">
   <div class="header">
     <h1>TRANSPORT DETAILS</h1>
     <span class="subtitle">Curated Travel Experiences | Internal Coordination</span>
@@ -155,6 +165,7 @@
     <div class="notes-box">{{transport.internalNotes}}</div>
   </div>
   {{/if}}
+  </div>
 
   <div class="footer">
     <p>VSL 360 — Internal Transport Document</p>
