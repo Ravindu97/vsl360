@@ -40,9 +40,33 @@
     }
     .info-block h3 { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
     .info-block p { margin-bottom: 4px; }
-    .contact-line { color: #334155; }
+    .billto-card {
+      background: linear-gradient(180deg, #fcfdff 0%, #f8fafd 100%);
+      border-color: #d6deea;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+    }
+    .billto-card h3 {
+      margin-bottom: 10px;
+      letter-spacing: 1.1px;
+    }
+    .contact-stack {
+      display: grid;
+      gap: 5px;
+    }
+    .contact-line {
+      color: #334155;
+      line-height: 1.4;
+      word-break: break-word;
+    }
     .inline-label { color: var(--muted); font-weight: 600; margin-right: 4px; }
-    .guest-name { font-size: 15px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
+    .guest-name {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--ocean-blue);
+      margin-bottom: 8px;
+      letter-spacing: 0.2px;
+      line-height: 1.15;
+    }
     .detail-row {
       display: flex;
       justify-content: space-between;
@@ -78,6 +102,8 @@
     body.compact .invoice-title { font-size: 28px; }
     body.compact .info-section { gap: 12px; margin-bottom: 10px; }
     body.compact .panel { padding: 10px 11px; }
+    body.compact .guest-name { font-size: 17px; margin-bottom: 6px; }
+    body.compact .contact-stack { gap: 4px; }
     body.compact .tour-details { padding: 9px 10px; margin-bottom: 11px; }
     body.compact table { margin: 10px 0; }
     body.compact thead th { padding: 8px 10px; }
@@ -98,12 +124,14 @@
   </div>
 
   <div class="info-section">
-    <div class="info-block panel">
+    <div class="info-block panel billto-card">
       <h3>Bill To</h3>
-      <p class="guest-name">{{client.name}}</p>
-      <p class="contact-line">{{client.email}}</p>
-      <p class="contact-line">{{client.contactNumber}}</p>
-      <p class="contact-line"><span class="inline-label">Citizenship:</span>{{titleCase client.citizenship}}</p>
+      <div class="contact-stack">
+        <p class="guest-name">{{client.name}}</p>
+        <p class="contact-line">{{client.email}}</p>
+        <p class="contact-line">{{client.contactNumber}}</p>
+        <p class="contact-line"><span class="inline-label">Citizenship:</span>{{titleCase client.citizenship}}</p>
+      </div>
     </div>
     <div class="info-block panel">
       <h3>Invoice Details</h3>
