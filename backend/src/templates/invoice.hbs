@@ -40,6 +40,8 @@
     }
     .info-block h3 { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
     .info-block p { margin-bottom: 4px; }
+    .contact-line { color: #334155; }
+    .inline-label { color: var(--muted); font-weight: 600; margin-right: 4px; }
     .guest-name { font-size: 15px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
     .detail-row {
       display: flex;
@@ -99,9 +101,9 @@
     <div class="info-block panel">
       <h3>Bill To</h3>
       <p class="guest-name">{{client.name}}</p>
-      <p>{{client.email}}</p>
-      <p>{{client.contactNumber}}</p>
-      <p>Citizenship: {{client.citizenship}}</p>
+      <p class="contact-line">{{client.email}}</p>
+      <p class="contact-line">{{client.contactNumber}}</p>
+      <p class="contact-line"><span class="inline-label">Citizenship:</span>{{titleCase client.citizenship}}</p>
     </div>
     <div class="info-block panel">
       <h3>Invoice Details</h3>

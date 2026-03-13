@@ -18,6 +18,13 @@ Handlebars.registerHelper('formatCurrency', (amount: number | string) => {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
 });
 Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
+Handlebars.registerHelper('titleCase', (value: unknown) => {
+  if (typeof value !== 'string') return value;
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+});
 
 type PdfRenderOptions = {
   margin?: { top: string; right: string; bottom: string; left: string };
