@@ -215,6 +215,51 @@ export class DocumentGeneratorService {
     };
   }
 
+  private pickItineraryLayout(booking: any): {
+    layoutMode: 'normal' | 'compact';
+    pdf: PdfRenderOptions;
+  } {
+    const hotelPlan = booking?.hotelPlan ?? [];
+    const dayPlans = booking?.transportPlan?.dayPlans ?? [];
+    const dayCount = booking?.numberOfDays ?? 0;
+
+    const textBlocks = [
+      booking?.generalNotes,
+      booking?.specialCelebrations,
+      ...hotelPlan.map((h: any) => h.hotelName),
+      ...hotelPlan.map((h: any) => h.roomCategory),
+      ...hotelPlan.map((h: any) => h.mealPreference),
+      ...dayPlans.map((d: any) => d.description),
+      ...dayPlans.map((d: any) => d.notes),
+      ...dayPlans.map((d: any) => d.pickupLocation),
+      ...dayPlans.map((d: any) => d.dropLocation),
+    ].filter(Boolean) as string[];
+
+    const totalChars = textBlocks.reduce((sum, text) => sum + text.length, 0);
+    const score = dayCount * 12 + Math.ceil(totalChars / 170) * 5;
+
+    // Keep itinerary styling readable. Compact mode is only for denser plans.
+    if (score >= 95) {
+      return {
+        layoutMode: 'compact',
+        pdf: {
+          margin: { top: '8mm', right: '8mm', bottom: '8mm', left: '8mm' },
+          scale: 0.94,
+          preferCSSPageSize: true,
+        },
+      };
+    }
+
+    return {
+      layoutMode: 'normal',
+      pdf: {
+        margin: { top: '10mm', right: '9mm', bottom: '10mm', left: '9mm' },
+        scale: 1,
+        preferCSSPageSize: true,
+      },
+    };
+  }
+
   async generateInvoice(bookingId: string, generatedBy: string): Promise<string> {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -368,9 +413,12 @@ export class DocumentGeneratorService {
       });
     }
 
+    const layout = this.pickItineraryLayout(booking);
+
     const template = this.loadTemplate('itinerary');
     const html = template({
       themeImage: this.themeImage,
+      layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
       days,
@@ -378,7 +426,7 @@ export class DocumentGeneratorService {
     });
 
     const filename = `itinerary_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
-    const filePath = await this.renderPdf(html, filename);
+    const filePath = await this.renderPdf(html, filename, layout.pdf);
 
     await prisma.generatedDocument.create({
       data: {

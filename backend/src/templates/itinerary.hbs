@@ -35,14 +35,56 @@
     .detail .value { font-weight: 600; color: #111827; }
     .notes-section { background: #f7f0e3; border-left: 4px solid var(--sunset-gold); padding: 11px; border-radius: 8px; margin-top: 10px; page-break-inside: avoid; }
     .notes-section h3 { font-family: 'Alegros', Georgia, serif; font-size: 15px; color: var(--ocean-blue); margin-bottom: 8px; }
-    .cta-list { margin-top: 10px; padding-left: 18px; }
-    .cta-list li { margin-bottom: 5px; color: #3f4d61; }
+    .cta-list { margin-top: 14px; list-style: none; padding-left: 0; }
+    .cta-list li {
+      position: relative;
+      margin-bottom: 14px;
+      padding-left: 28px;
+      color: #3f4d61;
+      font-size: 14px;
+      line-height: 1.45;
+      text-align: left;
+    }
+    .cta-list li:last-child { margin-bottom: 0; }
+    .cta-list li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.56em;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #42546b;
+    }
     .footer { margin-top: 16px; text-align: center; padding: 12px; background: #f4f6f8; border: 1px solid #d8dde6; border-radius: 10px; page-break-inside: avoid; }
     .footer p { color: #5f6875; font-size: 13px; }
     .footer .brand { font-family: 'Alegros', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
+
+    /* Safe adaptive mode: mild compaction for denser itineraries */
+    body.compact { font-size: 12px; line-height: 1.42; }
+    body.compact .page { padding: 14px; }
+    body.compact .header { padding-bottom: 11px; margin-bottom: 12px; }
+    body.compact .logo { font-size: 27px; }
+    body.compact .header h1 { font-size: 22px; }
+    body.compact .welcome { padding: 11px; margin-bottom: 11px; }
+    body.compact .welcome h2 { font-size: 18px; margin-bottom: 6px; }
+    body.compact .pillar { margin-bottom: 8px; }
+    body.compact .pillar h3 { padding: 8px 10px; }
+    body.compact .pillar-body { padding: 8px 10px; }
+    body.compact .day-card { margin-bottom: 8px; }
+    body.compact .day-header { padding: 8px 10px; font-size: 14px; }
+    body.compact .day-body { padding: 10px; }
+    body.compact .day-body .grid { gap: 10px; }
+    body.compact .detail { margin-bottom: 6px; }
+    body.compact .notes-section { padding: 9px; margin-top: 8px; }
+    body.compact .notes-section h3 { font-size: 14px; margin-bottom: 6px; }
+    body.compact .footer { margin-top: 12px; padding: 10px; }
+    body.compact .cta-list { margin-top: 10px; }
+    body.compact .cta-list li { margin-bottom: 10px; padding-left: 24px; font-size: 13px; }
+    body.compact .cta-list li::before { width: 7px; height: 7px; top: 0.6em; }
   </style>
 </head>
-<body>
+<body class="{{layoutMode}}">
   <div class="page">
   <div class="header">
     <div class="logo">VSL <span>360</span></div>
@@ -72,7 +114,7 @@
 
   {{#if transport}}
   <div class="day-card">
-    <div class="day-header">🛬 Arrival Details</div>
+    <div class="day-header">Arrival Details</div>
     <div class="day-body">
       <div class="grid">
         <div class="detail"><span class="label">Pickup Location</span><div class="value">{{transport.arrivalPickupLocation}}</div></div>
@@ -90,7 +132,7 @@
     <div class="day-body">
       <div class="grid">
         {{#if this.hotel}}
-        <div class="detail"><span class="label">🏨 Hotel</span><div class="value">{{this.hotel.hotelName}}</div></div>
+        <div class="detail"><span class="label">Hotel</span><div class="value">{{this.hotel.hotelName}}</div></div>
         <div class="detail"><span class="label">Room</span><div class="value">{{this.hotel.roomCategory}}</div></div>
         <div class="detail"><span class="label">Meal Plan</span><div class="value">{{this.hotel.mealPlan}}</div></div>
         {{#if this.hotel.mealPreference}}
@@ -98,7 +140,7 @@
         {{/if}}
         {{/if}}
         {{#if this.transport}}
-        <div class="detail"><span class="label">🚗 Activities</span><div class="value">{{this.transport.description}}</div></div>
+        <div class="detail"><span class="label">Activities</span><div class="value">{{this.transport.description}}</div></div>
         {{#if this.transport.pickupTime}}
         <div class="detail"><span class="label">Pickup</span><div class="value">{{this.transport.pickupTime}} — {{this.transport.pickupLocation}}</div></div>
         {{/if}}
@@ -117,7 +159,7 @@
 
   {{#if transport}}
   <div class="day-card">
-    <div class="day-header">🛫 Departure Details</div>
+    <div class="day-header">Departure Details</div>
     <div class="day-body">
       <div class="grid">
         <div class="detail"><span class="label">Drop-off Location</span><div class="value">{{transport.departureDropLocation}}</div></div>
@@ -129,7 +171,7 @@
 
   {{#if booking.generalNotes}}
   <div class="notes-section">
-    <h3>📝 Important Notes</h3>
+    <h3>Important Notes</h3>
     <p>{{booking.generalNotes}}</p>
   </div>
   {{/if}}
