@@ -68,9 +68,23 @@
     .notes h3 { font-family: 'Alegros', Georgia, serif; font-size: 14px; color: var(--ocean-blue); margin-bottom: 8px; }
     .footer { margin-top: 14px; text-align: center; color: var(--muted); font-size: 11.5px; border-top: 1px solid #d9dce3; padding-top: 10px; }
     .tagline { color: var(--ocean-blue); font-weight: 600; margin-top: 4px; }
+
+    /* Safe adaptive mode: mild compaction only for longer note content */
+    body.compact { font-size: 12px; line-height: 1.42; }
+    body.compact .page { padding: 15px; }
+    body.compact .header { margin-bottom: 14px; padding-bottom: 11px; }
+    body.compact .invoice-title { font-size: 28px; }
+    body.compact .info-section { gap: 12px; margin-bottom: 10px; }
+    body.compact .panel { padding: 10px 11px; }
+    body.compact .tour-details { padding: 9px 10px; margin-bottom: 11px; }
+    body.compact table { margin: 10px 0; }
+    body.compact thead th { padding: 8px 10px; }
+    body.compact tbody td { padding: 8px 10px; }
+    body.compact .notes { padding: 10px; margin-top: 10px; }
+    body.compact .footer { margin-top: 11px; padding-top: 8px; font-size: 11px; }
   </style>
 </head>
-<body>
+<body class="{{layoutMode}}">
   <div class="page">
   <div class="content">
   <div class="header">

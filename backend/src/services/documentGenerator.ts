@@ -146,6 +146,75 @@ export class DocumentGeneratorService {
     };
   }
 
+  private pickInvoiceLayout(invoice: any): {
+    layoutMode: 'normal' | 'compact';
+    pdf: PdfRenderOptions;
+  } {
+    const notesLength = (invoice?.paymentNotes?.length ?? 0) + (invoice?.paymentInstructions?.length ?? 0);
+
+    // Keep invoice layout stable. Only switch to compact mode for long note content.
+    if (notesLength > 220) {
+      return {
+        layoutMode: 'compact',
+        pdf: {
+          margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
+          scale: 0.96,
+          preferCSSPageSize: true,
+        },
+      };
+    }
+
+    return {
+      layoutMode: 'normal',
+      pdf: {
+        margin: { top: '12mm', right: '11mm', bottom: '12mm', left: '11mm' },
+        scale: 1,
+        preferCSSPageSize: true,
+      },
+    };
+  }
+
+  private pickReservationLayout(booking: any): {
+    layoutMode: 'normal' | 'compact';
+    pdf: PdfRenderOptions;
+  } {
+    const hotels = booking?.hotelPlan ?? [];
+    const hotelCount = hotels.length;
+
+    const textBlocks = [
+      booking?.specialCelebrations,
+      ...hotels.map((h: any) => h.mobilityNotes),
+      ...hotels.map((h: any) => h.reservationNotes),
+      ...hotels.map((h: any) => h.hotelName),
+      ...hotels.map((h: any) => h.roomCategory),
+      ...hotels.map((h: any) => h.mealPreference),
+    ].filter(Boolean) as string[];
+
+    const totalChars = textBlocks.reduce((sum, text) => sum + text.length, 0);
+    const score = hotelCount * 14 + Math.ceil(totalChars / 150) * 5;
+
+    // Keep reservation layout stable. Compact mode is a gentle fallback for dense plans.
+    if (score >= 70) {
+      return {
+        layoutMode: 'compact',
+        pdf: {
+          margin: { top: '9mm', right: '9mm', bottom: '9mm', left: '9mm' },
+          scale: 0.95,
+          preferCSSPageSize: true,
+        },
+      };
+    }
+
+    return {
+      layoutMode: 'normal',
+      pdf: {
+        margin: { top: '11mm', right: '10mm', bottom: '11mm', left: '10mm' },
+        scale: 1,
+        preferCSSPageSize: true,
+      },
+    };
+  }
+
   async generateInvoice(bookingId: string, generatedBy: string): Promise<string> {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -156,9 +225,12 @@ export class DocumentGeneratorService {
       throw new Error('Booking, client, or invoice data not found');
     }
 
+    const layout = this.pickInvoiceLayout(booking.invoice);
+
     const template = this.loadTemplate('invoice');
     const html = template({
       themeImage: this.themeImage,
+      layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
       invoice: booking.invoice,
@@ -166,7 +238,7 @@ export class DocumentGeneratorService {
     });
 
     const filename = `invoice_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
-    const filePath = await this.renderPdf(html, filename);
+    const filePath = await this.renderPdf(html, filename, layout.pdf);
 
     await prisma.generatedDocument.create({
       data: {
@@ -238,10 +310,12 @@ export class DocumentGeneratorService {
     const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
     const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
     const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+    const layout = this.pickReservationLayout(booking);
 
     const template = this.loadTemplate('reservation');
     const html = template({
       themeImage: this.themeImage,
+      layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
       hotels: booking.hotelPlan,
@@ -252,7 +326,7 @@ export class DocumentGeneratorService {
     });
 
     const filename = `reservation_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
-    const filePath = await this.renderPdf(html, filename);
+    const filePath = await this.renderPdf(html, filename, layout.pdf);
 
     await prisma.generatedDocument.create({
       data: {
