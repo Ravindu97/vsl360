@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -73,6 +73,7 @@ export function BookingCreatePage() {
     handleSubmit,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<CreateBookingForm>({
     resolver: zodResolver(createBookingSchema),
@@ -80,6 +81,44 @@ export function BookingCreatePage() {
   });
 
   const watchedValues = watch();
+  const lastAutoDepartureRef = useRef<string | null>(initialValues.departureDate || null);
+
+  useEffect(() => {
+    const arrivalDate = watchedValues.arrivalDate;
+    const numberOfDays = watchedValues.numberOfDays;
+    const currentDepartureDate = watchedValues.departureDate;
+
+    if (!arrivalDate || !numberOfDays) {
+      return;
+    }
+
+    const arrival = new Date(`${arrivalDate}T00:00:00`);
+    if (Number.isNaN(arrival.getTime())) {
+      return;
+    }
+
+    const computedDeparture = new Date(arrival);
+    computedDeparture.setDate(computedDeparture.getDate() + Math.max(0, numberOfDays - 1));
+    const nextDepartureDate = [
+      computedDeparture.getFullYear(),
+      String(computedDeparture.getMonth() + 1).padStart(2, '0'),
+      String(computedDeparture.getDate()).padStart(2, '0'),
+    ].join('-');
+
+    const shouldApplyAutoValue =
+      !currentDepartureDate ||
+      currentDepartureDate === lastAutoDepartureRef.current;
+
+    if (shouldApplyAutoValue && currentDepartureDate !== nextDepartureDate) {
+      setValue('departureDate', nextDepartureDate, { shouldDirty: true, shouldValidate: true });
+      lastAutoDepartureRef.current = nextDepartureDate;
+      return;
+    }
+
+    if (currentDepartureDate === nextDepartureDate) {
+      lastAutoDepartureRef.current = nextDepartureDate;
+    }
+  }, [setValue, watchedValues.arrivalDate, watchedValues.departureDate, watchedValues.numberOfDays]);
 
   useEffect(() => {
     saveSessionDraft(BOOKING_CREATE_DRAFT_KEY, watchedValues);
