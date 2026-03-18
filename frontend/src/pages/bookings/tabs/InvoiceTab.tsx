@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { AxiosError } from 'axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +29,22 @@ const invoiceSchema = z.object({
   balanceAmount: z.coerce.number().min(0),
   paymentNotes: z.string().optional(),
   paymentInstructions: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.advancePaid > data.totalAmount) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['advancePaid'],
+      message: 'Advance paid cannot exceed total amount.',
+    });
+  }
+
+  if (data.balanceAmount !== data.totalAmount - data.advancePaid) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['balanceAmount'],
+      message: 'Balance amount must equal total amount minus advance paid.',
+    });
+  }
 });
 
 type InvoiceForm = z.infer<typeof invoiceSchema>;
@@ -37,6 +54,7 @@ export function InvoiceTab({ booking }: Props) {
   const queryClient = useQueryClient();
   const canManage = user ? canGenerateInvoice(user.role) : false;
   const [editing, setEditing] = useState(false);
+  const [saveError, setSaveError] = useState<string>('');
 
   const adults = (booking.client ? 1 : 0) + booking.paxList.filter(p => p.type === PaxType.ADULT).length;
   const children = booking.paxList.filter(p => p.type === PaxType.CHILD).length;
@@ -65,7 +83,7 @@ export function InvoiceTab({ booking }: Props) {
       : { costPerPerson: 0, totalAmount: 0, advancePaid: 0, balanceAmount: 0 },
   });
 
-  const { setValue, watch, getValues } = form;
+  const { setValue, watch, getValues, formState: { errors } } = form;
   const watchedCost = watch('costPerPerson');
   const watchedTotal = watch('totalAmount');
   const watchedAdvance = watch('advancePaid');
@@ -78,6 +96,7 @@ export function InvoiceTab({ booking }: Props) {
     if (editing) {
       lastAutoTotalRef.current = getValues('totalAmount');
       lastAutoBalanceRef.current = getValues('balanceAmount');
+      setSaveError('');
     }
   }, [editing, getValues]);
 
@@ -112,7 +131,14 @@ export function InvoiceTab({ booking }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', booking.id] });
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+      setSaveError('');
       setEditing(false);
+    },
+    onError: (error) => {
+      const message = error instanceof AxiosError
+        ? error.response?.data?.error ?? 'Unable to save invoice.'
+        : 'Unable to save invoice.';
+      setSaveError(message);
     },
   });
 
@@ -129,6 +155,11 @@ export function InvoiceTab({ booking }: Props) {
       <CardContent>
         {editing && canManage ? (
           <form onSubmit={form.handleSubmit((d) => saveMutation.mutate(d))} className="grid gap-4 sm:grid-cols-2">
+            {saveError && (
+              <div className="sm:col-span-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {saveError}
+              </div>
+            )}
             <div className="sm:col-span-2 flex flex-wrap items-center gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
               <span className="text-xs font-medium text-muted-foreground">Guests from Pax Details:</span>
               <div className="flex flex-wrap gap-2">
@@ -141,20 +172,24 @@ export function InvoiceTab({ booking }: Props) {
             <div className="space-y-2">
               <Label>Cost Per Person (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('costPerPerson')} />
+              {errors.costPerPerson && <p className="text-xs text-red-600">{errors.costPerPerson.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Total Amount (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('totalAmount')} />
               <p className="text-xs text-muted-foreground">Auto: Cost × {totalGuests} guests</p>
+              {errors.totalAmount && <p className="text-xs text-red-600">{errors.totalAmount.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Advance Paid (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('advancePaid')} />
+              {errors.advancePaid && <p className="text-xs text-red-600">{errors.advancePaid.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Balance Amount (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('balanceAmount')} />
               <p className="text-xs text-muted-foreground">Auto: Total − Advance</p>
+              {errors.balanceAmount && <p className="text-xs text-red-600">{errors.balanceAmount.message}</p>}
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label>Payment Notes</Label>

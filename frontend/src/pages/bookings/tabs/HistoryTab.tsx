@@ -43,6 +43,7 @@ export function HistoryTab({ booking }: Props) {
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {formatDateTime(entry.createdAt)}
+                    {(entry.changedByName || entry.changedBy) && ` · ${entry.changedByName || entry.changedBy}`}
                   </p>
                   {entry.notes && <p className="text-sm mt-1">{entry.notes}</p>}
                 </div>

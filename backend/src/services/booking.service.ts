@@ -1,7 +1,38 @@
-import { BookingStatus, Role } from '@prisma/client';
 import prisma from '../config/database';
 import { generateBookingId } from '../utils/bookingIdGenerator';
 import { CreateBookingInput, UpdateBookingInput } from '../validators/booking.schema';
+
+type UserRole = 'SALES' | 'RESERVATION' | 'TRANSPORT' | 'OPS_MANAGER';
+type BookingStatusValue =
+  | 'INQUIRY_RECEIVED'
+  | 'CLIENT_PROFILE_CREATED'
+  | 'PAX_DETAILS_ADDED'
+  | 'COSTING_COMPLETED'
+  | 'SALES_CONFIRMED'
+  | 'RESERVATION_PENDING'
+  | 'RESERVATION_COMPLETED'
+  | 'TRANSPORT_PENDING'
+  | 'TRANSPORT_COMPLETED'
+  | 'DOCUMENTS_READY'
+  | 'OPS_APPROVED'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+const BOOKING_STATUS: Record<BookingStatusValue, BookingStatusValue> = {
+  INQUIRY_RECEIVED: 'INQUIRY_RECEIVED',
+  CLIENT_PROFILE_CREATED: 'CLIENT_PROFILE_CREATED',
+  PAX_DETAILS_ADDED: 'PAX_DETAILS_ADDED',
+  COSTING_COMPLETED: 'COSTING_COMPLETED',
+  SALES_CONFIRMED: 'SALES_CONFIRMED',
+  RESERVATION_PENDING: 'RESERVATION_PENDING',
+  RESERVATION_COMPLETED: 'RESERVATION_COMPLETED',
+  TRANSPORT_PENDING: 'TRANSPORT_PENDING',
+  TRANSPORT_COMPLETED: 'TRANSPORT_COMPLETED',
+  DOCUMENTS_READY: 'DOCUMENTS_READY',
+  OPS_APPROVED: 'OPS_APPROVED',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED',
+};
 
 export class BookingService {
   async create(data: CreateBookingInput, salesOwnerId: string) {
@@ -20,7 +51,7 @@ export class BookingService {
         specialCelebrations: data.specialCelebrations,
         generalNotes: data.generalNotes,
         salesOwnerId,
-        status: BookingStatus.CLIENT_PROFILE_CREATED,
+        status: BOOKING_STATUS.CLIENT_PROFILE_CREATED,
         client: {
           create: {
             name: data.client.name,
@@ -32,7 +63,7 @@ export class BookingService {
         statusHistory: {
           create: {
             fromStatus: null,
-            toStatus: BookingStatus.CLIENT_PROFILE_CREATED,
+            toStatus: BOOKING_STATUS.CLIENT_PROFILE_CREATED,
             changedBy: salesOwnerId,
             notes: 'Booking created',
           },
@@ -47,28 +78,28 @@ export class BookingService {
     return booking;
   }
 
-  async findAll(userRole: Role, userId: string, status?: string) {
+  async findAll(userRole: UserRole, userId: string, status?: string) {
     const where: any = {};
 
     // Sales people only see their own bookings
-    if (userRole === Role.SALES) {
+    if (userRole === 'SALES') {
       where.salesOwnerId = userId;
     }
 
     // Reservation/Transport see only confirmed+ bookings
-    if (userRole === Role.RESERVATION || userRole === Role.TRANSPORT) {
+    if (userRole === 'RESERVATION' || userRole === 'TRANSPORT') {
       where.status = {
         notIn: [
-          BookingStatus.INQUIRY_RECEIVED,
-          BookingStatus.CLIENT_PROFILE_CREATED,
-          BookingStatus.PAX_DETAILS_ADDED,
-          BookingStatus.COSTING_COMPLETED,
+          BOOKING_STATUS.INQUIRY_RECEIVED,
+          BOOKING_STATUS.CLIENT_PROFILE_CREATED,
+          BOOKING_STATUS.PAX_DETAILS_ADDED,
+          BOOKING_STATUS.COSTING_COMPLETED,
         ],
       };
     }
 
     if (status) {
-      where.status = status as BookingStatus;
+      where.status = status as BookingStatusValue;
     }
 
     return prisma.booking.findMany({
@@ -101,7 +132,29 @@ export class BookingService {
     });
 
     if (!booking) throw new Error('Booking not found');
-    return booking;
+
+    const changedByIds = [...new Set(
+      booking.statusHistory
+        .map((entry: { changedBy: string }) => entry.changedBy)
+        .filter((changedBy: string) => changedBy && changedBy !== 'SYSTEM')
+    )];
+
+    const users = changedByIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: changedByIds } },
+          select: { id: true, name: true },
+        })
+      : [];
+
+    const userNames = new Map(users.map((user: { id: string; name: string }) => [user.id, user.name]));
+
+    return {
+      ...booking,
+      statusHistory: booking.statusHistory.map((entry: { changedBy: string }) => ({
+        ...entry,
+        changedByName: entry.changedBy === 'SYSTEM' ? 'System' : (userNames.get(entry.changedBy) ?? entry.changedBy),
+      })),
+    };
   }
 
   async update(id: string, data: UpdateBookingInput) {
@@ -125,7 +178,7 @@ export class BookingService {
     });
   }
 
-  async updateStatus(id: string, status: BookingStatus, changedBy: string, notes?: string) {
+  async updateStatus(id: string, status: BookingStatusValue, changedBy: string, notes?: string) {
     const booking = await prisma.booking.findUnique({ where: { id } });
     if (!booking) throw new Error('Booking not found');
 
@@ -145,24 +198,24 @@ export class BookingService {
     });
 
     // Auto-check if both departments are done
-    if (status === BookingStatus.RESERVATION_COMPLETED || status === BookingStatus.TRANSPORT_COMPLETED) {
+    if (status === BOOKING_STATUS.RESERVATION_COMPLETED || status === BOOKING_STATUS.TRANSPORT_COMPLETED) {
       const refreshed = await prisma.booking.findUnique({ where: { id } });
       if (!refreshed) return updated;
 
       // Check if booking has been through both completions
       const history = await prisma.statusHistory.findMany({ where: { bookingId: id } });
-      const hasReservationComplete = history.some((h) => h.toStatus === BookingStatus.RESERVATION_COMPLETED);
-      const hasTransportComplete = history.some((h) => h.toStatus === BookingStatus.TRANSPORT_COMPLETED);
+      const hasReservationComplete = history.some((h: { toStatus: string }) => h.toStatus === BOOKING_STATUS.RESERVATION_COMPLETED);
+      const hasTransportComplete = history.some((h: { toStatus: string }) => h.toStatus === BOOKING_STATUS.TRANSPORT_COMPLETED);
 
       if (hasReservationComplete && hasTransportComplete) {
         await prisma.booking.update({
           where: { id },
           data: {
-            status: BookingStatus.DOCUMENTS_READY,
+            status: BOOKING_STATUS.DOCUMENTS_READY,
             statusHistory: {
               create: {
                 fromStatus: status,
-                toStatus: BookingStatus.DOCUMENTS_READY,
+                toStatus: BOOKING_STATUS.DOCUMENTS_READY,
                 changedBy: 'SYSTEM',
                 notes: 'Both departments completed — documents ready for generation',
               },

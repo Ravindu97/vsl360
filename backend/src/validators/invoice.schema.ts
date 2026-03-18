@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const createInvoiceSchema = z.object({
+const invoiceBaseSchema = z.object({
   costPerPerson: z.number().positive(),
   totalAmount: z.number().positive(),
   advancePaid: z.number().min(0).default(0),
@@ -9,6 +9,24 @@ export const createInvoiceSchema = z.object({
   paymentInstructions: z.string().optional(),
 });
 
-export const updateInvoiceSchema = createInvoiceSchema.partial();
+export const createInvoiceSchema = invoiceBaseSchema.superRefine((data, ctx) => {
+  if (data.advancePaid > data.totalAmount) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['advancePaid'],
+      message: 'Advance paid cannot exceed total amount',
+    });
+  }
+
+  if (data.balanceAmount !== data.totalAmount - data.advancePaid) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['balanceAmount'],
+      message: 'Balance amount must equal total amount minus advance paid',
+    });
+  }
+});
+
+export const updateInvoiceSchema = invoiceBaseSchema.partial();
 
 export type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>;

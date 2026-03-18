@@ -9,6 +9,7 @@ export const createHotelSchema = z.object({
   mealPlan: z.string().min(1, 'Meal plan is required'),
   mealPreference: z.string().optional(),
   mobilityNotes: z.string().optional(),
+  confirmationStatus: z.enum(['PENDING', 'CONFIRMED']).optional(),
   reservationNotes: z.string().optional(),
 });
 

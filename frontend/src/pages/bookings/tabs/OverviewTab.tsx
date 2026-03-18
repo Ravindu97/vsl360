@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { BookingStatus, type Booking } from '@/types';
 import { STATUS_LABELS } from '@/utils/constants';
 
@@ -110,6 +109,13 @@ export function OverviewTab({ booking }: Props) {
     if (newStatus === BookingStatus.RESERVATION_COMPLETED && (!booking.hotelPlan || booking.hotelPlan.length === 0)) {
       setValidationError('❌ Hotel reservations must be completed before marking reservation as done. Add and complete hotel bookings first.');
       return false;
+    }
+    if (newStatus === BookingStatus.RESERVATION_COMPLETED) {
+      const unconfirmedHotels = (booking.hotelPlan ?? []).filter((hotel) => hotel.confirmationStatus !== 'CONFIRMED');
+      if (unconfirmedHotels.length > 0) {
+        setValidationError(`❌ All hotel bookings must be confirmed before marking reservation as complete. ${unconfirmedHotels.length} night(s) still pending.`);
+        return false;
+      }
     }
     if (newStatus === BookingStatus.TRANSPORT_COMPLETED && !booking.transportPlan) {
       setValidationError('❌ Transport details must be added and completed before marking transport as done. Fill in transport details first.');

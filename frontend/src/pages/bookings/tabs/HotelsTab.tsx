@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Trash2, CheckCircle, Save, X, Pencil } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Save, X, Pencil, RotateCcw } from 'lucide-react';
 import { hotelsApi } from '@/api/endpoints.api';
 import { useAuthStore } from '@/store/authStore';
 import { canManageHotels } from '@/utils/permissions';
@@ -125,6 +125,15 @@ export function HotelsTab({ booking }: Props) {
 
   const confirmHotel = useMutation({
     mutationFn: (hotelId: string) => hotelsApi.confirm(booking.id, hotelId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hotels', booking.id] });
+      queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+    },
+  });
+
+  const updateHotelStatus = useMutation({
+    mutationFn: ({ hotelId, confirmationStatus }: { hotelId: string; confirmationStatus: 'PENDING' | 'CONFIRMED' }) =>
+      hotelsApi.update(booking.id, hotelId, { confirmationStatus }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels', booking.id] });
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
@@ -331,6 +340,16 @@ export function HotelsTab({ booking }: Props) {
                             {h.confirmationStatus !== 'CONFIRMED' && (
                               <Button variant="ghost" size="icon" onClick={() => confirmHotel.mutate(h.id)} title="Confirm">
                                 <CheckCircle className="h-4 w-4 text-green-600" />
+                              </Button>
+                            )}
+                            {h.confirmationStatus === 'CONFIRMED' && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => updateHotelStatus.mutate({ hotelId: h.id, confirmationStatus: 'PENDING' })}
+                                title="Mark as pending"
+                              >
+                                <RotateCcw className="h-4 w-4 text-amber-600" />
                               </Button>
                             )}
                             <Button variant="ghost" size="icon" onClick={() => deleteHotel.mutate(h.id)}>

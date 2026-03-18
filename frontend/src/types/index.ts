@@ -147,6 +147,7 @@ export interface StatusHistory {
   fromStatus?: BookingStatus;
   toStatus: BookingStatus;
   changedBy: string;
+  changedByName?: string;
   notes?: string;
   createdAt: string;
 }
