@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi } from '@/api/bookings.api';
 import { useAuthStore } from '@/store/authStore';
@@ -25,6 +25,8 @@ const statusTransitions: Partial<Record<BookingStatus, BookingStatus[]>> = {
   [BookingStatus.SALES_CONFIRMED]: [BookingStatus.RESERVATION_PENDING, BookingStatus.TRANSPORT_PENDING],
   [BookingStatus.RESERVATION_PENDING]: [BookingStatus.RESERVATION_COMPLETED],
   [BookingStatus.TRANSPORT_PENDING]: [BookingStatus.TRANSPORT_COMPLETED],
+  [BookingStatus.RESERVATION_COMPLETED]: [BookingStatus.TRANSPORT_PENDING],
+  [BookingStatus.TRANSPORT_COMPLETED]: [BookingStatus.RESERVATION_PENDING],
   [BookingStatus.DOCUMENTS_READY]: [BookingStatus.OPS_APPROVED],
   [BookingStatus.OPS_APPROVED]: [BookingStatus.COMPLETED],
 };
@@ -34,9 +36,31 @@ export function OverviewTab({ booking }: Props) {
   const queryClient = useQueryClient();
   const [newStatus, setNewStatus] = useState('');
   const [notes, setNotes] = useState('');
+  const [validationError, setValidationError] = useState<string>('');
 
-  const nextStatuses = statusTransitions[booking.status] ?? [];
+  // Clear validation error when status changes
+  useEffect(() => {
+    setValidationError('');
+  }, [newStatus]);
+
+  let nextStatuses = statusTransitions[booking.status] ?? [];
   const canChangeStatus = user && (canEditBooking(user.role) || canApproveDocuments(user.role));
+
+  // Add DOCUMENTS_READY only if both RESERVATION_COMPLETED and TRANSPORT_COMPLETED are in history
+  const hasReservationCompleted = booking.statusHistory.some(
+    (h) => h.toStatus === BookingStatus.RESERVATION_COMPLETED
+  );
+  const hasTransportCompleted = booking.statusHistory.some(
+    (h) => h.toStatus === BookingStatus.TRANSPORT_COMPLETED
+  );
+  if (
+    (booking.status === BookingStatus.RESERVATION_COMPLETED ||
+      booking.status === BookingStatus.TRANSPORT_COMPLETED) &&
+    hasReservationCompleted &&
+    hasTransportCompleted
+  ) {
+    nextStatuses = [...nextStatuses, BookingStatus.DOCUMENTS_READY];
+  }
 
   const statusMutation = useMutation({
     mutationFn: () => bookingsApi.updateStatus(booking.id, newStatus, notes || undefined),
@@ -44,8 +68,36 @@ export function OverviewTab({ booking }: Props) {
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
       setNewStatus('');
       setNotes('');
+      setValidationError('');
     },
   });
+
+  // Validate before allowing status transition
+  const canProceedWithStatusChange = () => {
+    if (newStatus === BookingStatus.COSTING_COMPLETED && !booking.invoice) {
+      setValidationError('❌ Invoice must be created before marking costing as completed. Create an invoice first.');
+      return false;
+    }
+    if (newStatus === BookingStatus.SALES_CONFIRMED && !booking.invoice) {
+      setValidationError('❌ Invoice must be created before confirming sales. Create an invoice first.');
+      return false;
+    }
+    if (newStatus === BookingStatus.RESERVATION_COMPLETED && (!booking.hotelPlan || booking.hotelPlan.length === 0)) {
+      setValidationError('❌ Hotel reservations must be completed before marking reservation as done. Add and complete hotel bookings first.');
+      return false;
+    }
+    if (newStatus === BookingStatus.TRANSPORT_COMPLETED && !booking.transportPlan) {
+      setValidationError('❌ Transport details must be added and completed before marking transport as done. Fill in transport details first.');
+      return false;
+    }
+    return true;
+  };
+
+  const handleStatusUpdate = () => {
+    if (canProceedWithStatusChange()) {
+      statusMutation.mutate();
+    }
+  };
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -97,9 +149,14 @@ export function OverviewTab({ booking }: Props) {
               <Label>Notes (optional)</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add a note about this status change..." />
             </div>
+            {validationError && (
+              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {validationError}
+              </div>
+            )}
             <Button
               disabled={!newStatus || statusMutation.isPending}
-              onClick={() => statusMutation.mutate()}
+              onClick={handleStatusUpdate}
             >
               {statusMutation.isPending ? 'Updating...' : 'Update Status'}
             </Button>
