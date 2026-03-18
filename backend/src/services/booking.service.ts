@@ -179,8 +179,40 @@ export class BookingService {
   }
 
   async updateStatus(id: string, status: BookingStatusValue, changedBy: string, notes?: string) {
-    const booking = await prisma.booking.findUnique({ where: { id } });
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      include: {
+        invoice: { select: { id: true } },
+        hotelPlan: { select: { confirmationStatus: true } },
+        transportPlan: { select: { id: true } },
+      },
+    });
     if (!booking) throw new Error('Booking not found');
+
+    // Server-side guardrails: enforce required data regardless of UI state/cache/reverts.
+    if ((status === BOOKING_STATUS.COSTING_COMPLETED || status === BOOKING_STATUS.SALES_CONFIRMED) && !booking.invoice) {
+      throw new Error('Invoice must be created before moving to this status');
+    }
+
+    if (status === BOOKING_STATUS.RESERVATION_COMPLETED) {
+      if (!booking.hotelPlan || booking.hotelPlan.length === 0) {
+        throw new Error('Hotel reservations must exist before marking reservation as completed');
+      }
+
+      const unconfirmedHotelCount = booking.hotelPlan.filter(
+        (hotel: { confirmationStatus: string }) => hotel.confirmationStatus !== 'CONFIRMED'
+      ).length;
+
+      if (unconfirmedHotelCount > 0) {
+        throw new Error(
+          `All hotel bookings must be confirmed before marking reservation as completed. ${unconfirmedHotelCount} night(s) still pending.`
+        );
+      }
+    }
+
+    if (status === BOOKING_STATUS.TRANSPORT_COMPLETED && !booking.transportPlan) {
+      throw new Error('Transport details must be added before marking transport as completed');
+    }
 
     const updated = await prisma.booking.update({
       where: { id },

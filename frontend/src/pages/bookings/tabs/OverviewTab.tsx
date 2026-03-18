@@ -45,30 +45,47 @@ export function OverviewTab({ booking }: Props) {
   let nextStatuses = statusTransitions[booking.status] ?? [];
   const canChangeStatus = user && (canEditBooking(user.role) || canApproveDocuments(user.role));
 
+  const isStatusAllowedByRole = (status: BookingStatus) => {
+    if (!user) return false;
+
+    if (
+      status === BookingStatus.RESERVATION_PENDING ||
+      status === BookingStatus.RESERVATION_COMPLETED
+    ) {
+      return canAdvanceToReservationStatuses(user.role);
+    }
+
+    if (
+      status === BookingStatus.TRANSPORT_PENDING ||
+      status === BookingStatus.TRANSPORT_COMPLETED
+    ) {
+      return canAdvanceToTransportStatuses(user.role);
+    }
+
+    if (status === BookingStatus.COSTING_COMPLETED || status === BookingStatus.SALES_CONFIRMED) {
+      return canAdvanceToCosting(user.role);
+    }
+
+    if (status === BookingStatus.DOCUMENTS_READY) {
+      return canAdvanceToDocumentsReady(user.role);
+    }
+
+    return true;
+  };
+
   // Filter statuses based on user role
   if (user) {
-    nextStatuses = nextStatuses.filter((status) => {
-      if (
-        status === BookingStatus.RESERVATION_PENDING ||
-        status === BookingStatus.RESERVATION_COMPLETED
-      ) {
-        return canAdvanceToReservationStatuses(user.role);
-      }
-      if (
-        status === BookingStatus.TRANSPORT_PENDING ||
-        status === BookingStatus.TRANSPORT_COMPLETED
-      ) {
-        return canAdvanceToTransportStatuses(user.role);
-      }
-      if (status === BookingStatus.COSTING_COMPLETED || status === BookingStatus.SALES_CONFIRMED) {
-        return canAdvanceToCosting(user.role);
-      }
-      if (status === BookingStatus.DOCUMENTS_READY) {
-        return canAdvanceToDocumentsReady(user.role);
-      }
-      return true;
-    });
+    nextStatuses = nextStatuses.filter((status) => isStatusAllowedByRole(status));
   }
+
+  // Revert one stage: allow going back to the immediate previous status from audit history.
+  const latestTransitionIntoCurrent = booking.statusHistory.find(
+    (entry) => entry.toStatus === booking.status && Boolean(entry.fromStatus)
+  );
+  const previousStatus = latestTransitionIntoCurrent?.fromStatus;
+  const revertStatus = previousStatus && user && isStatusAllowedByRole(previousStatus)
+    ? previousStatus
+    : undefined;
 
   // Add DOCUMENTS_READY only if both RESERVATION_COMPLETED and TRANSPORT_COMPLETED are in history
   const hasReservationCompleted = booking.statusHistory.some(
@@ -159,7 +176,7 @@ export function OverviewTab({ booking }: Props) {
         </CardContent>
       </Card>
 
-      {canChangeStatus && nextStatuses.length > 0 && (
+      {canChangeStatus && (nextStatuses.length > 0 || Boolean(revertStatus)) && (
         <Card className="lg:col-span-2">
           <CardHeader><CardTitle>Update Status</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -172,6 +189,11 @@ export function OverviewTab({ booking }: Props) {
                   {nextStatuses.map((s) => (
                     <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
                   ))}
+                  {revertStatus && (
+                    <SelectItem value={revertStatus}>
+                      {`Revert to ${STATUS_LABELS[revertStatus]}`}
+                    </SelectItem>
+                  )}
                   <SelectItem value={BookingStatus.CANCELLED}>Cancelled</SelectItem>
                 </SelectContent>
               </Select>
