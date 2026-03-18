@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, Trash2, CheckCircle, Save, X } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Save, X, Pencil } from 'lucide-react';
 import { hotelsApi } from '@/api/endpoints.api';
 import { useAuthStore } from '@/store/authStore';
 import { canManageHotels } from '@/utils/permissions';
@@ -36,22 +36,57 @@ const hotelSchema = z.object({
 
 type HotelForm = z.infer<typeof hotelSchema>;
 
+function getInitialNightCount(booking: Booking): number {
+  if (booking.arrivalDate && booking.departureDate) {
+    const arrival = new Date(`${booking.arrivalDate}T00:00:00`);
+    const departure = new Date(`${booking.departureDate}T00:00:00`);
+    if (!Number.isNaN(arrival.getTime()) && !Number.isNaN(departure.getTime())) {
+      const diffDays = Math.round((departure.getTime() - arrival.getTime()) / (1000 * 60 * 60 * 24));
+      return Math.max(0, diffDays);
+    }
+  }
+
+  return Math.max(0, booking.numberOfDays - 1);
+}
+
+function buildInitialHotelDraft(nightNumber: number): HotelForm {
+  return {
+    nightNumber,
+    hotelName: 'To Be Confirmed',
+    roomCategory: 'To Be Confirmed',
+    numberOfRooms: 1,
+    roomPreference: '',
+    mealPlan: 'BB',
+    mealPreference: '',
+    mobilityNotes: '',
+    reservationNotes: '',
+  };
+}
+
 export function HotelsTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [adding, setAdding] = useState(false);
+  const [editingHotelId, setEditingHotelId] = useState<string | null>(null);
+  const hasSeededRef = useRef(false);
   const canManage = user ? canManageHotels(user.role) : false;
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['hotels', booking.id],
     queryFn: () => hotelsApi.list(booking.id),
   });
 
-  const hotels: HotelBooking[] = data?.data ?? booking.hotelPlan ?? [];
+  const hotels = useMemo<HotelBooking[]>(() => data?.data ?? booking.hotelPlan ?? [], [booking.hotelPlan, data?.data]);
+  const initialNightCount = useMemo(() => getInitialNightCount(booking), [booking]);
 
   const form = useForm<HotelForm>({
     resolver: zodResolver(hotelSchema),
     defaultValues: { nightNumber: (hotels.length + 1), numberOfRooms: 1, mealPlan: 'BB' },
+  });
+
+  const editForm = useForm<HotelForm>({
+    resolver: zodResolver(hotelSchema),
+    defaultValues: buildInitialHotelDraft(1),
   });
 
   const createHotel = useMutation({
@@ -61,6 +96,30 @@ export function HotelsTab({ booking }: Props) {
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
       form.reset({ nightNumber: hotels.length + 2, numberOfRooms: 1, mealPlan: 'BB' });
       setAdding(false);
+    },
+  });
+
+  const updateHotel = useMutation({
+    mutationFn: ({ hotelId, data }: { hotelId: string; data: HotelForm }) => hotelsApi.update(booking.id, hotelId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hotels', booking.id] });
+      queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+      setEditingHotelId(null);
+    },
+  });
+
+  const seedHotels = useMutation({
+    mutationFn: async () => {
+      for (let nightNumber = 1; nightNumber <= initialNightCount; nightNumber += 1) {
+        await hotelsApi.create(booking.id, buildInitialHotelDraft(nightNumber));
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['hotels', booking.id] });
+      queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+    },
+    onSettled: () => {
+      hasSeededRef.current = true;
     },
   });
 
@@ -79,6 +138,30 @@ export function HotelsTab({ booking }: Props) {
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
     },
   });
+
+  useEffect(() => {
+    if (isLoading || !canManage || hotels.length > 0 || initialNightCount <= 0 || seedHotels.isPending || hasSeededRef.current) {
+      return;
+    }
+
+    hasSeededRef.current = true;
+    seedHotels.mutate();
+  }, [canManage, hotels.length, initialNightCount, isLoading, seedHotels]);
+
+  const startEditing = (hotel: HotelBooking) => {
+    editForm.reset({
+      nightNumber: hotel.nightNumber,
+      hotelName: hotel.hotelName,
+      roomCategory: hotel.roomCategory,
+      numberOfRooms: hotel.numberOfRooms,
+      roomPreference: hotel.roomPreference ?? '',
+      mealPlan: hotel.mealPlan,
+      mealPreference: hotel.mealPreference ?? '',
+      mobilityNotes: hotel.mobilityNotes ?? '',
+      reservationNotes: hotel.reservationNotes ?? '',
+    });
+    setEditingHotelId(hotel.id);
+  };
 
   return (
     <Card>
@@ -144,8 +227,17 @@ export function HotelsTab({ booking }: Props) {
           </form>
         )}
 
+        {seedHotels.isPending && (
+          <div className="mb-4 rounded-md border border-dashed px-4 py-3 text-sm text-muted-foreground">
+            Generating {initialNightCount} initial hotel night{initialNightCount === 1 ? '' : 's'} from the booking dates.
+          </div>
+        )}
+
         {hotels.length === 0 ? (
-          <EmptyState title="No hotel bookings" description="Add hotel nights for this booking" />
+          <EmptyState
+            title="No hotel bookings"
+            description={initialNightCount > 0 ? 'Hotel nights will be auto-created from the trip dates, then you can edit them.' : 'Add hotel nights for this booking'}
+          />
         ) : (
           <Table>
             <TableHeader>
@@ -163,32 +255,92 @@ export function HotelsTab({ booking }: Props) {
               {hotels
                 .sort((a, b) => a.nightNumber - b.nightNumber)
                 .map((h) => (
-                  <TableRow key={h.id}>
-                    <TableCell>{h.nightNumber}</TableCell>
-                    <TableCell className="font-medium">{h.hotelName}</TableCell>
-                    <TableCell>{h.roomCategory}</TableCell>
-                    <TableCell>{h.numberOfRooms}</TableCell>
-                    <TableCell>{MEAL_PLAN_LABELS[h.mealPlan] || h.mealPlan}</TableCell>
-                    <TableCell>
-                      <Badge variant={h.confirmationStatus === 'CONFIRMED' ? 'default' : 'secondary'}>
-                        {h.confirmationStatus}
-                      </Badge>
-                    </TableCell>
-                    {canManage && (
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          {h.confirmationStatus !== 'CONFIRMED' && (
-                            <Button variant="ghost" size="icon" onClick={() => confirmHotel.mutate(h.id)} title="Confirm">
-                              <CheckCircle className="h-4 w-4 text-green-600" />
+                  editingHotelId === h.id ? (
+                    <TableRow key={h.id}>
+                      <TableCell colSpan={canManage ? 7 : 6}>
+                        <form onSubmit={editForm.handleSubmit((data) => updateHotel.mutate({ hotelId: h.id, data }))} className="grid gap-3 rounded-md border p-4 sm:grid-cols-3">
+                          <div className="space-y-1">
+                            <Label>Night # *</Label>
+                            <Input type="number" {...editForm.register('nightNumber')} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Hotel Name *</Label>
+                            <Input {...editForm.register('hotelName')} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Room Category *</Label>
+                            <Input {...editForm.register('roomCategory')} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Rooms *</Label>
+                            <Input type="number" min={1} {...editForm.register('numberOfRooms')} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Meal Plan *</Label>
+                            <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm" {...editForm.register('mealPlan')}>
+                              {Object.entries(MEAL_PLAN_LABELS).map(([k, v]) => (
+                                <option key={k} value={k}>{v}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Room Preference</Label>
+                            <Input {...editForm.register('roomPreference')} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Meal Preference</Label>
+                            <Input {...editForm.register('mealPreference')} />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Mobility Notes</Label>
+                            <Input {...editForm.register('mobilityNotes')} />
+                          </div>
+                          <div className="space-y-1 sm:col-span-3">
+                            <Label>Reservation Notes</Label>
+                            <Textarea {...editForm.register('reservationNotes')} />
+                          </div>
+                          <div className="sm:col-span-3 flex gap-2">
+                            <Button type="submit" size="sm" disabled={updateHotel.isPending}>
+                              <Save className="mr-1 h-3 w-3" /> Save Changes
                             </Button>
-                          )}
-                          <Button variant="ghost" size="icon" onClick={() => deleteHotel.mutate(h.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
+                            <Button type="button" variant="outline" size="sm" onClick={() => setEditingHotelId(null)}>
+                              <X className="mr-1 h-3 w-3" /> Cancel
+                            </Button>
+                          </div>
+                        </form>
                       </TableCell>
-                    )}
-                  </TableRow>
+                    </TableRow>
+                  ) : (
+                    <TableRow key={h.id}>
+                      <TableCell>{h.nightNumber}</TableCell>
+                      <TableCell className="font-medium">{h.hotelName}</TableCell>
+                      <TableCell>{h.roomCategory}</TableCell>
+                      <TableCell>{h.numberOfRooms}</TableCell>
+                      <TableCell>{MEAL_PLAN_LABELS[h.mealPlan] || h.mealPlan}</TableCell>
+                      <TableCell>
+                        <Badge variant={h.confirmationStatus === 'CONFIRMED' ? 'default' : 'secondary'}>
+                          {h.confirmationStatus}
+                        </Badge>
+                      </TableCell>
+                      {canManage && (
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => startEditing(h)} title="Edit">
+                              <Pencil className="h-4 w-4 text-slate-600" />
+                            </Button>
+                            {h.confirmationStatus !== 'CONFIRMED' && (
+                              <Button variant="ghost" size="icon" onClick={() => confirmHotel.mutate(h.id)} title="Confirm">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="icon" onClick={() => deleteHotel.mutate(h.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  )
                 ))}
             </TableBody>
           </Table>

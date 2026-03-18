@@ -29,7 +29,7 @@
       border: 1px solid #dde2ea;
       border-radius: 10px;
       overflow: hidden;
-      min-height: calc(297mm - 24mm);
+      height: calc(297mm - 28mm);
       background: #f5f6f8;
       background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');
       background-size: cover;
@@ -38,15 +38,15 @@
       position: relative;
     }
     .cover-overlay {
-      min-height: calc(297mm - 24mm);
+      height: calc(297mm - 28mm);
       background: linear-gradient(180deg, rgba(248, 249, 251, 0.08) 0%, rgba(248, 249, 251, 0.78) 34%, rgba(248, 249, 251, 0.95) 100%);
-      padding: 0 28px 28px;
+      padding: 0 24px 24px;
       display: flex;
       flex-direction: column;
     }
     .brand-emblem {
-      width: 270px;
-      height: 146px;
+      width: 238px;
+      height: 130px;
       margin: 0 auto 6px;
       background: #f8f9fb;
       border-radius: 0 0 140px 140px;
@@ -58,49 +58,73 @@
       box-shadow: 0 8px 20px rgba(34, 46, 60, 0.06);
     }
     .brand-emblem img {
-      max-width: 185px;
-      max-height: 110px;
+      max-width: 162px;
+      max-height: 96px;
       object-fit: contain;
     }
     .cover-title {
       text-align: center;
-      margin: 12px 0 18px;
+      margin: 10px 0 10px;
       font-family: 'Alegros', Georgia, serif;
-      font-size: 62px;
-      letter-spacing: 0.8px;
+      font-size: 50px;
+      letter-spacing: 0.4px;
       color: #3a2f2d;
       text-transform: uppercase;
       line-height: 1;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
     }
+    .cover-meta {
+      margin: 0 auto 14px;
+      padding: 7px 14px;
+      border: 1px solid rgba(115, 104, 94, 0.18);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.56);
+      color: #534845;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
 
-    .cover-section { margin-bottom: 14px; }
+    .cover-section { margin-bottom: 12px; }
     .cover-section-title {
       background: var(--bar);
       color: #ffffff;
-      font-size: 19px;
+      font-size: 17px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      padding: 8px 12px;
+      padding: 7px 11px;
     }
 
     .overview-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px 24px;
+      gap: 12px 18px;
       background: rgba(250, 250, 250, 0.82);
       border: 1px solid #d4d8dd;
       border-top: 0;
-      padding: 12px;
+      padding: 10px 11px;
     }
-    .overview-column { display: grid; gap: 7px; }
+    .overview-column { display: grid; gap: 6px; }
+    .cover-panel {
+      background: rgba(250, 250, 250, 0.82);
+      border: 1px solid #d4d8dd;
+      border-top: 0;
+      padding: 10px 11px;
+    }
+    .cover-panel-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+    }
     .kv {
       display: grid;
-      grid-template-columns: 136px 14px 1fr;
+      grid-template-columns: 122px 12px 1fr;
       align-items: baseline;
       gap: 2px;
-      font-size: 13px;
+      font-size: 12px;
     }
     .kv .k { font-weight: 700; color: #362f2f; }
     .kv .sep { text-align: center; color: #4f4949; }
@@ -112,15 +136,15 @@
       border: 1px solid #d1d6de;
       border-top: 0;
       background: rgba(250, 250, 250, 0.86);
-      font-size: 13px;
+      font-size: 12px;
     }
     .accommodation-table td {
       border: 1px solid #b8bec8;
-      padding: 9px 10px;
+      padding: 8px 9px;
       vertical-align: middle;
     }
     .accommodation-table td.night {
-      width: 128px;
+      width: 110px;
       font-weight: 700;
       text-align: center;
       background: #d9ceba;
@@ -136,7 +160,6 @@
       display: flex;
       flex-direction: column;
     }
-    .details-page { page-break-before: always; }
     .content { flex: 1; }
     .header { text-align: center; border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 16px; }
     .logo { font-family: 'Alegros', Georgia, serif; font-size: 30px; font-weight: 700; color: var(--ocean-blue); }
@@ -183,13 +206,16 @@
     .footer .brand { font-family: 'Alegros', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
 
     body.compact { font-size: 12px; line-height: 1.42; }
-    body.compact .cover-title { font-size: 55px; margin: 10px 0 14px; }
-    body.compact .brand-emblem { width: 252px; height: 136px; }
-    body.compact .cover-section-title { font-size: 17px; }
-    body.compact .overview-grid { gap: 12px 18px; padding: 10px; }
-    body.compact .kv { grid-template-columns: 124px 12px 1fr; font-size: 12px; }
+    body.compact .cover-title { font-size: 44px; margin: 8px 0 8px; }
+    body.compact .cover-meta { margin-bottom: 12px; font-size: 11.5px; padding: 6px 12px; }
+    body.compact .brand-emblem { width: 224px; height: 122px; }
+    body.compact .cover-section-title { font-size: 16px; }
+    body.compact .overview-grid { gap: 10px 14px; padding: 9px 10px; }
+    body.compact .cover-panel { padding: 9px 10px; }
+    body.compact .cover-panel-grid { gap: 10px 14px; }
+    body.compact .kv { grid-template-columns: 112px 10px 1fr; font-size: 11.5px; }
     body.compact .accommodation-table { font-size: 12px; }
-    body.compact .accommodation-table td { padding: 7px 8px; }
+    body.compact .accommodation-table td { padding: 6px 7px; }
 
     body.compact .page { padding: 14px; }
     body.compact .header { padding-bottom: 11px; margin-bottom: 12px; }
@@ -226,23 +252,47 @@
 
       <h1 class="cover-title">Travel Itinerary</h1>
 
+      <div class="cover-meta">
+        {{formatDate booking.arrivalDate}} to {{formatDate booking.departureDate}} | {{booking.numberOfDays}} Days | {{totalGuests}} Guests
+      </div>
+
       <div class="cover-section">
         <div class="cover-section-title">Trip Overview</div>
         <div class="overview-grid">
           <div class="overview-column">
-            <div class="kv"><span class="k">Group Name</span><span class="sep">:</span><span class="v">{{client.name}}</span></div>
-            <div class="kv"><span class="k">No Of Pax</span><span class="sep">:</span><span class="v">{{totalGuests}} Guests</span></div>
-            <div class="kv"><span class="k">No Of Rooms</span><span class="sep">:</span><span class="v">{{roomNights}} Room Nights</span></div>
-            <div class="kv"><span class="k">Meal Plan</span><span class="sep">:</span><span class="v">{{#if hotels.0.mealPlan}}{{titleCase hotels.0.mealPlan}}{{else}}As Confirmed{{/if}}</span></div>
+            <div class="kv"><span class="k">Lead Guest</span><span class="sep">:</span><span class="v">{{client.name}}</span></div>
+            <div class="kv"><span class="k">Duration</span><span class="sep">:</span><span class="v">{{booking.numberOfDays}} Days</span></div>
+            <div class="kv"><span class="k">Guest Count</span><span class="sep">:</span><span class="v">{{totalGuests}} Guests</span></div>
+            <div class="kv"><span class="k">Stay Plan</span><span class="sep">:</span><span class="v">{{roomNights}} Night Stops</span></div>
           </div>
           <div class="overview-column">
             <div class="kv"><span class="k">Travel Dates</span><span class="sep">:</span><span class="v">{{formatDate booking.arrivalDate}} to {{formatDate booking.departureDate}}</span></div>
-            <div class="kv"><span class="k">Pick Up Point</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupLocation}}{{transport.arrivalPickupLocation}}{{else}}To Be Confirmed{{/if}}</span></div>
-            <div class="kv"><span class="k">Transfer Type</span><span class="sep">:</span><span class="v">{{#if transport.vehicleModel}}{{transport.vehicleModel}}{{else}}Private Transfer{{/if}}</span></div>
-            <div class="kv"><span class="k">Reservation No</span><span class="sep">:</span><span class="v">{{booking.bookingId}}</span></div>
+            <div class="kv"><span class="k">Booking Ref</span><span class="sep">:</span><span class="v">{{booking.bookingId}}</span></div>
+            <div class="kv"><span class="k">Meal Plan</span><span class="sep">:</span><span class="v">{{#if hotels.0.mealPlan}}{{titleCase hotels.0.mealPlan}}{{else}}As Confirmed{{/if}}</span></div>
+            <div class="kv"><span class="k">Document Type</span><span class="sep">:</span><span class="v">Private Journey Itinerary</span></div>
           </div>
         </div>
       </div>
+
+      {{#if transport}}
+      <div class="cover-section">
+        <div class="cover-section-title">Transport Details</div>
+        <div class="cover-panel">
+          <div class="cover-panel-grid">
+            <div class="overview-column">
+              <div class="kv"><span class="k">Arrival Point</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupLocation}}{{transport.arrivalPickupLocation}}{{else}}To Be Confirmed{{/if}}</span></div>
+              <div class="kv"><span class="k">Arrival Time</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupTime}}{{transport.arrivalPickupTime}}{{else}}To Be Confirmed{{/if}}</span></div>
+              <div class="kv"><span class="k">Driver</span><span class="sep">:</span><span class="v">{{#if transport.driverName}}{{transport.driverName}}{{else}}Assigned Closer To Arrival{{/if}}</span></div>
+            </div>
+            <div class="overview-column">
+              <div class="kv"><span class="k">Departure Point</span><span class="sep">:</span><span class="v">{{#if transport.departureDropLocation}}{{transport.departureDropLocation}}{{else}}To Be Confirmed{{/if}}</span></div>
+              <div class="kv"><span class="k">Departure Time</span><span class="sep">:</span><span class="v">{{#if transport.departureDropTime}}{{transport.departureDropTime}}{{else}}To Be Confirmed{{/if}}</span></div>
+              <div class="kv"><span class="k">Vehicle</span><span class="sep">:</span><span class="v">{{#if transport.vehicleModel}}{{transport.vehicleModel}}{{else}}Private Transfer{{/if}}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {{/if}}
 
       <div class="cover-section">
         <div class="cover-section-title">Accommodation (On {{#if hotels.0.mealPlan}}{{titleCase hotels.0.mealPlan}}{{else}}Confirmed Basis{{/if}})</div>
