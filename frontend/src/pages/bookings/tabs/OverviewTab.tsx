@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi } from '@/api/bookings.api';
 import { useAuthStore } from '@/store/authStore';
-import { canEditBooking, canApproveDocuments } from '@/utils/permissions';
+import { canEditBooking, canApproveDocuments, canAdvanceToReservationStatuses, canAdvanceToTransportStatuses, canAdvanceToCosting, canAdvanceToDocumentsReady } from '@/utils/permissions';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,31 @@ export function OverviewTab({ booking }: Props) {
 
   let nextStatuses = statusTransitions[booking.status] ?? [];
   const canChangeStatus = user && (canEditBooking(user.role) || canApproveDocuments(user.role));
+
+  // Filter statuses based on user role
+  if (user) {
+    nextStatuses = nextStatuses.filter((status) => {
+      if (
+        status === BookingStatus.RESERVATION_PENDING ||
+        status === BookingStatus.RESERVATION_COMPLETED
+      ) {
+        return canAdvanceToReservationStatuses(user.role);
+      }
+      if (
+        status === BookingStatus.TRANSPORT_PENDING ||
+        status === BookingStatus.TRANSPORT_COMPLETED
+      ) {
+        return canAdvanceToTransportStatuses(user.role);
+      }
+      if (status === BookingStatus.COSTING_COMPLETED || status === BookingStatus.SALES_CONFIRMED) {
+        return canAdvanceToCosting(user.role);
+      }
+      if (status === BookingStatus.DOCUMENTS_READY) {
+        return canAdvanceToDocumentsReady(user.role);
+      }
+      return true;
+    });
+  }
 
   // Add DOCUMENTS_READY only if both RESERVATION_COMPLETED and TRANSPORT_COMPLETED are in history
   const hasReservationCompleted = booking.statusHistory.some(
