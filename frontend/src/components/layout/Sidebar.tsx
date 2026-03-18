@@ -4,10 +4,8 @@ import {
   BookOpen,
   Users,
   BarChart3,
-  Globe,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { canManageUsers } from '@/utils/permissions';
 import { cn } from '@/lib/utils';
 import { Role } from '@/types';
 
@@ -28,9 +26,12 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-background">
-      <div className="flex h-14 items-center gap-2 border-b px-4">
-        <Globe className="h-6 w-6 text-primary" />
-        <span className="text-lg font-bold">VSL 360</span>
+      <div className="flex h-20 items-center border-b px-4">
+        <img
+          src="/assets/logo.png"
+          alt="VSL 360 logo"
+          className="h-14 w-auto origin-left scale-125 object-contain"
+        />
       </div>
       <nav className="flex-1 space-y-1 p-3">
         {visibleNav.map((item) => (
