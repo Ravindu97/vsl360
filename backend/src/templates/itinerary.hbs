@@ -12,9 +12,121 @@
       --paper: #f0f0f0;
       --ink: #1f2933;
       --muted: #687283;
+      --bar: #3a2d2c;
+      --line: #cfd5dd;
     }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12.5px; line-height: 1.5; background: var(--paper); }
+    body {
+      font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif;
+      color: var(--ink);
+      font-size: 12.5px;
+      line-height: 1.5;
+      background: var(--paper);
+    }
+
+    .cover-page {
+      border: 1px solid #dde2ea;
+      border-radius: 10px;
+      overflow: hidden;
+      min-height: calc(297mm - 24mm);
+      background: #f5f6f8;
+      background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');
+      background-size: cover;
+      background-position: center top;
+      page-break-inside: avoid;
+      position: relative;
+    }
+    .cover-overlay {
+      min-height: calc(297mm - 24mm);
+      background: linear-gradient(180deg, rgba(248, 249, 251, 0.08) 0%, rgba(248, 249, 251, 0.78) 34%, rgba(248, 249, 251, 0.95) 100%);
+      padding: 0 28px 28px;
+      display: flex;
+      flex-direction: column;
+    }
+    .brand-emblem {
+      width: 270px;
+      height: 146px;
+      margin: 0 auto 6px;
+      background: #f8f9fb;
+      border-radius: 0 0 140px 140px;
+      border: 1px solid rgba(209, 177, 120, 0.45);
+      border-top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(34, 46, 60, 0.06);
+    }
+    .brand-emblem img {
+      max-width: 185px;
+      max-height: 110px;
+      object-fit: contain;
+    }
+    .cover-title {
+      text-align: center;
+      margin: 12px 0 18px;
+      font-family: 'Alegros', Georgia, serif;
+      font-size: 62px;
+      letter-spacing: 0.8px;
+      color: #3a2f2d;
+      text-transform: uppercase;
+      line-height: 1;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .cover-section { margin-bottom: 14px; }
+    .cover-section-title {
+      background: var(--bar);
+      color: #ffffff;
+      font-size: 19px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 8px 12px;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px 24px;
+      background: rgba(250, 250, 250, 0.82);
+      border: 1px solid #d4d8dd;
+      border-top: 0;
+      padding: 12px;
+    }
+    .overview-column { display: grid; gap: 7px; }
+    .kv {
+      display: grid;
+      grid-template-columns: 136px 14px 1fr;
+      align-items: baseline;
+      gap: 2px;
+      font-size: 13px;
+    }
+    .kv .k { font-weight: 700; color: #362f2f; }
+    .kv .sep { text-align: center; color: #4f4949; }
+    .kv .v { color: #342f2f; }
+
+    .accommodation-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #d1d6de;
+      border-top: 0;
+      background: rgba(250, 250, 250, 0.86);
+      font-size: 13px;
+    }
+    .accommodation-table td {
+      border: 1px solid #b8bec8;
+      padding: 9px 10px;
+      vertical-align: middle;
+    }
+    .accommodation-table td.night {
+      width: 128px;
+      font-weight: 700;
+      text-align: center;
+      background: #d9ceba;
+      color: #342f2f;
+    }
+
     .page {
       border: 1px solid #dde2ea;
       border-radius: 10px;
@@ -24,6 +136,7 @@
       display: flex;
       flex-direction: column;
     }
+    .details-page { page-break-before: always; }
     .content { flex: 1; }
     .header { text-align: center; border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 16px; }
     .logo { font-family: 'Alegros', Georgia, serif; font-size: 30px; font-weight: 700; color: var(--ocean-blue); }
@@ -69,8 +182,15 @@
     .footer p { color: #5f6875; font-size: 13px; }
     .footer .brand { font-family: 'Alegros', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
 
-    /* Safe adaptive mode: mild compaction for denser itineraries */
     body.compact { font-size: 12px; line-height: 1.42; }
+    body.compact .cover-title { font-size: 55px; margin: 10px 0 14px; }
+    body.compact .brand-emblem { width: 252px; height: 136px; }
+    body.compact .cover-section-title { font-size: 17px; }
+    body.compact .overview-grid { gap: 12px 18px; padding: 10px; }
+    body.compact .kv { grid-template-columns: 124px 12px 1fr; font-size: 12px; }
+    body.compact .accommodation-table { font-size: 12px; }
+    body.compact .accommodation-table td { padding: 7px 8px; }
+
     body.compact .page { padding: 14px; }
     body.compact .header { padding-bottom: 11px; margin-bottom: 12px; }
     body.compact .logo { font-size: 27px; }
@@ -94,122 +214,170 @@
   </style>
 </head>
 <body class="{{layoutMode}}">
-  <div class="page">
-  <div class="content">
-  <div class="header">
-    <div class="logo">VSL <span>360</span></div>
-    <h1>Itinerary Story</h1>
-    <p class="subtitle">Experience Sri Lanka Completely</p>
-  </div>
+  <div class="cover-page">
+    <div class="cover-overlay">
+      <div class="brand-emblem">
+        {{#if brandLogoImage}}
+        <img src="{{brandLogoImage}}" alt="VSL 360">
+        {{else}}
+        <div class="logo">VSL <span>360</span></div>
+        {{/if}}
+      </div>
 
-  <div class="welcome">
-    <h2>Dear {{client.name}},</h2>
-    <p>Welcome to a {{booking.numberOfDays}}-day journey shaped with local character, thoughtful comfort, and meaningful moments.</p>
-    <p>{{formatDate booking.arrivalDate}} - {{formatDate booking.departureDate}}</p>
-  </div>
+      <h1 class="cover-title">Travel Itinerary</h1>
 
-  <div class="pillar">
-    <h3>Destination Discovery</h3>
-    <div class="pillar-body">
-      Your route has been curated to balance iconic scenery with quieter corners of Sri Lanka, creating a complete sense of place from arrival to departure.
-    </div>
-  </div>
+      <div class="cover-section">
+        <div class="cover-section-title">Trip Overview</div>
+        <div class="overview-grid">
+          <div class="overview-column">
+            <div class="kv"><span class="k">Group Name</span><span class="sep">:</span><span class="v">{{client.name}}</span></div>
+            <div class="kv"><span class="k">No Of Pax</span><span class="sep">:</span><span class="v">{{totalGuests}} Guests</span></div>
+            <div class="kv"><span class="k">No Of Rooms</span><span class="sep">:</span><span class="v">{{roomNights}} Room Nights</span></div>
+            <div class="kv"><span class="k">Meal Plan</span><span class="sep">:</span><span class="v">{{#if hotels.0.mealPlan}}{{titleCase hotels.0.mealPlan}}{{else}}As Confirmed{{/if}}</span></div>
+          </div>
+          <div class="overview-column">
+            <div class="kv"><span class="k">Travel Dates</span><span class="sep">:</span><span class="v">{{formatDate booking.arrivalDate}} to {{formatDate booking.departureDate}}</span></div>
+            <div class="kv"><span class="k">Pick Up Point</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupLocation}}{{transport.arrivalPickupLocation}}{{else}}To Be Confirmed{{/if}}</span></div>
+            <div class="kv"><span class="k">Transfer Type</span><span class="sep">:</span><span class="v">{{#if transport.vehicleModel}}{{transport.vehicleModel}}{{else}}Private Transfer{{/if}}</span></div>
+            <div class="kv"><span class="k">Reservation No</span><span class="sep">:</span><span class="v">{{booking.bookingId}}</span></div>
+          </div>
+        </div>
+      </div>
 
-  <div class="pillar">
-    <h3>Travel Experiences</h3>
-    <div class="pillar-body">
-      Each transfer and activity is arranged to keep your days seamless, so you can focus on the experience itself rather than the logistics.
-    </div>
-  </div>
-
-  {{#if transport}}
-  <div class="day-card">
-    <div class="day-header">Arrival Details</div>
-    <div class="day-body">
-      <div class="grid">
-        <div class="detail"><span class="label">Pickup Location</span><div class="value">{{transport.arrivalPickupLocation}}</div></div>
-        <div class="detail"><span class="label">Pickup Time</span><div class="value">{{transport.arrivalPickupTime}}</div></div>
-        <div class="detail"><span class="label">Vehicle</span><div class="value">{{transport.vehicleModel}}</div></div>
-        <div class="detail"><span class="label">Driver</span><div class="value">{{transport.driverName}} ({{transport.driverLanguage}})</div></div>
+      <div class="cover-section">
+        <div class="cover-section-title">Accommodation (On {{#if hotels.0.mealPlan}}{{titleCase hotels.0.mealPlan}}{{else}}Confirmed Basis{{/if}})</div>
+        <table class="accommodation-table">
+          <tbody>
+            {{#each hotels}}
+            <tr>
+              <td class="night">{{this.nightNumber}} Night</td>
+              <td>{{this.hotelName}}</td>
+              <td>{{this.roomCategory}}</td>
+              <td>{{#if this.mealPlan}}{{titleCase this.mealPlan}}{{else}}As Confirmed{{/if}}</td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
-  {{/if}}
 
-  {{#each days}}
-  <div class="day-card">
-    <div class="day-header">Day {{this.dayNumber}}</div>
-    <div class="day-body">
-      <div class="grid">
-        {{#if this.hotel}}
-        <div class="detail"><span class="label">Hotel</span><div class="value">{{this.hotel.hotelName}}</div></div>
-        <div class="detail"><span class="label">Room</span><div class="value">{{this.hotel.roomCategory}}</div></div>
-        <div class="detail"><span class="label">Meal Plan</span><div class="value">{{this.hotel.mealPlan}}</div></div>
-        {{#if this.hotel.mealPreference}}
-        <div class="detail"><span class="label">Meal Preference</span><div class="value">{{this.hotel.mealPreference}}</div></div>
-        {{/if}}
-        {{/if}}
-        {{#if this.transport}}
-        <div class="detail"><span class="label">Activities</span><div class="value">{{this.transport.description}}</div></div>
-        {{#if this.transport.pickupTime}}
-        <div class="detail"><span class="label">Pickup</span><div class="value">{{this.transport.pickupTime}} — {{this.transport.pickupLocation}}</div></div>
-        {{/if}}
-        {{/if}}
+  <div class="page details-page">
+    <div class="content">
+      <div class="header">
+        <div class="logo">VSL <span>360</span></div>
+        <h1>Itinerary Story</h1>
+        <p class="subtitle">Experience Sri Lanka Completely</p>
+      </div>
+
+      <div class="welcome">
+        <h2>Dear {{client.name}},</h2>
+        <p>Welcome to a {{booking.numberOfDays}}-day journey shaped with local character, thoughtful comfort, and meaningful moments.</p>
+        <p>{{formatDate booking.arrivalDate}} - {{formatDate booking.departureDate}}</p>
+      </div>
+
+      <div class="pillar">
+        <h3>Destination Discovery</h3>
+        <div class="pillar-body">
+          Your route has been curated to balance iconic scenery with quieter corners of Sri Lanka, creating a complete sense of place from arrival to departure.
+        </div>
+      </div>
+
+      <div class="pillar">
+        <h3>Travel Experiences</h3>
+        <div class="pillar-body">
+          Each transfer and activity is arranged to keep your days seamless, so you can focus on the experience itself rather than the logistics.
+        </div>
+      </div>
+
+      {{#if transport}}
+      <div class="day-card">
+        <div class="day-header">Arrival Details</div>
+        <div class="day-body">
+          <div class="grid">
+            <div class="detail"><span class="label">Pickup Location</span><div class="value">{{transport.arrivalPickupLocation}}</div></div>
+            <div class="detail"><span class="label">Pickup Time</span><div class="value">{{transport.arrivalPickupTime}}</div></div>
+            <div class="detail"><span class="label">Vehicle</span><div class="value">{{transport.vehicleModel}}</div></div>
+            <div class="detail"><span class="label">Driver</span><div class="value">{{transport.driverName}} ({{transport.driverLanguage}})</div></div>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+
+      {{#each days}}
+      <div class="day-card">
+        <div class="day-header">Day {{this.dayNumber}}</div>
+        <div class="day-body">
+          <div class="grid">
+            {{#if this.hotel}}
+            <div class="detail"><span class="label">Hotel</span><div class="value">{{this.hotel.hotelName}}</div></div>
+            <div class="detail"><span class="label">Room</span><div class="value">{{this.hotel.roomCategory}}</div></div>
+            <div class="detail"><span class="label">Meal Plan</span><div class="value">{{this.hotel.mealPlan}}</div></div>
+            {{#if this.hotel.mealPreference}}
+            <div class="detail"><span class="label">Meal Preference</span><div class="value">{{this.hotel.mealPreference}}</div></div>
+            {{/if}}
+            {{/if}}
+            {{#if this.transport}}
+            <div class="detail"><span class="label">Activities</span><div class="value">{{this.transport.description}}</div></div>
+            {{#if this.transport.pickupTime}}
+            <div class="detail"><span class="label">Pickup</span><div class="value">{{this.transport.pickupTime}} - {{this.transport.pickupLocation}}</div></div>
+            {{/if}}
+            {{/if}}
+          </div>
+        </div>
+      </div>
+      {{/each}}
+
+      <div class="pillar">
+        <h3>Luxury Stays</h3>
+        <div class="pillar-body">
+          Your stays are selected for comfort, atmosphere, and location, so each evening feels like part of the journey, not just a stop between destinations.
+        </div>
+      </div>
+
+      {{#if transport}}
+      <div class="day-card">
+        <div class="day-header">Departure Details</div>
+        <div class="day-body">
+          <div class="grid">
+            <div class="detail"><span class="label">Drop-off Location</span><div class="value">{{transport.departureDropLocation}}</div></div>
+            <div class="detail"><span class="label">Drop-off Time</span><div class="value">{{transport.departureDropTime}}</div></div>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+
+      {{#if booking.generalNotes}}
+      <div class="notes-section">
+        <h3>Important Notes</h3>
+        <p>{{booking.generalNotes}}</p>
+      </div>
+      {{/if}}
+
+      {{#if booking.specialCelebrations}}
+      <div class="notes-section" style="margin-top: 12px;">
+        <h3>Local Culture & Celebrations</h3>
+        <p>{{booking.specialCelebrations}}</p>
+      </div>
+      {{/if}}
+
+      <div class="pillar">
+        <h3>Travel Moments</h3>
+        <div class="pillar-body">
+          Look out for candid moments in warm natural light: sunrise roads, tea-country air, coastal evenings, and conversations that make the island memorable.
+        </div>
       </div>
     </div>
-  </div>
-  {{/each}}
 
-  <div class="pillar">
-    <h3>Luxury Stays</h3>
-    <div class="pillar-body">
-      Your stays are selected for comfort, atmosphere, and location, so each evening feels like part of the journey, not just a stop between destinations.
+    <div class="footer">
+      <div class="brand">VSL 360</div>
+      <p>Curated Travel Experiences</p>
+      <ul class="cta-list">
+        <li>When you are ready, we would be delighted to design your next Sri Lankan chapter.</li>
+        <li>Share your preferred dates, and we will craft another journey around your travel style.</li>
+        <li>Let us know the moments you value most, and we will shape the itinerary around them.</li>
+      </ul>
     </div>
-  </div>
-
-  {{#if transport}}
-  <div class="day-card">
-    <div class="day-header">Departure Details</div>
-    <div class="day-body">
-      <div class="grid">
-        <div class="detail"><span class="label">Drop-off Location</span><div class="value">{{transport.departureDropLocation}}</div></div>
-        <div class="detail"><span class="label">Drop-off Time</span><div class="value">{{transport.departureDropTime}}</div></div>
-      </div>
-    </div>
-  </div>
-  {{/if}}
-
-  {{#if booking.generalNotes}}
-  <div class="notes-section">
-    <h3>Important Notes</h3>
-    <p>{{booking.generalNotes}}</p>
-  </div>
-  {{/if}}
-
-  {{#if booking.specialCelebrations}}
-  <div class="notes-section" style="margin-top: 12px;">
-    <h3>Local Culture & Celebrations</h3>
-    <p>{{booking.specialCelebrations}}</p>
-  </div>
-  {{/if}}
-
-  <div class="pillar">
-    <h3>Travel Moments</h3>
-    <div class="pillar-body">
-      Look out for candid moments in warm natural light: sunrise roads, tea-country air, coastal evenings, and conversations that make the island memorable.
-    </div>
-  </div>
-  </div>
-
-  <div class="footer">
-    <div class="brand">VSL 360</div>
-    <p>Curated Travel Experiences</p>
-    <ul class="cta-list">
-      <li>When you are ready, we would be delighted to design your next Sri Lankan chapter.</li>
-      <li>Share your preferred dates, and we will craft another journey around your travel style.</li>
-      <li>Let us know the moments you value most, and we will shape the itinerary around them.</li>
-    </ul>
-  </div>
   </div>
 </body>
 </html>

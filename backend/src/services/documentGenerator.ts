@@ -36,14 +36,51 @@ export class DocumentGeneratorService {
   private templatesDir: string;
   private outputDir: string;
   private themeImage: string | null;
+  private itineraryCoverImage: string | null;
+  private brandLogoImage: string | null;
 
   constructor() {
     this.templatesDir = path.join(__dirname, '..', 'templates');
     this.outputDir = path.join(env.UPLOAD_DIR, 'documents');
     this.themeImage = this.loadThemeImage();
+    this.itineraryCoverImage = this.loadAssetImage('Template.png');
+    this.brandLogoImage = this.loadAssetImage('logo.png');
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
     }
+  }
+
+  private getImageMime(filePath: string): string {
+    const ext = path.extname(filePath).toLowerCase();
+    if (ext === '.png') return 'image/png';
+    if (ext === '.avif') return 'image/avif';
+    return 'image/jpeg';
+  }
+
+  private encodeImage(filePath: string): string {
+    const image = fs.readFileSync(filePath).toString('base64');
+    return `data:${this.getImageMime(filePath)};base64,${image}`;
+  }
+
+  private loadAssetImage(fileName: string): string | null {
+    const assetsRoot = path.join(process.cwd(), '..', 'assets');
+    const candidates = [
+      path.join(process.cwd(), 'assets', fileName),
+      path.join(assetsRoot, fileName),
+      path.join(process.cwd(), 'assets', fileName.toLowerCase()),
+      path.join(assetsRoot, fileName.toLowerCase()),
+      path.join(process.cwd(), 'assets', fileName.toUpperCase()),
+      path.join(assetsRoot, fileName.toUpperCase()),
+    ];
+
+    for (const candidate of candidates) {
+      if (!fs.existsSync(candidate)) continue;
+      logger.info(`Loaded document asset image from ${candidate}`);
+      return this.encodeImage(candidate);
+    }
+
+    logger.warn(`Asset image not found: ${fileName}`);
+    return null;
   }
 
   private loadThemeImage(): string | null {
@@ -59,11 +96,8 @@ export class DocumentGeneratorService {
     for (const candidate of candidates) {
       if (!fs.existsSync(candidate)) continue;
 
-      const ext = path.extname(candidate).toLowerCase();
-      const mime = ext === '.png' ? 'image/png' : 'image/jpeg';
-      const image = fs.readFileSync(candidate).toString('base64');
       logger.info(`Loaded document theme image from ${candidate}`);
-      return `data:${mime};base64,${image}`;
+      return this.encodeImage(candidate);
     }
 
     logger.warn('No theme image found for document templates (expected theme.jpg/jpeg/png).');
@@ -420,14 +454,26 @@ export class DocumentGeneratorService {
       });
     }
 
+    const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
+    const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
+    const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+
     const layout = this.pickItineraryLayout(booking);
 
     const template = this.loadTemplate('itinerary');
     const html = template({
       themeImage: this.themeImage,
+      coverTemplateImage: this.itineraryCoverImage,
+      brandLogoImage: this.brandLogoImage,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
+      hotels: booking.hotelPlan,
+      adults,
+      children,
+      infants,
+      roomNights: booking.hotelPlan.length,
+      totalGuests: adults + children + infants,
       days,
       transport: booking.transportPlan,
     });
