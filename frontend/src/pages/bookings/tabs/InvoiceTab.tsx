@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { PaxType } from '@/types';
 import type { Booking, Invoice } from '@/types';
 
 interface Props {
@@ -37,6 +38,11 @@ export function InvoiceTab({ booking }: Props) {
   const canManage = user ? canGenerateInvoice(user.role) : false;
   const [editing, setEditing] = useState(false);
 
+  const adults = (booking.client ? 1 : 0) + booking.paxList.filter(p => p.type === PaxType.ADULT).length;
+  const children = booking.paxList.filter(p => p.type === PaxType.CHILD).length;
+  const infants = booking.paxList.filter(p => p.type === PaxType.INFANT).length;
+  const totalGuests = adults + children + infants;
+
   const { data } = useQuery({
     queryKey: ['invoice', booking.id],
     queryFn: () => invoiceApi.get(booking.id),
@@ -58,6 +64,47 @@ export function InvoiceTab({ booking }: Props) {
         }
       : { costPerPerson: 0, totalAmount: 0, advancePaid: 0, balanceAmount: 0 },
   });
+
+  const { setValue, watch, getValues } = form;
+  const watchedCost = watch('costPerPerson');
+  const watchedTotal = watch('totalAmount');
+  const watchedAdvance = watch('advancePaid');
+
+  const lastAutoTotalRef = useRef<number>(invoice?.totalAmount ?? 0);
+  const lastAutoBalanceRef = useRef<number>(invoice?.balanceAmount ?? 0);
+
+  // Reset auto-fill baselines each time editing mode opens
+  useEffect(() => {
+    if (editing) {
+      lastAutoTotalRef.current = getValues('totalAmount');
+      lastAutoBalanceRef.current = getValues('balanceAmount');
+    }
+  }, [editing, getValues]);
+
+  // Auto-compute Total = Cost Per Person × Total Guests
+  useEffect(() => {
+    if (!editing || totalGuests === 0) return;
+    const cost = Number(watchedCost) || 0;
+    const computedTotal = cost * totalGuests;
+    const currentTotal = Number(getValues('totalAmount')) || 0;
+    if (currentTotal === lastAutoTotalRef.current) {
+      setValue('totalAmount', computedTotal, { shouldDirty: true });
+      lastAutoTotalRef.current = computedTotal;
+    }
+  }, [watchedCost, editing, totalGuests, getValues, setValue]);
+
+  // Auto-compute Balance = Total − Advance Paid
+  useEffect(() => {
+    if (!editing) return;
+    const total = Number(watchedTotal) || 0;
+    const advance = Number(watchedAdvance) || 0;
+    const computedBalance = Math.max(0, total - advance);
+    const currentBalance = Number(getValues('balanceAmount')) || 0;
+    if (currentBalance === lastAutoBalanceRef.current) {
+      setValue('balanceAmount', computedBalance, { shouldDirty: true });
+      lastAutoBalanceRef.current = computedBalance;
+    }
+  }, [watchedTotal, watchedAdvance, editing, getValues, setValue]);
 
   const saveMutation = useMutation({
     mutationFn: (data: InvoiceForm) =>
@@ -82,6 +129,15 @@ export function InvoiceTab({ booking }: Props) {
       <CardContent>
         {editing && canManage ? (
           <form onSubmit={form.handleSubmit((d) => saveMutation.mutate(d))} className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2 flex flex-wrap items-center gap-3 rounded-lg border bg-muted/40 px-4 py-3 text-sm">
+              <span className="text-xs font-medium text-muted-foreground">Guests from Pax Details:</span>
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded border bg-background px-2 py-0.5 text-xs font-semibold">Adults: {adults}</span>
+                {children > 0 && <span className="rounded border bg-background px-2 py-0.5 text-xs font-semibold">Children: {children}</span>}
+                {infants > 0 && <span className="rounded border bg-background px-2 py-0.5 text-xs font-semibold">Infants: {infants}</span>}
+                <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-semibold">Total: {totalGuests}</span>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Cost Per Person (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('costPerPerson')} />
@@ -89,6 +145,7 @@ export function InvoiceTab({ booking }: Props) {
             <div className="space-y-2">
               <Label>Total Amount (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('totalAmount')} />
+              <p className="text-xs text-muted-foreground">Auto: Cost × {totalGuests} guests</p>
             </div>
             <div className="space-y-2">
               <Label>Advance Paid (USD) *</Label>
@@ -97,6 +154,7 @@ export function InvoiceTab({ booking }: Props) {
             <div className="space-y-2">
               <Label>Balance Amount (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('balanceAmount')} />
+              <p className="text-xs text-muted-foreground">Auto: Total − Advance</p>
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label>Payment Notes</Label>
@@ -117,6 +175,11 @@ export function InvoiceTab({ booking }: Props) {
           </form>
         ) : invoice ? (
           <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 px-4 py-2.5 text-xs">
+              <span className="font-medium text-muted-foreground">Guests:</span>
+              <span>{adults} Adults{children > 0 ? ` · ${children} Children` : ''}{infants > 0 ? ` · ${infants} Infants` : ''}</span>
+              <span className="ml-auto font-semibold">{totalGuests} Total</span>
+            </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <Info label="Invoice Number" value={invoice.invoiceNumber} />
               <Info label="Date" value={formatDate(invoice.invoiceDate)} />
