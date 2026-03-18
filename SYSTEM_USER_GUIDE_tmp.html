@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SYSTEM_USER_GUIDE.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="vsl-360-system-user-guide">VSL 360 System User Guide</h1>
+<h2 id="1-purpose">1. Purpose</h2>
+<p>This guide explains how to use the VSL 360 Tour Operations Management System in day-to-day operations.</p>
+<p>Use this document for:</p>
+<ul>
+<li>Logging in and understanding role-based access</li>
+<li>Creating and managing bookings</li>
+<li>Coordinating Sales, Reservation, Transport, and Operations work</li>
+<li>Managing invoices, documents, and attachments</li>
+<li>Troubleshooting common user issues</li>
+</ul>
+<hr>
+<h2 id="2-what-this-system-does">2. What This System Does</h2>
+<p>VSL 360 centralizes the full tour lifecycle:</p>
+<ul>
+<li>Client inquiry and profile capture</li>
+<li>Passenger (Pax) management</li>
+<li>Hotel and transport planning</li>
+<li>Invoice management</li>
+<li>Document generation (PDFs)</li>
+<li>Booking status tracking and history</li>
+</ul>
+<hr>
+<h2 id="3-access-and-login">3. Access and Login</h2>
+<h3 id="31-login-url">3.1 Login URL</h3>
+<ul>
+<li>Open the frontend app in your browser (local dev default is <code>http://localhost:5173</code>).</li>
+<li>Use the login page to authenticate.</li>
+</ul>
+<h3 id="32-default-seeded-users">3.2 Default Seeded Users</h3>
+<p>All seeded users use this password:</p>
+<ul>
+<li>Password: <code>admin123</code></li>
+</ul>
+<p>Accounts:</p>
+<ul>
+<li><code>admin@vsl360.com</code> (Operations Manager)</li>
+<li><code>sales@vsl360.com</code> (Sales)</li>
+<li><code>reservation@vsl360.com</code> (Reservation)</li>
+<li><code>transport@vsl360.com</code> (Transport)</li>
+</ul>
+<h3 id="33-logout">3.3 Logout</h3>
+<ul>
+<li>Click your name/user icon in the top-right menu.</li>
+<li>Select <code>Logout</code>.</li>
+</ul>
+<hr>
+<h2 id="4-roles-and-responsibilities">4. Roles and Responsibilities</h2>
+<h3 id="41-sales-sales">4.1 Sales (<code>SALES</code>)</h3>
+<p>Primary tasks:</p>
+<ul>
+<li>Create bookings</li>
+<li>Enter client details and tour details</li>
+<li>Add pax details</li>
+<li>Add and manage invoice information</li>
+<li>Upload booking attachments</li>
+<li>Generate invoice documents</li>
+</ul>
+<h3 id="42-reservation-reservation">4.2 Reservation (<code>RESERVATION</code>)</h3>
+<p>Primary tasks:</p>
+<ul>
+<li>Add and manage hotel plans by night</li>
+<li>Confirm hotel entries</li>
+<li>Update reservation-related details</li>
+</ul>
+<h3 id="43-transport-transport">4.3 Transport (<code>TRANSPORT</code>)</h3>
+<p>Primary tasks:</p>
+<ul>
+<li>Create/edit transport plan</li>
+<li>Add day-by-day transport plan entries</li>
+<li>Manage driver/vehicle/pickup/drop information</li>
+</ul>
+<h3 id="44-operations-manager-opsmanager">4.4 Operations Manager (<code>OPS_MANAGER</code>)</h3>
+<p>Primary tasks:</p>
+<ul>
+<li>Full visibility across modules</li>
+<li>User management</li>
+<li>Final status transitions and operational oversight</li>
+<li>Access to dashboard metrics</li>
+</ul>
+<hr>
+<h2 id="5-main-navigation">5. Main Navigation</h2>
+<p>Left sidebar (role-dependent):</p>
+<ul>
+<li><code>Dashboard</code></li>
+<li><code>Bookings</code></li>
+<li><code>Users</code> (Ops Manager only)</li>
+<li><code>Reports</code> (menu item visible for Ops Manager; route may be unavailable in current UI build)</li>
+</ul>
+<p>Top bar:</p>
+<ul>
+<li>Current user name and account dropdown</li>
+<li>Logout action</li>
+</ul>
+<hr>
+<h2 id="6-booking-lifecycle-overview">6. Booking Lifecycle Overview</h2>
+<p>Typical status progression:</p>
+<ol>
+<li><code>INQUIRY_RECEIVED</code></li>
+<li><code>CLIENT_PROFILE_CREATED</code></li>
+<li><code>PAX_DETAILS_ADDED</code></li>
+<li><code>COSTING_COMPLETED</code></li>
+<li><code>SALES_CONFIRMED</code></li>
+<li><code>RESERVATION_PENDING</code> / <code>TRANSPORT_PENDING</code></li>
+<li><code>RESERVATION_COMPLETED</code> / <code>TRANSPORT_COMPLETED</code></li>
+<li><code>DOCUMENTS_READY</code></li>
+<li><code>OPS_APPROVED</code></li>
+<li><code>COMPLETED</code></li>
+</ol>
+<p>Special terminal state:</p>
+<ul>
+<li><code>CANCELLED</code></li>
+</ul>
+<p>Status changes are visible in the booking <code>History</code> tab.</p>
+<hr>
+<h2 id="7-daily-workflow-by-screen">7. Daily Workflow by Screen</h2>
+<h2 id="71-dashboard">7.1 Dashboard</h2>
+<p>Purpose:</p>
+<ul>
+<li>Quick operational summary</li>
+<li>Booking counts and revenue snapshot</li>
+<li>Recent bookings shortcuts</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Open <code>Dashboard</code> after login.</li>
+<li>Review summary cards (total bookings, revenue collected/pending).</li>
+<li>Review status breakdown to identify queue buildup.</li>
+<li>Click a recent booking to open details.</li>
+<li>If your role permits, use <code>New Booking</code> for fast entry.</li>
+</ol>
+<hr>
+<h2 id="72-bookings-list">7.2 Bookings List</h2>
+<p>Purpose:</p>
+<ul>
+<li>View all accessible bookings</li>
+<li>Filter by status</li>
+<li>Navigate to booking details</li>
+<li>Create or delete bookings (role-dependent)</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Open <code>Bookings</code>.</li>
+<li>Use status filter dropdown (<code>All Statuses</code> or specific stage).</li>
+<li>Use row actions:</li>
+</ol>
+<ul>
+<li>Eye icon: open booking details</li>
+<li>Trash icon: delete booking (permitted roles only)</li>
+</ul>
+<ol start="4">
+<li>Click <code>New Booking</code> to create a booking.</li>
+</ol>
+<hr>
+<h2 id="73-create-booking">7.3 Create Booking</h2>
+<p>Purpose:</p>
+<ul>
+<li>Capture base data for a new trip</li>
+</ul>
+<p>Data captured:</p>
+<ul>
+<li>Client information (name, citizenship, email, contact)</li>
+<li>Tour details (tour month, days, arrival/departure date and time)</li>
+<li>Optional notes (activities, celebrations, general notes)</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Open <code>Bookings</code> -&gt; <code>New Booking</code>.</li>
+<li>Fill all required fields (<code>*</code>).</li>
+<li>Submit <code>Create Booking</code>.</li>
+<li>System redirects to the booking detail page.</li>
+</ol>
+<p>Best practice:</p>
+<ul>
+<li>Ensure client email and contact are accurate before submission.</li>
+</ul>
+<hr>
+<h2 id="74-booking-detail-page">7.4 Booking Detail Page</h2>
+<p>The booking detail page is organized into tabs.</p>
+<h3 id="741-overview-tab">7.4.1 Overview Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>High-level trip summary</li>
+<li>Quick counts (pax, hotels, attachments, documents)</li>
+<li>Status update action (based on role and allowed transitions)</li>
+</ul>
+<p>How to use status update:</p>
+<ol>
+<li>Select next status from dropdown.</li>
+<li>Add optional notes.</li>
+<li>Click <code>Update Status</code>.</li>
+</ol>
+<h3 id="742-client--pax-tab">7.4.2 Client &amp; Pax Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>Editing main client profile</li>
+<li>Adding/removing passengers (Pax)</li>
+</ul>
+<p>How to add Pax:</p>
+<ol>
+<li>Click <code>Add Pax</code>.</li>
+<li>Enter name, type (<code>ADULT/CHILD/INFANT</code>), optional relationship/age.</li>
+<li>Save.</li>
+</ol>
+<h3 id="743-hotels-tab">7.4.3 Hotels Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>Building night-by-night hotel plan</li>
+<li>Confirming hotel reservations</li>
+</ul>
+<p>How to add a hotel night:</p>
+<ol>
+<li>Click <code>Add Night</code>.</li>
+<li>Enter night number, hotel name, room category, room count, meal plan.</li>
+<li>Add optional preferences/notes.</li>
+<li>Save.</li>
+<li>Use confirm action when reservation is finalized.</li>
+</ol>
+<h3 id="744-transport-tab">7.4.4 Transport Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>Creating transport master plan</li>
+<li>Adding day-level itinerary transport details</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Create or edit transport plan (vehicle, driver, language, pickup/drop).</li>
+<li>Add <code>Day Plans</code> with day number and movement details.</li>
+<li>Maintain notes for internal clarity.</li>
+</ol>
+<h3 id="745-invoice-tab">7.4.5 Invoice Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>Creating/editing financial values</li>
+<li>Tracking total, paid, and balance amounts</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Open <code>Invoice</code> tab.</li>
+<li>Enter <code>Cost Per Person</code>, <code>Total</code>, <code>Advance Paid</code>, <code>Balance</code>.</li>
+<li>Add payment notes/instructions if needed.</li>
+<li>Save.</li>
+</ol>
+<h3 id="746-attachments-tab">7.4.6 Attachments Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>Uploading supporting files (e.g., passports, tickets, confirmations)</li>
+<li>Downloading or deleting files</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Click <code>Upload</code>.</li>
+<li>Select file from device.</li>
+<li>Confirm file appears in list.</li>
+<li>Use download/delete actions as needed.</li>
+</ol>
+<h3 id="747-documents-tab">7.4.7 Documents Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>Generating official booking PDFs</li>
+<li>Downloading generated versions</li>
+</ul>
+<p>Document types:</p>
+<ul>
+<li>Invoice</li>
+<li>Transport Details</li>
+<li>Hotel Reservation</li>
+<li>Full Itinerary</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Click <code>Generate &lt;Document Type&gt;</code>.</li>
+<li>Wait for document to appear in table.</li>
+<li>Download from action button.</li>
+<li>Repeat generation when revised versions are needed.</li>
+</ol>
+<h3 id="748-history-tab">7.4.8 History Tab</h3>
+<p>Use for:</p>
+<ul>
+<li>Auditing status transitions and timeline notes</li>
+</ul>
+<p>How to use:</p>
+<ol>
+<li>Open <code>History</code> tab.</li>
+<li>Review chronological entries for who/when/what changed.</li>
+</ol>
+<hr>
+<h2 id="75-user-management-ops-manager">7.5 User Management (Ops Manager)</h2>
+<p>Purpose:</p>
+<ul>
+<li>Add and deactivate users</li>
+<li>Assign role at creation</li>
+</ul>
+<p>How to create user:</p>
+<ol>
+<li>Open <code>Users</code>.</li>
+<li>Click <code>Add User</code>.</li>
+<li>Fill name, email, password, role.</li>
+<li>Save.</li>
+</ol>
+<p>How to deactivate user:</p>
+<ol>
+<li>Click delete/deactivate action in user row.</li>
+<li>Confirm action.</li>
+</ol>
+<p>Operational note:</p>
+<ul>
+<li>User role determines module access immediately.</li>
+</ul>
+<hr>
+<h2 id="8-recommended-team-operating-procedure">8. Recommended Team Operating Procedure</h2>
+<h3 id="81-sales-handover-pattern">8.1 Sales Handover Pattern</h3>
+<ol>
+<li>Sales creates booking and completes client + pax + financial core data.</li>
+<li>Sales updates status toward handover.</li>
+<li>Reservation and Transport teams execute their respective tabs.</li>
+<li>Ops Manager verifies completion and approves final stage.</li>
+</ol>
+<h3 id="82-data-quality-checklist-before-completion">8.2 Data Quality Checklist Before Completion</h3>
+<ul>
+<li>Client profile complete and contactable</li>
+<li>Pax list final and accurate</li>
+<li>Hotel nights complete and confirmed</li>
+<li>Transport plan + daily movements complete</li>
+<li>Invoice values validated</li>
+<li>Required files attached</li>
+<li>Required PDFs generated and downloaded/shared</li>
+</ul>
+<hr>
+<h2 id="9-troubleshooting-for-users">9. Troubleshooting for Users</h2>
+<h3 id="91-login-fails">9.1 Login fails</h3>
+<p>Check:</p>
+<ul>
+<li>Correct email/password</li>
+<li>Backend server running</li>
+<li>Frontend points to correct backend URL</li>
+</ul>
+<h3 id="92-no-data-showing-on-dashboardbookings">9.2 No data showing on dashboard/bookings</h3>
+<p>Check:</p>
+<ul>
+<li>Logged-in role permissions</li>
+<li>API/backend availability</li>
+<li>Browser console/network errors (for admin support)</li>
+</ul>
+<h3 id="93-cannot-change-status">9.3 Cannot change status</h3>
+<p>Possible causes:</p>
+<ul>
+<li>Role does not allow that transition</li>
+<li>Current status has limited next states</li>
+</ul>
+<h3 id="94-uploadgenerate-actions-fail">9.4 Upload/generate actions fail</h3>
+<p>Check:</p>
+<ul>
+<li>File type/size accepted by backend rules</li>
+<li>Backend upload/doc generation services running</li>
+<li>Retry and verify network response</li>
+</ul>
+<h3 id="95-seeded-login-users-not-found">9.5 Seeded login users not found</h3>
+<p>Cause:</p>
+<ul>
+<li>Seed script not executed on current DB
+Fix:</li>
+<li>Run backend DB seed process again (admin/developer task)</li>
+</ul>
+<hr>
+<h2 id="10-security-and-good-usage-practices">10. Security and Good Usage Practices</h2>
+<ul>
+<li>Do not share credentials between team members.</li>
+<li>Change seeded default passwords in non-dev environments.</li>
+<li>Keep notes factual and professional (status history is audit-like).</li>
+<li>Avoid deleting records unless required by policy.</li>
+<li>Keep attachments relevant and correctly named.</li>
+</ul>
+<hr>
+<h2 id="11-current-implementation-notes">11. Current Implementation Notes</h2>
+<ul>
+<li><code>Users</code> page is protected for Ops Manager role.</li>
+<li>Sidebar may show a <code>Reports</code> menu item for Ops Manager, but a dedicated reports route/page may not be available yet in this build.</li>
+<li>Core operational modules (Dashboard, Bookings, Booking Details tabs, User management) are available.</li>
+</ul>
+<hr>
+<h2 id="12-quick-start-5-minutes">12. Quick Start (5 Minutes)</h2>
+<ol>
+<li>Login with <code>admin@vsl360.com</code> / <code>admin123</code>.</li>
+<li>Open <code>Bookings</code> -&gt; <code>New Booking</code>.</li>
+<li>Create one sample booking.</li>
+<li>Open booking and add:</li>
+</ol>
+<ul>
+<li>1-2 Pax</li>
+<li>1 Hotel night</li>
+<li>Transport plan and 1 day plan</li>
+<li>Invoice amounts</li>
+<li>1 attachment</li>
+</ul>
+<ol start="5">
+<li>Generate at least one document PDF.</li>
+<li>Move status forward and confirm in <code>History</code>.</li>
+</ol>
+<p>You are now ready for normal day-to-day operation.</p>
+
+</body>
+</html>
