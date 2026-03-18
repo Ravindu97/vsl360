@@ -199,3 +199,11 @@ export interface LoginResponse {
   accessToken: string;
   user: User;
 }
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

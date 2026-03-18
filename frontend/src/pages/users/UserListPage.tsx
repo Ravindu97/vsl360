@@ -9,17 +9,21 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { PaginationControls } from '@/components/shared/PaginationControls';
 import { UserCreateDialog } from './UserCreateDialog';
-import type { User, Role } from '@/types';
+import type { User, Role, PaginatedResponse } from '@/types';
+
+const PAGE_SIZE = 10;
 
 export function UserListPage() {
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useQuery<{ data: User[] }>({
-    queryKey: ['users'],
-    queryFn: () => usersApi.list(),
+  const { data, isLoading } = useQuery<{ data: PaginatedResponse<User> }>({
+    queryKey: ['users', page, PAGE_SIZE],
+    queryFn: () => usersApi.list(page, PAGE_SIZE),
   });
 
   const deleteMutation = useMutation({
@@ -30,7 +34,8 @@ export function UserListPage() {
     },
   });
 
-  const users = data?.data ?? [];
+  const users = data?.data.items ?? [];
+  const pagination = data?.data;
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -78,6 +83,15 @@ export function UserListPage() {
               ))}
             </TableBody>
           </Table>
+          <PaginationControls
+            page={pagination?.page ?? 1}
+            totalPages={pagination?.totalPages ?? 1}
+            totalItems={pagination?.total ?? 0}
+            pageSize={pagination?.pageSize ?? PAGE_SIZE}
+            itemLabel="users"
+            onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+            onNext={() => setPage((current) => Math.min(pagination?.totalPages ?? current, current + 1))}
+          />
         </div>
       )}
 

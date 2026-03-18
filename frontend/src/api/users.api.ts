@@ -1,8 +1,8 @@
 import api from './client';
-import type { User } from '@/types';
+import type { PaginatedResponse, User } from '@/types';
 
 export const usersApi = {
-  list: () => api.get<User[]>('/users'),
+  list: (page = 1, pageSize = 10) => api.get<PaginatedResponse<User>>('/users', { params: { page, pageSize } }),
 
   get: (id: string) => api.get<User>(`/users/${id}`),
 

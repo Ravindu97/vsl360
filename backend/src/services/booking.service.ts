@@ -78,8 +78,10 @@ export class BookingService {
     return booking;
   }
 
-  async findAll(userRole: UserRole, userId: string, status?: string) {
+  async findAll(userRole: UserRole, userId: string, status?: string, page = 1, pageSize = 10) {
     const where: any = {};
+    const safePage = Math.max(1, page);
+    const safePageSize = Math.max(1, Math.min(pageSize, 100));
 
     // Sales people only see their own bookings
     if (userRole === 'SALES') {
@@ -102,15 +104,28 @@ export class BookingService {
       where.status = status as BookingStatusValue;
     }
 
-    return prisma.booking.findMany({
-      where,
-      include: {
-        client: true,
-        salesOwner: { select: { id: true, name: true, email: true } },
-        _count: { select: { paxList: true, hotelPlan: true, attachments: true } },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const [items, total] = await Promise.all([
+      prisma.booking.findMany({
+        where,
+        include: {
+          client: true,
+          salesOwner: { select: { id: true, name: true, email: true } },
+          _count: { select: { paxList: true, hotelPlan: true, attachments: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (safePage - 1) * safePageSize,
+        take: safePageSize,
+      }),
+      prisma.booking.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page: safePage,
+      pageSize: safePageSize,
+      totalPages: Math.max(1, Math.ceil(total / safePageSize)),
+    };
   }
 
   async findById(id: string) {

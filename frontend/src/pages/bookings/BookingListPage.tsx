@@ -13,8 +13,11 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import { BookingStatus, type Booking } from '@/types';
+import { PaginationControls } from '@/components/shared/PaginationControls';
+import { BookingStatus, type Booking, type PaginatedResponse } from '@/types';
 import { STATUS_LABELS } from '@/utils/constants';
+
+const PAGE_SIZE = 10;
 
 export function BookingListPage() {
   const navigate = useNavigate();
@@ -22,10 +25,11 @@ export function BookingListPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useQuery<{ data: Booking[] }>({
-    queryKey: ['bookings', statusFilter === 'ALL' ? undefined : statusFilter],
-    queryFn: () => bookingsApi.list(statusFilter === 'ALL' ? undefined : statusFilter),
+  const { data, isLoading } = useQuery<{ data: PaginatedResponse<Booking> }>({
+    queryKey: ['bookings', statusFilter === 'ALL' ? undefined : statusFilter, page, PAGE_SIZE],
+    queryFn: () => bookingsApi.list(statusFilter === 'ALL' ? undefined : statusFilter, page, PAGE_SIZE),
   });
 
   const deleteMutation = useMutation({
@@ -36,7 +40,8 @@ export function BookingListPage() {
     },
   });
 
-  const bookings = data?.data ?? [];
+  const bookings = data?.data.items ?? [];
+  const pagination = data?.data;
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -45,7 +50,10 @@ export function BookingListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Bookings</h1>
         <div className="flex items-center gap-3">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(value) => {
+            setStatusFilter(value);
+            setPage(1);
+          }}>
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
@@ -131,6 +139,15 @@ export function BookingListPage() {
               ))}
             </TableBody>
           </Table>
+          <PaginationControls
+            page={pagination?.page ?? 1}
+            totalPages={pagination?.totalPages ?? 1}
+            totalItems={pagination?.total ?? 0}
+            pageSize={pagination?.pageSize ?? PAGE_SIZE}
+            itemLabel="bookings"
+            onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+            onNext={() => setPage((current) => Math.min(pagination?.totalPages ?? current, current + 1))}
+          />
         </div>
       )}
 

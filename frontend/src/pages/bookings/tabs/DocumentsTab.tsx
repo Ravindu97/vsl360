@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, FileText } from 'lucide-react';
 import { documentsApi } from '@/api/endpoints.api';
@@ -8,7 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { DocumentType, Role, type Booking, type GeneratedDocument } from '@/types';
+import { PaginationControls } from '@/components/shared/PaginationControls';
+import { DocumentType, Role, type Booking, type GeneratedDocument, type PaginatedResponse } from '@/types';
+
+const PAGE_SIZE = 5;
 
 interface Props {
   booking: Booking;
@@ -36,13 +40,15 @@ const ROLE_ALLOWED_TYPES: Record<Role, DocumentType[]> = {
 export function DocumentsTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
 
-  const { data } = useQuery({
-    queryKey: ['documents', booking.id],
-    queryFn: () => documentsApi.list(booking.id),
+  const { data } = useQuery<{ data: PaginatedResponse<GeneratedDocument> }>({
+    queryKey: ['documents', booking.id, page, PAGE_SIZE],
+    queryFn: () => documentsApi.list(booking.id, page, PAGE_SIZE),
   });
 
-  const documents: GeneratedDocument[] = data?.data ?? booking.documents ?? [];
+  const documents: GeneratedDocument[] = data?.data.items ?? booking.documents ?? [];
+  const pagination = data?.data;
 
   const generateMutation = useMutation({
     mutationFn: (type: DocumentType) => {
@@ -56,6 +62,7 @@ export function DocumentsTab({ booking }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['documents', booking.id] });
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+      setPage(1);
     },
   });
 
@@ -99,32 +106,43 @@ export function DocumentsTab({ booking }: Props) {
         {documents.length === 0 ? (
           <EmptyState title="No documents" description="Generate PDF documents for this booking" />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Version</TableHead>
-                <TableHead>Generated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.map((doc) => (
-                <TableRow key={doc.id}>
-                  <TableCell>
-                    <Badge variant="outline">{DOC_LABELS[doc.type] || doc.type}</Badge>
-                  </TableCell>
-                  <TableCell>v{doc.version}</TableCell>
-                  <TableCell>{formatDateTime(doc.createdAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Version</TableHead>
+                  <TableHead>Generated</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {documents.map((doc) => (
+                  <TableRow key={doc.id}>
+                    <TableCell>
+                      <Badge variant="outline">{DOC_LABELS[doc.type] || doc.type}</Badge>
+                    </TableCell>
+                    <TableCell>v{doc.version}</TableCell>
+                    <TableCell>{formatDateTime(doc.createdAt)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <PaginationControls
+              page={pagination?.page ?? 1}
+              totalPages={pagination?.totalPages ?? 1}
+              totalItems={pagination?.total ?? 0}
+              pageSize={pagination?.pageSize ?? PAGE_SIZE}
+              itemLabel="documents"
+              onPrevious={() => setPage((current) => Math.max(1, current - 1))}
+              onNext={() => setPage((current) => Math.min(pagination?.totalPages ?? current, current + 1))}
+            />
+          </div>
         )}
       </CardContent>
     </Card>

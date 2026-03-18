@@ -1,5 +1,4 @@
 import { Response } from 'express';
-import { BookingStatus } from '@prisma/client';
 import { bookingService } from '../services/booking.service';
 import { AuthRequest } from '../types';
 
@@ -15,13 +14,15 @@ export class BookingController {
 
   async findAll(req: AuthRequest, res: Response): Promise<void> {
     const status = req.query.status as string | undefined;
-    const bookings = await bookingService.findAll(req.user!.role, req.user!.userId, status);
+    const page = Number(req.query.page ?? 1);
+    const pageSize = Number(req.query.pageSize ?? 10);
+    const bookings = await bookingService.findAll(req.user!.role, req.user!.userId, status, page, pageSize);
     res.json(bookings);
   }
 
   async findById(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const booking = await bookingService.findById(req.params.id);
+      const booking = await bookingService.findById(String(req.params.id));
       res.json(booking);
     } catch (error: any) {
       res.status(404).json({ error: error.message });
@@ -30,7 +31,7 @@ export class BookingController {
 
   async update(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const booking = await bookingService.update(req.params.id, req.body);
+      const booking = await bookingService.update(String(req.params.id), req.body);
       res.json(booking);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -41,8 +42,8 @@ export class BookingController {
     try {
       const { status, notes } = req.body;
       const booking = await bookingService.updateStatus(
-        req.params.id,
-        status as BookingStatus,
+        String(req.params.id),
+        status,
         req.user!.userId,
         notes
       );
@@ -54,7 +55,7 @@ export class BookingController {
 
   async delete(req: AuthRequest, res: Response): Promise<void> {
     try {
-      await bookingService.delete(req.params.id);
+      await bookingService.delete(String(req.params.id));
       res.json({ message: 'Booking deleted' });
     } catch (error: any) {
       res.status(400).json({ error: error.message });

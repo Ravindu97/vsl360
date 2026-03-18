@@ -6,17 +6,33 @@ import { documentGeneratorService } from '../services/documentGenerator';
 
 export class DocumentController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
-    const documents = await prisma.generatedDocument.findMany({
-      where: { bookingId: req.params.id },
-      orderBy: { createdAt: 'desc' },
+    const page = Math.max(1, Number(req.query.page ?? 1));
+    const pageSize = Math.max(1, Math.min(Number(req.query.pageSize ?? 5), 100));
+    const where = { bookingId: req.params.id };
+
+    const [items, total] = await Promise.all([
+      prisma.generatedDocument.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.generatedDocument.count({ where }),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
     });
-    res.json(documents);
   }
 
   async generateInvoice(req: AuthRequest, res: Response): Promise<void> {
     try {
       const filePath = await documentGeneratorService.generateInvoice(
-        req.params.id,
+        String(req.params.id),
         req.user!.userId
       );
       res.json({ message: 'Invoice generated', filePath });
@@ -28,7 +44,7 @@ export class DocumentController {
   async generateTransport(req: AuthRequest, res: Response): Promise<void> {
     try {
       const filePath = await documentGeneratorService.generateTransportDetails(
-        req.params.id,
+        String(req.params.id),
         req.user!.userId
       );
       res.json({ message: 'Transport document generated', filePath });
@@ -40,7 +56,7 @@ export class DocumentController {
   async generateReservation(req: AuthRequest, res: Response): Promise<void> {
     try {
       const filePath = await documentGeneratorService.generateHotelReservation(
-        req.params.id,
+        String(req.params.id),
         req.user!.userId
       );
       res.json({ message: 'Reservation document generated', filePath });
@@ -52,7 +68,7 @@ export class DocumentController {
   async generateItinerary(req: AuthRequest, res: Response): Promise<void> {
     try {
       const filePath = await documentGeneratorService.generateItinerary(
-        req.params.id,
+        String(req.params.id),
         req.user!.userId
       );
       res.json({ message: 'Itinerary generated', filePath });

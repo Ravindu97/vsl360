@@ -3,12 +3,27 @@ import bcrypt from 'bcrypt';
 import prisma from '../config/database';
 
 export class UserController {
-  async findAll(_req: Request, res: Response): Promise<void> {
-    const users = await prisma.user.findMany({
-      select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
-      orderBy: { createdAt: 'desc' },
+  async findAll(req: Request, res: Response): Promise<void> {
+    const page = Math.max(1, Number(req.query.page ?? 1));
+    const pageSize = Math.max(1, Math.min(Number(req.query.pageSize ?? 10), 100));
+
+    const [items, total] = await Promise.all([
+      prisma.user.findMany({
+        select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      prisma.user.count(),
+    ]);
+
+    res.json({
+      items,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(total / pageSize)),
     });
-    res.json(users);
   }
 
   async findById(req: Request, res: Response): Promise<void> {

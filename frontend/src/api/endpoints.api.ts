@@ -1,5 +1,5 @@
 import api from './client';
-import type { Pax, Client, HotelBooking, TransportPlan, Invoice, Attachment, GeneratedDocument, TransportDayPlan } from '@/types';
+import type { Pax, Client, HotelBooking, TransportPlan, Invoice, Attachment, GeneratedDocument, TransportDayPlan, PaginatedResponse } from '@/types';
 
 // Client (Main Guest)
 export const clientApi = {
@@ -55,7 +55,8 @@ export const attachmentsApi = {
 
 // Documents
 export const documentsApi = {
-  list: (bookingId: string) => api.get<GeneratedDocument[]>(`/bookings/${bookingId}/documents`),
+  list: (bookingId: string, page = 1, pageSize = 5) =>
+    api.get<PaginatedResponse<GeneratedDocument>>(`/bookings/${bookingId}/documents`, { params: { page, pageSize } }),
   generateInvoice: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/invoice`),
   generateTransport: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/transport`),
   generateReservation: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/reservation`),

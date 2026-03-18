@@ -1,9 +1,15 @@
 import api from './client';
-import type { Booking } from '@/types';
+import type { Booking, PaginatedResponse } from '@/types';
 
 export const bookingsApi = {
-  list: (status?: string) =>
-    api.get<Booking[]>('/bookings', { params: status ? { status } : {} }),
+  list: (status?: string, page = 1, pageSize = 10) =>
+    api.get<PaginatedResponse<Booking>>('/bookings', {
+      params: {
+        ...(status ? { status } : {}),
+        page,
+        pageSize,
+      },
+    }),
 
   get: (id: string) => api.get<Booking>(`/bookings/${id}`),
 
