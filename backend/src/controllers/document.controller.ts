@@ -77,6 +77,18 @@ export class DocumentController {
     }
   }
 
+  async generateTravelConfirmation(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const filePath = await documentGeneratorService.generateTravelConfirmation(
+        String(req.params.id),
+        req.user!.userId
+      );
+      res.json({ message: 'Travel confirmation generated', filePath });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
   async download(req: Request, res: Response): Promise<void> {
     const doc = await prisma.generatedDocument.findUnique({
       where: { id: req.params.docId },

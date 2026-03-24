@@ -23,16 +23,16 @@ const DOC_LABELS: Record<DocumentType, string> = {
   [DocumentType.TRANSPORT_DETAILS]: 'Transport Details',
   [DocumentType.HOTEL_RESERVATION]: 'Hotel Reservation',
   [DocumentType.FULL_ITINERARY]: 'Full Itinerary',
+  [DocumentType.TRAVEL_CONFIRMATION]: 'Travel Confirmation',
 };
 
 const ROLE_ALLOWED_TYPES: Record<Role, DocumentType[]> = {
   [Role.SALES]: [DocumentType.INVOICE],
-  [Role.RESERVATION]: [DocumentType.HOTEL_RESERVATION],
-  [Role.TRANSPORT]: [DocumentType.TRANSPORT_DETAILS],
+  [Role.RESERVATION]: [DocumentType.TRAVEL_CONFIRMATION],
+  [Role.TRANSPORT]: [DocumentType.TRAVEL_CONFIRMATION],
   [Role.OPS_MANAGER]: [
     DocumentType.INVOICE,
-    DocumentType.TRANSPORT_DETAILS,
-    DocumentType.HOTEL_RESERVATION,
+    DocumentType.TRAVEL_CONFIRMATION,
     DocumentType.FULL_ITINERARY,
   ],
 };
@@ -57,6 +57,7 @@ export function DocumentsTab({ booking }: Props) {
         case DocumentType.TRANSPORT_DETAILS: return documentsApi.generateTransport(booking.id);
         case DocumentType.HOTEL_RESERVATION: return documentsApi.generateReservation(booking.id);
         case DocumentType.FULL_ITINERARY: return documentsApi.generateItinerary(booking.id);
+        case DocumentType.TRAVEL_CONFIRMATION: return documentsApi.generateTravelConfirmation(booking.id);
       }
     },
     onSuccess: () => {

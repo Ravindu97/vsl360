@@ -26,6 +26,34 @@ Handlebars.registerHelper('titleCase', (value: unknown) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 });
 
+Handlebars.registerHelper('padZero', (value: number) => {
+  return String(value).padStart(2, '0');
+});
+
+Handlebars.registerHelper('guestBreakdown', (adults: number, children: number, infants: number) => {
+  const parts: string[] = [];
+  if (adults > 0) parts.push(`Adult${adults > 1 ? 's' : ''}`);
+  if (children > 0) parts.push(`${String(children).padStart(2, '0')} Child${children > 1 ? 'ren' : ''}`);
+  if (infants > 0) parts.push(`${String(infants).padStart(2, '0')} Infant${infants > 1 ? 's' : ''}`);
+  return parts.join(', ');
+});
+
+Handlebars.registerHelper('roomSummary', (hotels: any[]) => {
+  if (!hotels || hotels.length === 0) return '—';
+  // Deduplicate: sum rooms by category
+  const map = new Map<string, number>();
+  for (const h of hotels) {
+    const cat = h.roomCategory || 'Room';
+    const rooms = h.numberOfRooms || 1;
+    map.set(cat, Math.max(map.get(cat) || 0, rooms));
+  }
+  const parts: string[] = [];
+  for (const [cat, count] of map) {
+    parts.push(`${String(count).padStart(2, '0')} ${cat}${count > 1 ? 's' : ''}`);
+  }
+  return parts.join(', ');
+});
+
 type PdfRenderOptions = {
   margin?: { top: string; right: string; bottom: string; left: string };
   scale?: number;
@@ -508,6 +536,156 @@ export class DocumentGeneratorService {
 
     logger.info(`Full itinerary generated for booking ${booking.bookingId}`);
     return filePath;
+  }
+
+  private pickTravelConfirmationLayout(booking: any): {
+    layoutMode: 'normal' | 'compact';
+    pdf: PdfRenderOptions;
+  } {
+    const hotelCount = booking?.hotelPlan?.length ?? 0;
+
+    if (hotelCount >= 10) {
+      return {
+        layoutMode: 'compact',
+        pdf: {
+          margin: { top: '9mm', right: '10mm', bottom: '9mm', left: '10mm' },
+          scale: 0.95,
+          preferCSSPageSize: true,
+        },
+      };
+    }
+
+    return {
+      layoutMode: 'normal',
+      pdf: {
+        margin: { top: '12mm', right: '12mm', bottom: '12mm', left: '12mm' },
+        scale: 1,
+        preferCSSPageSize: true,
+      },
+    };
+  }
+
+  async generateTravelConfirmation(bookingId: string, generatedBy: string): Promise<string> {
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: {
+        client: true,
+        paxList: true,
+        hotelPlan: { orderBy: { nightNumber: 'asc' } },
+        transportPlan: true,
+      },
+    });
+
+    if (!booking || !booking.client || booking.hotelPlan.length === 0) {
+      throw new Error('Booking, client, or hotel data not found');
+    }
+
+    const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
+    const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
+    const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+
+    // Build day-by-day rows from hotel plan
+    const arrivalDate = new Date(booking.arrivalDate);
+    const days = booking.hotelPlan.map((h: any, idx: number) => {
+      const date = new Date(arrivalDate);
+      date.setDate(date.getDate() + idx);
+      return {
+        dayNumber: idx + 1,
+        date,
+        location: this.extractLocation(h.hotelName),
+        hotelName: h.hotelName,
+        mealPlan: this.formatMealPlanCode(h.mealPlan),
+      };
+    });
+
+    const layout = this.pickTravelConfirmationLayout(booking);
+
+    const template = this.loadTemplate('travelConfirmation');
+    const html = template({
+      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
+      layoutMode: layout.layoutMode,
+      booking,
+      client: booking.client,
+      hotels: booking.hotelPlan,
+      transport: booking.transportPlan,
+      adults,
+      children,
+      infants,
+      totalGuests: adults + children + infants,
+      days,
+    });
+
+    const filename = `travel_confirmation_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
+    const filePath = await this.renderPdf(html, filename, layout.pdf);
+
+    await prisma.generatedDocument.create({
+      data: {
+        bookingId,
+        type: 'TRAVEL_CONFIRMATION',
+        filePath,
+        generatedBy,
+      },
+    });
+
+    logger.info(`Travel confirmation generated for booking ${booking.bookingId}`);
+    return filePath;
+  }
+
+  private extractLocation(hotelName: string): string {
+    // Common Sri Lankan location keywords; try to extract from hotel name
+    const locations: Record<string, string> = {
+      'kandy': 'Kandy',
+      'colombo': 'Colombo',
+      'galle': 'Galle',
+      'nuwara eliya': 'Nuwara Eliya',
+      'ella': 'Ella',
+      'yala': 'Yala',
+      'sigiriya': 'Sigiriya',
+      'dambulla': 'Dambulla',
+      'trincomalee': 'Trincomalee',
+      'bentota': 'Bentota',
+      'mirissa': 'Mirissa',
+      'unawatuna': 'Unawatuna',
+      'anuradhapura': 'Anuradhapura',
+      'polonnaruwa': 'Polonnaruwa',
+      'hikkaduwa': 'Hikkaduwa',
+      'negombo': 'Negombo',
+      'jaffna': 'Jaffna',
+      'arugam bay': 'Arugam Bay',
+      'habarana': 'Habarana',
+      'pasikuda': 'Pasikuda',
+      'weligama': 'Weligama',
+      'tangalle': 'Tangalle',
+      'kitulgala': 'Kitulgala',
+      'hatton': 'Hatton',
+      'nallathanniya': 'Nallathanniya',
+      'tissamaharama': 'Tissamaharama',
+      'udawalawe': 'Udawalawe',
+      'wilpattu': 'Wilpattu',
+      'kalpitiya': 'Kalpitiya',
+      'pinnawala': 'Pinnawala',
+      'ratnapura': 'Ratnapura',
+      'badulla': 'Badulla',
+      'matale': 'Matale',
+      'mahaweli': 'Kandy',
+      'jetwing': 'Yala',
+      'radisson': 'Galle',
+    };
+    const lower = hotelName.toLowerCase();
+    for (const [key, value] of Object.entries(locations)) {
+      if (lower.includes(key)) return value;
+    }
+    return hotelName;
+  }
+
+  private formatMealPlanCode(mealPlan: string): string {
+    if (!mealPlan) return '—';
+    const lower = mealPlan.toLowerCase().trim();
+    if (lower === 'bb' || lower.includes('bed') && lower.includes('breakfast')) return 'BB';
+    if (lower === 'hb' || lower.includes('half board')) return 'HB';
+    if (lower === 'fb' || lower.includes('full board')) return 'FB';
+    if (lower === 'ro' || lower.includes('room only')) return 'RO';
+    return mealPlan;
   }
 }
 

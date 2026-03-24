@@ -12,6 +12,7 @@ router.post('/invoice', authorize('SALES', 'OPS_MANAGER'), (req, res) => documen
 router.post('/transport', authorize('TRANSPORT', 'OPS_MANAGER'), (req, res) => documentController.generateTransport(req, res));
 router.post('/reservation', authorize('RESERVATION', 'OPS_MANAGER'), (req, res) => documentController.generateReservation(req, res));
 router.post('/itinerary', authorize('OPS_MANAGER'), (req, res) => documentController.generateItinerary(req, res));
+router.post('/travel-confirmation', authorize('RESERVATION', 'TRANSPORT', 'OPS_MANAGER'), (req, res) => documentController.generateTravelConfirmation(req, res));
 router.get('/:docId/download', (req, res) => documentController.download(req, res));
 
 export default router;

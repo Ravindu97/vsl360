@@ -61,6 +61,7 @@ export const documentsApi = {
   generateTransport: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/transport`),
   generateReservation: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/reservation`),
   generateItinerary: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/itinerary`),
+  generateTravelConfirmation: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/travel-confirmation`),
   download: (bookingId: string, docId: string) =>
     api.get(`/bookings/${bookingId}/documents/${docId}/download`, { responseType: 'blob' }),
 };
