@@ -7,6 +7,7 @@ const invoiceBaseSchema = z.object({
   balanceAmount: z.number().min(0),
   paymentNotes: z.string().optional(),
   paymentInstructions: z.string().optional(),
+  tourInclusions: z.string().optional(),
 });
 
 export const createInvoiceSchema = invoiceBaseSchema.superRefine((data, ctx) => {

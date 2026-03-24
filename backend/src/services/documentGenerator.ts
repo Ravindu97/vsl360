@@ -38,6 +38,7 @@ export class DocumentGeneratorService {
   private themeImage: string | null;
   private itineraryCoverImage: string | null;
   private brandLogoImage: string | null;
+  private invoiceLogoImage: string | null;
 
   constructor() {
     this.templatesDir = path.join(__dirname, '..', 'templates');
@@ -45,6 +46,7 @@ export class DocumentGeneratorService {
     this.themeImage = this.loadThemeImage();
     this.itineraryCoverImage = this.loadAssetImage('Template.png');
     this.brandLogoImage = this.loadAssetImage('logo.png');
+    this.invoiceLogoImage = this.loadAssetImage('logo-02.png');
     if (!fs.existsSync(this.outputDir)) {
       fs.mkdirSync(this.outputDir, { recursive: true });
     }
@@ -64,13 +66,21 @@ export class DocumentGeneratorService {
 
   private loadAssetImage(fileName: string): string | null {
     const assetsRoot = path.join(process.cwd(), '..', 'assets');
+    const frontendPublicAssets = path.join(process.cwd(), 'frontend', 'public', 'assets');
+    const parentFrontendPublicAssets = path.join(process.cwd(), '..', 'frontend', 'public', 'assets');
     const candidates = [
       path.join(process.cwd(), 'assets', fileName),
       path.join(assetsRoot, fileName),
+      path.join(frontendPublicAssets, fileName),
+      path.join(parentFrontendPublicAssets, fileName),
       path.join(process.cwd(), 'assets', fileName.toLowerCase()),
       path.join(assetsRoot, fileName.toLowerCase()),
+      path.join(frontendPublicAssets, fileName.toLowerCase()),
+      path.join(parentFrontendPublicAssets, fileName.toLowerCase()),
       path.join(process.cwd(), 'assets', fileName.toUpperCase()),
       path.join(assetsRoot, fileName.toUpperCase()),
+      path.join(frontendPublicAssets, fileName.toUpperCase()),
+      path.join(parentFrontendPublicAssets, fileName.toUpperCase()),
     ];
 
     for (const candidate of candidates) {
@@ -314,13 +324,19 @@ export class DocumentGeneratorService {
     const layout = this.pickInvoiceLayout(booking.invoice);
 
     const template = this.loadTemplate('invoice');
+    const tourInclusionsList = booking.invoice.tourInclusions
+      ? booking.invoice.tourInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean)
+      : [];
+
     const html = template({
       themeImage: this.themeImage,
+      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
       invoice: booking.invoice,
       paxCount: booking.paxList.length + 1, // +1 for main guest
+      tourInclusionsList,
     });
 
     const filename = `invoice_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;

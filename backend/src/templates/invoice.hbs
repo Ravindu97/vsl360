@@ -3,197 +3,334 @@
 <head>
   <meta charset="utf-8">
   <style>
-    @page { margin: 14mm 12mm; }
-    :root {
-      --ocean-blue: #204050;
-      --tropical-green: #3d6b54;
-      --sand-beige: #f0e0e0;
-      --sunset-gold: #c08020;
-      --paper: #f0f0f0;
-      --ink: #1f2933;
-      --muted: #6a7280;
-    }
+    @page { margin: 12mm 14mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12.5px; line-height: 1.5; background: var(--paper); }
+    body {
+      font-family: 'Trebuchet MS', 'Lucida Sans', Arial, sans-serif;
+      color: #3b3230;
+      font-size: 11.5px;
+      line-height: 1.5;
+      background: #fff;
+    }
     .page {
-      border: 1px solid #dde2ea;
-      border-radius: 10px;
-      padding: 18px;
-      background: #f5f6f8;
-      min-height: calc(297mm - 28mm);
+      min-height: calc(297mm - 32mm);
       display: flex;
       flex-direction: column;
     }
     .content { flex: 1; }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 18px; }
-    .logo { font-family: 'Alegros', Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: var(--ocean-blue); letter-spacing: 0.5px; }
-    .logo span { color: var(--sunset-gold); }
-    .invoice-title { font-family: 'Alegros', Georgia, serif; font-size: 30px; color: var(--ocean-blue); font-weight: 700; }
-    .subtitle { color: var(--muted); font-size: 11px; margin-top: 3px; }
-    .info-section { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
-    .info-block { flex: 1; }
-    .panel {
-      background: #f9fafc;
-      border: 1px solid #dbe1ea;
-      border-radius: 8px;
-      padding: 12px 14px;
-    }
-    .info-block h3 { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-    .info-block p { margin-bottom: 4px; }
-    .billto-card {
-      background: linear-gradient(180deg, #fcfdff 0%, #f8fafd 100%);
-      border-color: #d6deea;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
-    }
-    .billto-card h3 {
-      margin-bottom: 10px;
-      letter-spacing: 1.1px;
-    }
-    .contact-stack {
-      display: grid;
-      gap: 5px;
-    }
-    .contact-line {
-      color: #334155;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-    .inline-label { color: var(--muted); font-weight: 600; margin-right: 4px; }
-    .guest-name {
-      font-size: 19px;
-      font-weight: 700;
-      color: var(--ocean-blue);
-      margin-bottom: 8px;
-      letter-spacing: 0.2px;
-      line-height: 1.15;
-    }
-    .detail-row {
+
+    /* ── Header ── */
+    .header {
       display: flex;
       justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 4px;
-      border-bottom: 1px dashed #e3e7ee;
-      padding-bottom: 4px;
+      align-items: center;
+      padding-bottom: 10px;
+      margin-bottom: 0;
     }
-    .detail-row:last-child { margin-bottom: 0; border-bottom: 0; padding-bottom: 0; }
-    .detail-row .label { color: var(--muted); font-weight: 600; }
-    .tour-details {
-      background: #f7f9fc;
-      border: 1px solid #dbe1ea;
-      border-left: 3px solid var(--ocean-blue);
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-bottom: 14px;
+    .logo img {
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+      display: block;
     }
-    table { width: 100%; border-collapse: collapse; margin: 14px 0; border: 1px solid #d6d9df; border-radius: 8px; overflow: hidden; }
-    thead th { background: var(--ocean-blue); color: #fff; padding: 9px 12px; text-align: left; font-weight: 600; }
-    tbody td { padding: 9px 12px; border-bottom: 1px solid #dde1e8; }
-    tbody tr:nth-child(even) { background: #f6f7f9; }
-    .total-row td { font-weight: 700; font-size: 14.5px; border-top: 2px solid var(--sunset-gold); background: #fff9ec; }
-    .notes { background: #f7f0e3; border-left: 4px solid var(--sunset-gold); padding: 12px; border-radius: 8px; margin-top: 12px; }
-    .notes h3 { font-family: 'Alegros', Georgia, serif; font-size: 14px; color: var(--ocean-blue); margin-bottom: 8px; }
-    .footer { margin-top: auto; text-align: center; color: var(--muted); font-size: 11.5px; border-top: 1px solid #d9dce3; padding-top: 10px; }
-    .tagline { color: var(--ocean-blue); font-weight: 600; margin-top: 4px; }
+    .logo-fallback {
+      font-size: 26px;
+      font-weight: 700;
+      color: #3b3230;
+    }
+    .company-info {
+      text-align: right;
+      line-height: 1.5;
+    }
+    .company-name {
+      font-weight: 700;
+      font-size: 12.5px;
+      color: #3b3230;
+      margin-bottom: 2px;
+    }
+    .company-detail {
+      font-size: 10.5px;
+      color: #555;
+    }
+    .header-line {
+      border: none;
+      border-top: 2.5px solid #b08d57;
+      margin: 0 0 18px 0;
+    }
 
-    /* Safe adaptive mode: mild compaction only for longer note content */
-    body.compact { font-size: 12px; line-height: 1.42; }
-    body.compact .page { padding: 15px; }
-    body.compact .header { margin-bottom: 14px; padding-bottom: 11px; }
-    body.compact .invoice-title { font-size: 28px; }
-    body.compact .info-section { gap: 12px; margin-bottom: 10px; }
-    body.compact .panel { padding: 10px 11px; }
-    body.compact .guest-name { font-size: 17px; margin-bottom: 6px; }
-    body.compact .contact-stack { gap: 4px; }
-    body.compact .tour-details { padding: 9px 10px; margin-bottom: 11px; }
-    body.compact table { margin: 10px 0; }
-    body.compact thead th { padding: 8px 10px; }
-    body.compact tbody td { padding: 8px 10px; }
-    body.compact .notes { padding: 10px; margin-top: 10px; }
-    body.compact .footer { margin-top: auto; padding-top: 8px; font-size: 11px; }
+    /* ── Invoice title ── */
+    h1.invoice-title {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 40px;
+      font-weight: 700;
+      color: #3b3230;
+      letter-spacing: 1px;
+      margin: 0 0 18px 0;
+    }
+
+    /* ── Billing row ── */
+    .billing-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    .bill-to {}
+    .bill-to-label {
+      font-weight: 700;
+      font-size: 13px;
+      color: #3b3230;
+      margin-bottom: 4px;
+    }
+    .bill-to-name {
+      font-size: 12.5px;
+      color: #3b3230;
+      margin-bottom: 2px;
+    }
+    .bill-to-detail {
+      font-size: 11px;
+      color: #555;
+      margin-bottom: 1px;
+      line-height: 1.5;
+    }
+    .invoice-meta {
+      text-align: right;
+      font-size: 11.5px;
+      color: #555;
+      line-height: 1.65;
+    }
+    .invoice-meta strong {
+      color: #3b3230;
+    }
+
+    /* ── Description ── */
+    .desc-title {
+      font-weight: 700;
+      font-size: 15px;
+      color: #3b3230;
+      margin-bottom: 4px;
+    }
+    .desc-text {
+      font-size: 11.5px;
+      color: #3b3230;
+      margin-bottom: 18px;
+      line-height: 1.55;
+    }
+
+    /* ── Summary table ── */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 22px 0;
+      font-size: 11px;
+    }
+    .summary-table th,
+    .summary-table td {
+      border: 1px solid #bbb;
+      padding: 10px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .summary-table thead th {
+      font-weight: 700;
+      font-size: 11px;
+      color: #3b3230;
+      background: #f5f5f4;
+      line-height: 1.35;
+    }
+    .summary-table tbody td {
+      font-size: 11.5px;
+      color: #3b3230;
+    }
+    .summary-table tbody td.balance {
+      font-weight: 700;
+      font-size: 12.5px;
+      color: #3b3230;
+    }
+
+    /* ── Tour Inclusions ── */
+    .tour-include-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      color: #3b3230;
+      margin-bottom: 6px;
+    }
+    .tour-include-list {
+      margin: 0 0 20px 20px;
+      padding: 0;
+      font-size: 11.5px;
+      color: #3b3230;
+      line-height: 1.75;
+    }
+    .tour-include-list li {
+      margin-bottom: 1px;
+    }
+
+    /* ── Payment Terms ── */
+    .payment-terms {
+      border: 1.5px solid #999;
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 0;
+    }
+    .payment-terms-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #3b3230;
+      margin-bottom: 8px;
+    }
+    .payment-terms-text {
+      font-size: 11.5px;
+      color: #555;
+      line-height: 1.65;
+    }
+
+    /* ── Footer ── */
+    .footer { margin-top: auto; }
+    .footer-thanks {
+      text-align: center;
+      padding: 18px 0 10px;
+    }
+    .footer-thanks .main {
+      font-weight: 700;
+      font-size: 14px;
+      color: #3b3230;
+    }
+    .footer-thanks .sub {
+      font-size: 12px;
+      font-style: italic;
+      margin-top: 4px;
+      color: #555;
+    }
+    .contact-bar {
+      background: #8b6a42;
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-radius: 6px;
+      font-size: 11px;
+      letter-spacing: 0.2px;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Compact mode ── */
+    body.compact { font-size: 11px; }
+    body.compact h1.invoice-title { font-size: 34px; margin-bottom: 14px; }
+    body.compact .billing-row { margin-bottom: 16px; }
+    body.compact .desc-text { margin-bottom: 14px; }
+    body.compact .summary-table { margin-bottom: 18px; }
+    body.compact .summary-table th,
+    body.compact .summary-table td { padding: 7px 5px; }
+    body.compact .tour-include-list { margin-bottom: 16px; }
+    body.compact .payment-terms { padding: 11px 13px; }
+    body.compact .footer-thanks { padding: 14px 0 8px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
   <div class="page">
-  <div class="content">
-  <div class="header">
-    <div class="logo">VSL <span>360</span></div>
-    <div style="text-align:right;">
-      <div class="invoice-title">INVOICE</div>
-      <div class="subtitle">Curated Travel Experiences</div>
-    </div>
-  </div>
+    <div class="content">
 
-  <div class="info-section">
-    <div class="info-block panel billto-card">
-      <h3>Bill To</h3>
-      <div class="contact-stack">
-        <p class="guest-name">{{client.name}}</p>
-        <p class="contact-line">{{client.email}}</p>
-        <p class="contact-line">{{client.contactNumber}}</p>
-        <p class="contact-line"><span class="inline-label">Citizenship:</span>{{titleCase client.citizenship}}</p>
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          {{#if brandLogoImage}}
+            <img src="{{brandLogoImage}}" alt="VSL 360" />
+          {{else}}
+            <div class="logo-fallback">VSL 360</div>
+          {{/if}}
+        </div>
+        <div class="company-info">
+          <div class="company-name">Visit Sri Lanka 360 (Pvt) Ltd</div>
+          <div class="company-detail">1/111, De Mel Road, Moratuwa, 10400</div>
+          <div class="company-detail">Business Registration No: PV 00330941</div>
+        </div>
+      </div>
+      <hr class="header-line" />
+
+      <!-- Invoice title -->
+      <h1 class="invoice-title">INVOICE</h1>
+
+      <!-- Billed To + Invoice meta -->
+      <div class="billing-row">
+        <div class="bill-to">
+          <p class="bill-to-label">Billed To:</p>
+          <p class="bill-to-name">{{client.name}}</p>
+          {{#if client.contactNumber}}<p class="bill-to-detail">Phone: {{client.contactNumber}}</p>{{/if}}
+          {{#if client.email}}<p class="bill-to-detail">{{client.email}}</p>{{/if}}
+        </div>
+        <div class="invoice-meta">
+          <p>Invoice No: <strong>{{invoice.invoiceNumber}}</strong></p>
+          <p>Date: <strong>{{formatDate invoice.invoiceDate}}</strong></p>
+          <p>Booking ID: <strong>{{booking.bookingId}}</strong></p>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="desc-title">Description</div>
+      <div class="desc-text">{{#if invoice.paymentNotes}}{{invoice.paymentNotes}}{{else}}Advance payment for upcoming {{booking.numberOfDays}} Days tour in Sri Lanka{{/if}}</div>
+
+      <!-- Summary table -->
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Arrival<br>Date</th>
+            <th>Departure<br>Date</th>
+            <th>NO. Of<br>Guests</th>
+            <th>Cost Per<br>Person</th>
+            <th>Total<br>Amount</th>
+            <th>Advance<br>Paid</th>
+            <th>Balance<br>Due</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{formatDate booking.arrivalDate}}</td>
+            <td>{{formatDate booking.departureDate}}</td>
+            <td>{{paxCount}}</td>
+            <td>{{formatCurrency invoice.costPerPerson}}</td>
+            <td>{{formatCurrency invoice.totalAmount}}</td>
+            <td>{{formatCurrency invoice.advancePaid}}</td>
+            <td class="balance">{{formatCurrency invoice.balanceAmount}}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Tour Inclusions -->
+      {{#if tourInclusionsList.length}}
+      <div class="tour-include-title">Tour Include:</div>
+      <ul class="tour-include-list">
+        {{#each tourInclusionsList}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ul>
+      {{/if}}
+
+      <!-- Payment Terms -->
+      <div class="payment-terms">
+        <div class="payment-terms-title">Payment Terms</div>
+        <div class="payment-terms-text">{{#if invoice.paymentInstructions}}{{invoice.paymentInstructions}}{{else}}The total amount must be settled in either U.S. Dollars (USD), UPI Global transfer or credit or debit card payment to the company bank account upon arrival at Katunayake Airport Colombo on the day of your arrival.{{/if}}</div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-thanks">
+        <p class="main">Thank you for choosing VSL 360 Pvt Ltd</p>
+        <p class="sub">For any inquiries or clarifications, feel free to contact us.</p>
+      </div>
+      <div class="contact-bar">
+        <div class="contact-item">&#9742;&nbsp; Tel: +94727715854</div>
+        <div class="contact-item">&#9993;&nbsp; Email: infovsl360@gmail.com</div>
+        <div class="contact-item">&#127760;&nbsp; www.visitsrilanka360.com</div>
       </div>
     </div>
-    <div class="info-block panel">
-      <h3>Invoice Details</h3>
-      <div class="detail-row"><span class="label">Invoice #</span><strong>{{invoice.invoiceNumber}}</strong></div>
-      <div class="detail-row"><span class="label">Date</span><strong>{{formatDate invoice.invoiceDate}}</strong></div>
-      <div class="detail-row"><span class="label">Booking ID</span><strong>{{booking.bookingId}}</strong></div>
-    </div>
-  </div>
-
-  <div class="info-block tour-details">
-    <h3>Tour Details</h3>
-    <p><strong>Duration:</strong> {{booking.numberOfDays}} Days</p>
-    <p><strong>Travel Dates:</strong> {{formatDate booking.arrivalDate}} — {{formatDate booking.departureDate}}</p>
-    <p><strong>Number of Guests:</strong> {{paxCount}}</p>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Description</th>
-        <th style="text-align: right;">Amount</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Cost per person</td>
-        <td style="text-align: right;">{{formatCurrency invoice.costPerPerson}}</td>
-      </tr>
-      <tr>
-        <td>Total ({{paxCount}} guests)</td>
-        <td style="text-align: right;">{{formatCurrency invoice.totalAmount}}</td>
-      </tr>
-      <tr>
-        <td>Advance Paid</td>
-        <td style="text-align: right;">- {{formatCurrency invoice.advancePaid}}</td>
-      </tr>
-      <tr class="total-row">
-        <td>Balance Due</td>
-        <td style="text-align: right;">{{formatCurrency invoice.balanceAmount}}</td>
-      </tr>
-    </tbody>
-  </table>
-
-  {{#if invoice.paymentInstructions}}
-  <div class="notes">
-    <h3>Payment Instructions</h3>
-    <p>{{invoice.paymentInstructions}}</p>
-  </div>
-  {{/if}}
-
-  {{#if invoice.paymentNotes}}
-  <div class="notes" style="margin-top: 12px;">
-    <h3>Notes</h3>
-    <p>{{invoice.paymentNotes}}</p>
-  </div>
-  {{/if}}
-  </div>
-
-  <div class="footer">
-    <p>VSL 360 Tour Operations</p>
-    <p class="tagline">Experience Sri Lanka Completely</p>
-  </div>
   </div>
 </body>
 </html>

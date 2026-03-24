@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Pencil, Save, X } from 'lucide-react';
+import { Pencil, Save, X, Plus, Trash2 } from 'lucide-react';
 import { invoiceApi } from '@/api/endpoints.api';
 import { useAuthStore } from '@/store/authStore';
 import { canGenerateInvoice } from '@/utils/permissions';
@@ -29,6 +29,7 @@ const invoiceSchema = z.object({
   balanceAmount: z.coerce.number().min(0),
   paymentNotes: z.string().optional(),
   paymentInstructions: z.string().optional(),
+  tourInclusions: z.string().optional(),
 }).superRefine((data, ctx) => {
   if (data.advancePaid > data.totalAmount) {
     ctx.addIssue({
@@ -55,6 +56,7 @@ export function InvoiceTab({ booking }: Props) {
   const canManage = user ? canGenerateInvoice(user.role) : false;
   const [editing, setEditing] = useState(false);
   const [saveError, setSaveError] = useState<string>('');
+  const [newInclusion, setNewInclusion] = useState('');
 
   const adults = (booking.client ? 1 : 0) + booking.paxList.filter(p => p.type === PaxType.ADULT).length;
   const children = booking.paxList.filter(p => p.type === PaxType.CHILD).length;
@@ -69,6 +71,17 @@ export function InvoiceTab({ booking }: Props) {
 
   const invoice: Invoice | null = data?.data ?? booking.invoice ?? null;
 
+  const [inclusions, setInclusions] = useState<string[]>(
+    () => (booking.invoice?.tourInclusions ?? '').split('\n').filter(Boolean)
+  );
+
+  // Sync inclusions when query data loads
+  useEffect(() => {
+    if (data?.data?.tourInclusions !== undefined) {
+      setInclusions((data.data.tourInclusions ?? '').split('\n').filter(Boolean));
+    }
+  }, [data?.data?.tourInclusions]);
+
   const form = useForm<InvoiceForm>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: invoice
@@ -79,6 +92,7 @@ export function InvoiceTab({ booking }: Props) {
           balanceAmount: invoice.balanceAmount,
           paymentNotes: invoice.paymentNotes ?? '',
           paymentInstructions: invoice.paymentInstructions ?? '',
+          tourInclusions: invoice.tourInclusions ?? '',
         }
       : { costPerPerson: 0, totalAmount: 0, advancePaid: 0, balanceAmount: 0 },
   });
@@ -97,6 +111,8 @@ export function InvoiceTab({ booking }: Props) {
       lastAutoTotalRef.current = getValues('totalAmount');
       lastAutoBalanceRef.current = getValues('balanceAmount');
       setSaveError('');
+      setInclusions(invoice?.tourInclusions?.split('\n').filter(Boolean) ?? []);
+      setNewInclusion('');
     }
   }, [editing, getValues]);
 
@@ -127,7 +143,7 @@ export function InvoiceTab({ booking }: Props) {
 
   const saveMutation = useMutation({
     mutationFn: (data: InvoiceForm) =>
-      invoice ? invoiceApi.update(booking.id, data) : invoiceApi.create(booking.id, data),
+      invoice ? invoiceApi.update(booking.id, { ...data, tourInclusions: inclusions.join('\n') }) : invoiceApi.create(booking.id, { ...data, tourInclusions: inclusions.join('\n') }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['invoice', booking.id] });
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
@@ -199,6 +215,52 @@ export function InvoiceTab({ booking }: Props) {
               <Label>Payment Instructions</Label>
               <Textarea {...form.register('paymentInstructions')} />
             </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Tour Inclusions</Label>
+              <div className="space-y-2">
+                {inclusions.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="flex-1 rounded border bg-muted/30 px-3 py-1.5 text-sm">{item}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 text-muted-foreground hover:text-red-600"
+                      onClick={() => setInclusions(inclusions.filter((_, idx) => idx !== i))}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={newInclusion}
+                    onChange={(e) => setNewInclusion(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = newInclusion.trim();
+                        if (val) { setInclusions([...inclusions, val]); setNewInclusion(''); }
+                      }
+                    }}
+                    placeholder="Type an item and press Enter or click +"
+                    className="flex-1 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 w-9 p-0"
+                    onClick={() => {
+                      const val = newInclusion.trim();
+                      if (val) { setInclusions([...inclusions, val]); setNewInclusion(''); }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
             <div className="sm:col-span-2 flex gap-2">
               <Button type="submit" size="sm" disabled={saveMutation.isPending}>
                 <Save className="mr-1 h-3 w-3" /> {saveMutation.isPending ? 'Saving...' : 'Save'}
@@ -233,6 +295,16 @@ export function InvoiceTab({ booking }: Props) {
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs">Payment Instructions</p>
                 <p>{invoice.paymentInstructions}</p>
+              </div>
+            )}
+            {invoice.tourInclusions && (
+              <div className="text-sm">
+                <p className="text-muted-foreground text-xs">Tour Inclusions</p>
+                <ul className="list-disc list-inside mt-1 space-y-0.5">
+                  {invoice.tourInclusions.split('\n').filter(Boolean).map((item, i) => (
+                    <li key={i}>{item.trim()}</li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>

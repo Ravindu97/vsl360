@@ -31,6 +31,7 @@ export class InvoiceService {
         balanceAmount: data.balanceAmount,
         paymentNotes: data.paymentNotes,
         paymentInstructions: data.paymentInstructions,
+        tourInclusions: data.tourInclusions,
       },
     });
   }
@@ -58,6 +59,7 @@ export class InvoiceService {
         ...(data.balanceAmount !== undefined && { balanceAmount: data.balanceAmount }),
         ...(data.paymentNotes !== undefined && { paymentNotes: data.paymentNotes }),
         ...(data.paymentInstructions !== undefined && { paymentInstructions: data.paymentInstructions }),
+        ...(data.tourInclusions !== undefined && { tourInclusions: data.tourInclusions }),
       },
     });
   }

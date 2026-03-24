@@ -118,6 +118,7 @@ export interface Invoice {
   balanceAmount: number;
   paymentNotes?: string;
   paymentInstructions?: string;
+  tourInclusions?: string;
 }
 
 export interface Attachment {

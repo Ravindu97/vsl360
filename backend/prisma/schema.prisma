@@ -197,6 +197,7 @@ model Invoice {
   balanceAmount       Decimal  @db.Decimal(10, 2)
   paymentNotes        String?
   paymentInstructions String?
+  tourInclusions      String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
