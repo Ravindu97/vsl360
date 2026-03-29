@@ -185,6 +185,14 @@
       line-height: 1.65;
     }
 
+    /* ── Computer Generated Note ── */
+    .computer-generated-note {
+      font-size: 10px;
+      color: #888;
+      font-style: italic;
+      margin-top: 16px;
+    }
+
     /* ── Footer ── */
     .footer { margin-top: auto; }
     .footer-thanks {
@@ -315,6 +323,10 @@
       <div class="payment-terms">
         <div class="payment-terms-title">Payment Terms</div>
         <div class="payment-terms-text">{{#if invoice.paymentInstructions}}{{invoice.paymentInstructions}}{{else}}The total amount must be settled in either U.S. Dollars (USD), UPI Global transfer or credit or debit card payment to the company bank account upon arrival at Katunayake Airport Colombo on the day of your arrival.{{/if}}</div>
+      </div>
+
+      <div class="computer-generated-note">
+        This is a computer generated document. Doesn't require a signature.
       </div>
 
     </div>
