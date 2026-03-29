@@ -224,19 +224,20 @@ export function TransportTab({ booking }: Props) {
             </form>
           ) : plan ? (
             <div className="space-y-4">
-              <div className="grid gap-3 text-sm sm:grid-cols-3">
+              <div className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
                 <Info label="Vehicle" value={plan.vehicleModel} />
                 <Info label="Vehicle ID" value={plan.vehicleIdNumber} />
                 <Info label="Driver" value={`${plan.driverName || '—'} (${plan.driverLanguage})`} />
-              </div>
-              <div className="grid gap-3 text-sm sm:grid-cols-2">
                 <Info label="Arrival Pickup" value={[plan.arrivalPickupLocation, plan.arrivalPickupTime].filter(Boolean).join(' at ')} />
                 <Info label="Departure Drop" value={[plan.departureDropLocation, plan.departureDropTime].filter(Boolean).join(' at ')} />
-              </div>
-              <div className="flex gap-6 text-sm">
-                {plan.babySeatRequired && <span className="rounded-full bg-blue-50 px-3 py-0.5 text-blue-700 text-xs font-medium">Baby Seat</span>}
-                {plan.wheelchairRequired && <span className="rounded-full bg-blue-50 px-3 py-0.5 text-blue-700 text-xs font-medium">Wheelchair</span>}
-                {!plan.babySeatRequired && !plan.wheelchairRequired && <span className="text-xs text-muted-foreground">No special requirements</span>}
+                <div>
+                  <p className="text-muted-foreground text-xs">Special Requirements</p>
+                  <div className="mt-1 flex gap-2">
+                    {plan.babySeatRequired && <span className="rounded-full bg-blue-50 px-3 py-0.5 text-blue-700 text-xs font-medium">Baby Seat</span>}
+                    {plan.wheelchairRequired && <span className="rounded-full bg-blue-50 px-3 py-0.5 text-blue-700 text-xs font-medium">Wheelchair</span>}
+                    {!plan.babySeatRequired && !plan.wheelchairRequired && <span className="font-medium">None</span>}
+                  </div>
+                </div>
               </div>
             </div>
           ) : (

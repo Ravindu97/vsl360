@@ -79,18 +79,37 @@
     .tour-overview {
       margin-bottom: 22px;
     }
+    .overview-grid {
+      display: flex;
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .overview-col {
+      flex: 1;
+    }
+    .overview-group-title {
+      font-weight: 700;
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #e0dbd6;
+    }
     .overview-row {
       display: flex;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
       font-size: 12px;
     }
     .overview-label {
-      width: 170px;
-      color: #3b3230;
+      width: 120px;
+      color: #777;
       flex-shrink: 0;
     }
     .overview-value {
       color: #3b3230;
+      font-weight: 500;
     }
 
     /* ── Hotel Table ── */
@@ -185,6 +204,8 @@
     body.compact .section-title { font-size: 13px; margin-bottom: 6px; }
     body.compact .tour-overview { margin-bottom: 16px; }
     body.compact .overview-row { font-size: 11px; }
+    body.compact .overview-grid { gap: 10px; }
+    body.compact .overview-label { width: 100px; }
     body.compact .hotel-table { font-size: 10.5px; }
     body.compact .hotel-table thead th { padding: 7px 8px; font-size: 11px; }
     body.compact .hotel-table tbody td { padding: 6px 8px; }
@@ -224,35 +245,57 @@
       <!-- Tour Overview -->
       <div class="tour-overview">
         <div class="section-title">Tour Overview</div>
-        <div class="overview-row">
-          <div class="overview-label">Country</div>
-          <div class="overview-value">: {{client.citizenship}}</div>
-        </div>
-        <div class="overview-row">
-          <div class="overview-label">From</div>
-          <div class="overview-value">: {{formatDate booking.arrivalDate}}</div>
-        </div>
-        <div class="overview-row">
-          <div class="overview-label">To</div>
-          <div class="overview-value">: {{formatDate booking.departureDate}}</div>
-        </div>
-        <div class="overview-row">
-          <div class="overview-label">Number of Guests</div>
-          <div class="overview-value">: {{padZero totalGuests}} {{guestBreakdown adults children infants}}</div>
-        </div>
-        <div class="overview-row">
-          <div class="overview-label">Room allocation</div>
-          <div class="overview-value">: {{roomSummary hotels}}</div>
-        </div>
-        {{#if transport}}
-        <div class="overview-row">
-          <div class="overview-label">Vehicle</div>
-          <div class="overview-value">: {{transport.vehicleModel}}</div>
-        </div>
-        {{/if}}
-        <div class="overview-row">
-          <div class="overview-label">Meal Plan</div>
-          <div class="overview-value">: {{mealPlanSummary hotels}}</div>
+        <div class="overview-grid">
+          <div class="overview-col">
+            <div class="overview-group-title">Tour Details</div>
+            <div class="overview-row">
+              <div class="overview-label">Country</div>
+              <div class="overview-value">: {{client.citizenship}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">From</div>
+              <div class="overview-value">: {{formatDate booking.arrivalDate}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">To</div>
+              <div class="overview-value">: {{formatDate booking.departureDate}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Guests</div>
+              <div class="overview-value">: {{padZero totalGuests}} {{guestBreakdown adults children infants}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Meal Plan</div>
+              <div class="overview-value">: {{mealPlanSummary hotels}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Rooms</div>
+              <div class="overview-value">: {{roomSummary hotels}}</div>
+            </div>
+          </div>
+          <div class="overview-col">
+            <div class="overview-group-title">Transport</div>
+            {{#if transport}}
+            <div class="overview-row">
+              <div class="overview-label">Vehicle</div>
+              <div class="overview-value">: {{transport.vehicleModel}}</div>
+            </div>
+            {{#if transport.vehicleIdNumber}}
+            <div class="overview-row">
+              <div class="overview-label">Vehicle ID</div>
+              <div class="overview-value">: {{transport.vehicleIdNumber}}</div>
+            </div>
+            {{/if}}
+            <div class="overview-row">
+              <div class="overview-label">Driver</div>
+              <div class="overview-value">: {{transport.driverName}} ({{transport.driverLanguage}})</div>
+            </div>
+            {{else}}
+            <div class="overview-row">
+              <div class="overview-value" style="color:#888;">To Be Confirmed</div>
+            </div>
+            {{/if}}
+          </div>
         </div>
       </div>
 
