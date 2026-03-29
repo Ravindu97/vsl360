@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { bookingsApi } from '@/api/bookings.api';
 import { useAuthStore } from '@/store/authStore';
 import { canEditBooking, canApproveDocuments, canAdvanceToReservationStatuses, canAdvanceToTransportStatuses, canAdvanceToCosting, canAdvanceToDocumentsReady } from '@/utils/permissions';
-import { formatDate, formatDateTime } from '@/utils/formatters';
+import { formatDate, formatDateTime, formatCurrency } from '@/utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -148,36 +148,124 @@ export function OverviewTab({ booking }: Props) {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <Card>
-        <CardHeader><CardTitle>Tour Details</CardTitle></CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <Row label="Tour Month" value={booking.tourMonth} />
-          <Row label="Duration" value={`${booking.numberOfDays} days`} />
-          <Row label="Arrival" value={`${formatDate(booking.arrivalDate)} at ${booking.arrivalTime}`} />
-          <Row label="Departure" value={`${formatDate(booking.departureDate)} at ${booking.departureTime}`} />
-          <Row label="Sales Owner" value={booking.salesOwner?.name} />
-          <Row label="Created" value={formatDateTime(booking.createdAt)} />
-          {booking.additionalActivities && <Row label="Activities" value={booking.additionalActivities} />}
-          {booking.specialCelebrations && <Row label="Celebrations" value={booking.specialCelebrations} />}
-          {booking.generalNotes && <Row label="Notes" value={booking.generalNotes} />}
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      {/* Row 1: Tour Details + Client */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Tour Details</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <Row label="Tour Month" value={booking.tourMonth} />
+            <Row label="Duration" value={`${booking.numberOfDays} days`} />
+            <Row label="Arrival" value={`${formatDate(booking.arrivalDate)} at ${booking.arrivalTime}`} />
+            <Row label="Departure" value={`${formatDate(booking.departureDate)} at ${booking.departureTime}`} />
+            <Row label="Sales Owner" value={booking.salesOwner?.name} />
+            <Row label="Created" value={formatDateTime(booking.createdAt)} />
+            {booking.additionalActivities && <Row label="Activities" value={booking.additionalActivities} />}
+            {booking.specialCelebrations && <Row label="Celebrations" value={booking.specialCelebrations} />}
+            {booking.generalNotes && <Row label="Notes" value={booking.generalNotes} />}
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Quick Summary</CardTitle></CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <Row label="Pax Count" value={String(booking.paxList?.length ?? 0)} />
-          <Row label="Hotel Nights" value={String(booking.hotelPlan?.length ?? 0)} />
-          <Row label="Transport" value={booking.transportPlan ? 'Assigned' : 'Not assigned'} />
-          <Row label="Invoice" value={booking.invoice ? booking.invoice.invoiceNumber : 'Not created'} />
-          <Row label="Attachments" value={String(booking.attachments?.length ?? 0)} />
-          <Row label="Documents" value={String(booking.documents?.length ?? 0)} />
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader><CardTitle>Client & Passengers</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <Row label="Guest Name" value={booking.client?.name} />
+            <Row label="Citizenship" value={booking.client?.citizenship} />
+            <Row label="Language Preference" value={booking.client?.languagePreference} />
+            <Row label="Email" value={booking.client?.email} />
+            <Row label="Contact" value={booking.client?.contactNumber} />
+            <Divider />
+            <Row label="Total Pax" value={String((booking.paxList?.length ?? 0) + (booking.client ? 1 : 0))} />
+            <Row label="Adults" value={String((booking.paxList?.filter(p => p.type === 'ADULT').length ?? 0) + (booking.client ? 1 : 0))} />
+            <Row label="Children" value={String(booking.paxList?.filter(p => p.type === 'CHILD').length ?? 0)} />
+            <Row label="Infants" value={String(booking.paxList?.filter(p => p.type === 'INFANT').length ?? 0)} />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 2: Hotels + Transport */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Hotels</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {booking.hotelPlan && booking.hotelPlan.length > 0 ? (
+              <>
+                <Row label="Total Nights" value={String(booking.hotelPlan.length)} />
+                <Row label="Confirmed" value={String(booking.hotelPlan.filter(h => h.confirmationStatus === 'CONFIRMED').length)} />
+                <Row label="Pending" value={String(booking.hotelPlan.filter(h => h.confirmationStatus !== 'CONFIRMED').length)} />
+                <Divider />
+                {booking.hotelPlan.map((h) => (
+                  <div key={h.id} className="flex justify-between">
+                    <span className="text-muted-foreground">Night {h.nightNumber}</span>
+                    <span className="font-medium text-right max-w-[60%] truncate">
+                      {h.hotelName}
+                      <span className="ml-1.5 text-xs text-muted-foreground">({h.roomCategory})</span>
+                    </span>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <p className="text-muted-foreground">No hotel bookings yet</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Transport</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {booking.transportPlan ? (
+              <>
+                <Row label="Vehicle" value={booking.transportPlan.vehicleModel} />
+                {booking.transportPlan.vehicleIdNumber && <Row label="Vehicle ID" value={booking.transportPlan.vehicleIdNumber} />}
+                <Row label="Driver" value={booking.transportPlan.driverName || '—'} />
+                <Row label="Driver Language" value={booking.transportPlan.driverLanguage} />
+                <Divider />
+                {booking.transportPlan.arrivalPickupLocation && <Row label="Arrival Pickup" value={booking.transportPlan.arrivalPickupLocation} />}
+                {booking.transportPlan.departureDropLocation && <Row label="Departure Drop" value={booking.transportPlan.departureDropLocation} />}
+                <Divider />
+                {booking.transportPlan.babySeatRequired && <Row label="Baby Seat" value="Required" />}
+                {booking.transportPlan.wheelchairRequired && <Row label="Wheelchair" value="Required" />}
+                <Row label="Day Plans" value={`${booking.transportPlan.dayPlans?.length ?? 0} days`} />
+              </>
+            ) : (
+              <p className="text-muted-foreground">No transport assigned yet</p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Row 3: Invoice + Docs/Attachments */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle>Invoice</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {booking.invoice ? (
+              <>
+                <Row label="Invoice No" value={booking.invoice.invoiceNumber} />
+                <Row label="Invoice Date" value={formatDate(booking.invoice.invoiceDate)} />
+                <Row label="Cost / Person" value={formatCurrency(booking.invoice.costPerPerson)} />
+                <Row label="Total Amount" value={formatCurrency(booking.invoice.totalAmount)} />
+                <Divider />
+                <Row label="Advance Paid" value={formatCurrency(booking.invoice.advancePaid)} />
+                <Row label="Balance Due" value={formatCurrency(booking.invoice.balanceAmount)} />
+              </>
+            ) : (
+              <p className="text-muted-foreground">No invoice created yet</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Documents & Attachments</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <Row label="Generated Documents" value={String(booking.documents?.length ?? 0)} />
+            <Row label="Attachments" value={String(booking.attachments?.length ?? 0)} />
+          </CardContent>
+        </Card>
+      </div>
 
       {canChangeStatus && (nextStatuses.length > 0 || Boolean(revertStatus)) && (
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader><CardTitle>Update Status</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-3">
@@ -227,4 +315,8 @@ function Row({ label, value }: { label: string; value?: string }) {
       <span className="font-medium text-right max-w-[60%]">{value || '—'}</span>
     </div>
   );
+}
+
+function Divider() {
+  return <div className="border-t border-border" />;
 }

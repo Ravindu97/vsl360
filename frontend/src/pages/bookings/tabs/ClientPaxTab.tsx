@@ -140,7 +140,7 @@ export function ClientPaxTab({ booking }: Props) {
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <Info label="Name" value={booking.client?.name} />
               <Info label="Citizenship" value={booking.client?.citizenship} />
-              <Info label="Language" value={booking.client?.languagePreference} />
+              <Info label="Language Preference" value={booking.client?.languagePreference} />
               <Info label="Email" value={booking.client?.email} />
               <Info label="Contact" value={booking.client?.contactNumber} />
             </div>
