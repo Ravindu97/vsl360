@@ -27,10 +27,8 @@ const hotelSchema = z.object({
   hotelName: z.string().min(1, 'Required'),
   roomCategory: z.string().min(1, 'Required'),
   numberOfRooms: z.coerce.number().min(1),
-  roomPreference: z.string().optional(),
   mealPlan: z.string().min(1, 'Required'),
   mealPreference: z.string().optional(),
-  mobilityNotes: z.string().optional(),
   reservationNotes: z.string().optional(),
 });
 
@@ -55,10 +53,8 @@ function buildInitialHotelDraft(nightNumber: number): HotelForm {
     hotelName: 'To Be Confirmed',
     roomCategory: 'To Be Confirmed',
     numberOfRooms: 1,
-    roomPreference: '',
     mealPlan: 'BB',
     mealPreference: '',
-    mobilityNotes: '',
     reservationNotes: '',
   };
 }
@@ -163,10 +159,8 @@ export function HotelsTab({ booking }: Props) {
       hotelName: hotel.hotelName,
       roomCategory: hotel.roomCategory,
       numberOfRooms: hotel.numberOfRooms,
-      roomPreference: hotel.roomPreference ?? '',
       mealPlan: hotel.mealPlan,
       mealPreference: hotel.mealPreference ?? '',
-      mobilityNotes: hotel.mobilityNotes ?? '',
       reservationNotes: hotel.reservationNotes ?? '',
     });
     setEditingHotelId(hotel.id);
@@ -184,48 +178,44 @@ export function HotelsTab({ booking }: Props) {
       </CardHeader>
       <CardContent>
         {adding && canManage && (
-          <form onSubmit={form.handleSubmit((d) => createHotel.mutate(d))} className="mb-4 grid gap-3 rounded-md border p-4 sm:grid-cols-3">
-            <div className="space-y-1">
-              <Label>Night # *</Label>
-              <Input type="number" {...form.register('nightNumber')} />
+          <form onSubmit={form.handleSubmit((d) => createHotel.mutate(d))} className="mb-4 space-y-4 rounded-md border p-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1">
+                <Label>Night # *</Label>
+                <Input type="number" {...form.register('nightNumber')} />
+              </div>
+              <div className="space-y-1">
+                <Label>Hotel Name *</Label>
+                <Input {...form.register('hotelName')} />
+              </div>
+              <div className="space-y-1">
+                <Label>Room Category *</Label>
+                <Input {...form.register('roomCategory')} />
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Hotel Name *</Label>
-              <Input {...form.register('hotelName')} />
-            </div>
-            <div className="space-y-1">
-              <Label>Room Category *</Label>
-              <Input {...form.register('roomCategory')} />
-            </div>
-            <div className="space-y-1">
-              <Label>Rooms *</Label>
-              <Input type="number" min={1} {...form.register('numberOfRooms')} />
-            </div>
-            <div className="space-y-1">
-              <Label>Meal Plan *</Label>
-              <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm" {...form.register('mealPlan')}>
-                {Object.entries(MEAL_PLAN_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label>Room Preference</Label>
-              <Input {...form.register('roomPreference')} />
-            </div>
-            <div className="space-y-1">
-              <Label>Meal Preference</Label>
-              <Input {...form.register('mealPreference')} />
-            </div>
-            <div className="space-y-1">
-              <Label>Mobility Notes</Label>
-              <Input {...form.register('mobilityNotes')} />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1">
+                <Label>Rooms *</Label>
+                <Input type="number" min={1} {...form.register('numberOfRooms')} />
+              </div>
+              <div className="space-y-1">
+                <Label>Meal Plan *</Label>
+                <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm" {...form.register('mealPlan')}>
+                  {Object.entries(MEAL_PLAN_LABELS).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label>Meal Preference</Label>
+                <Input {...form.register('mealPreference')} />
+              </div>
             </div>
             <div className="space-y-1">
               <Label>Reservation Notes</Label>
               <Textarea {...form.register('reservationNotes')} />
             </div>
-            <div className="sm:col-span-3 flex gap-2">
+            <div className="flex gap-2">
               <Button type="submit" size="sm" disabled={createHotel.isPending}>
                 <Save className="mr-1 h-3 w-3" /> Save
               </Button>
@@ -267,48 +257,44 @@ export function HotelsTab({ booking }: Props) {
                   editingHotelId === h.id ? (
                     <TableRow key={h.id}>
                       <TableCell colSpan={canManage ? 7 : 6}>
-                        <form onSubmit={editForm.handleSubmit((data) => updateHotel.mutate({ hotelId: h.id, data }))} className="grid gap-3 rounded-md border p-4 sm:grid-cols-3">
-                          <div className="space-y-1">
-                            <Label>Night # *</Label>
-                            <Input type="number" {...editForm.register('nightNumber')} />
+                        <form onSubmit={editForm.handleSubmit((data) => updateHotel.mutate({ hotelId: h.id, data }))} className="space-y-4 rounded-md border p-4">
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="space-y-1">
+                              <Label>Night # *</Label>
+                              <Input type="number" {...editForm.register('nightNumber')} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Hotel Name *</Label>
+                              <Input {...editForm.register('hotelName')} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Room Category *</Label>
+                              <Input {...editForm.register('roomCategory')} />
+                            </div>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="space-y-1">
+                              <Label>Rooms *</Label>
+                              <Input type="number" min={1} {...editForm.register('numberOfRooms')} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Meal Plan *</Label>
+                              <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm" {...editForm.register('mealPlan')}>
+                                {Object.entries(MEAL_PLAN_LABELS).map(([k, v]) => (
+                                  <option key={k} value={k}>{v}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Meal Preference</Label>
+                              <Input {...editForm.register('mealPreference')} />
+                            </div>
                           </div>
                           <div className="space-y-1">
-                            <Label>Hotel Name *</Label>
-                            <Input {...editForm.register('hotelName')} />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Room Category *</Label>
-                            <Input {...editForm.register('roomCategory')} />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Rooms *</Label>
-                            <Input type="number" min={1} {...editForm.register('numberOfRooms')} />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Meal Plan *</Label>
-                            <select className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm" {...editForm.register('mealPlan')}>
-                              {Object.entries(MEAL_PLAN_LABELS).map(([k, v]) => (
-                                <option key={k} value={k}>{v}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Room Preference</Label>
-                            <Input {...editForm.register('roomPreference')} />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Meal Preference</Label>
-                            <Input {...editForm.register('mealPreference')} />
-                          </div>
-                          <div className="space-y-1">
-                            <Label>Mobility Notes</Label>
-                            <Input {...editForm.register('mobilityNotes')} />
-                          </div>
-                          <div className="space-y-1 sm:col-span-3">
                             <Label>Reservation Notes</Label>
                             <Textarea {...editForm.register('reservationNotes')} />
                           </div>
-                          <div className="sm:col-span-3 flex gap-2">
+                          <div className="flex gap-2">
                             <Button type="submit" size="sm" disabled={updateHotel.isPending}>
                               <Save className="mr-1 h-3 w-3" /> Save Changes
                             </Button>
