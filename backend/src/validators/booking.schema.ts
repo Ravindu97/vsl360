@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 export const createBookingSchema = z.object({
   numberOfDays: z.number().int().positive(),
-  tourMonth: z.string().min(1),
   arrivalDate: z.string().datetime({ offset: true }).or(z.string().min(1)),
   arrivalTime: z.string().min(1),
   departureDate: z.string().datetime({ offset: true }).or(z.string().min(1)),
@@ -21,7 +20,6 @@ export const createBookingSchema = z.object({
 
 export const updateBookingSchema = z.object({
   numberOfDays: z.number().int().positive().optional(),
-  tourMonth: z.string().min(1).optional(),
   arrivalDate: z.string().datetime({ offset: true }).or(z.string().min(1)).optional(),
   arrivalTime: z.string().min(1).optional(),
   departureDate: z.string().datetime({ offset: true }).or(z.string().min(1)).optional(),

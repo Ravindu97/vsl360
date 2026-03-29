@@ -30,7 +30,6 @@ export function BookingListPage() {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [tourMonth, setTourMonth] = useState('');
   const [arrivalFrom, setArrivalFrom] = useState('');
   const [arrivalTo, setArrivalTo] = useState('');
   const [salesOwnerId, setSalesOwnerId] = useState('ALL');
@@ -49,13 +48,12 @@ export function BookingListPage() {
   const filters: BookingFilters = {
     ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
     ...(search ? { search } : {}),
-    ...(tourMonth ? { tourMonth } : {}),
     ...(arrivalFrom ? { arrivalFrom } : {}),
     ...(arrivalTo ? { arrivalTo } : {}),
     ...(salesOwnerId !== 'ALL' ? { salesOwnerId } : {}),
   };
 
-  const activeFilterCount = [tourMonth, arrivalFrom, arrivalTo, salesOwnerId !== 'ALL' ? salesOwnerId : ''].filter(Boolean).length;
+  const activeFilterCount = [arrivalFrom, arrivalTo, salesOwnerId !== 'ALL' ? salesOwnerId : ''].filter(Boolean).length;
 
   const { data: usersData } = useQuery({
     queryKey: ['users-all'],
@@ -89,7 +87,7 @@ export function BookingListPage() {
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search ID, client, month..."
+              placeholder="Search ID, client..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9 w-[240px]"
@@ -144,15 +142,7 @@ export function BookingListPage() {
 
       {showFilters && (
         <div className="rounded-md border bg-muted/30 p-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Tour Month</Label>
-              <Input
-                placeholder="e.g. January 2026"
-                value={tourMonth}
-                onChange={(e) => { setTourMonth(e.target.value); setPage(1); }}
-              />
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Arrival From</Label>
               <Input
@@ -189,7 +179,7 @@ export function BookingListPage() {
               variant="ghost"
               size="sm"
               className="mt-3 text-xs"
-              onClick={() => { setTourMonth(''); setArrivalFrom(''); setArrivalTo(''); setSalesOwnerId('ALL'); setPage(1); }}
+              onClick={() => { setArrivalFrom(''); setArrivalTo(''); setSalesOwnerId('ALL'); setPage(1); }}
             >
               <X className="mr-1 h-3 w-3" /> Clear all filters
             </Button>
@@ -217,7 +207,6 @@ export function BookingListPage() {
               <TableRow>
                 <TableHead>Booking ID</TableHead>
                 <TableHead>Client</TableHead>
-                <TableHead>Tour Month</TableHead>
                 <TableHead>Arrival</TableHead>
                 <TableHead>Days</TableHead>
                 <TableHead>Status</TableHead>
@@ -230,7 +219,6 @@ export function BookingListPage() {
                 <TableRow key={booking.id}>
                   <TableCell className="font-medium">{booking.bookingId}</TableCell>
                   <TableCell>{booking.client?.name ?? '—'}</TableCell>
-                  <TableCell>{booking.tourMonth}</TableCell>
                   <TableCell>{formatDate(booking.arrivalDate)}</TableCell>
                   <TableCell>{booking.numberOfDays}</TableCell>
                   <TableCell>

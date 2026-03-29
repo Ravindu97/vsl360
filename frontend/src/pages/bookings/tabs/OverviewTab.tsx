@@ -324,7 +324,6 @@ export function OverviewTab({ booking }: Props) {
 }
 
 const tourDetailsSchema = z.object({
-  tourMonth: z.string().min(1, 'Required'),
   numberOfDays: z.coerce.number().min(1),
   arrivalDate: z.string().min(1, 'Required'),
   arrivalTime: z.string().min(1, 'Required'),
@@ -340,7 +339,6 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
   const form = useForm({
     resolver: zodResolver(tourDetailsSchema),
     defaultValues: {
-      tourMonth: booking.tourMonth,
       numberOfDays: booking.numberOfDays,
       arrivalDate: booking.arrivalDate?.slice(0, 10) ?? '',
       arrivalTime: booking.arrivalTime,
@@ -374,10 +372,6 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
         {editing ? (
           <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Tour Month</Label>
-                <Input placeholder="e.g. January 2026" {...form.register('tourMonth')} />
-              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Number of Days</Label>
                 <Input type="number" min={1} {...form.register('numberOfDays')} />
@@ -422,7 +416,6 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
           </form>
         ) : (
           <div className="space-y-3 text-sm">
-            <Row label="Tour Month" value={booking.tourMonth} />
             <Row label="Duration" value={`${booking.numberOfDays} days`} />
             <Row label="Arrival" value={`${formatDate(booking.arrivalDate)} at ${booking.arrivalTime}`} />
             <Row label="Departure" value={`${formatDate(booking.departureDate)} at ${booking.departureTime}`} />

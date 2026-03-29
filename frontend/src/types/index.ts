@@ -162,7 +162,6 @@ export interface Booking {
   bookingId: string;
   status: BookingStatus;
   numberOfDays: number;
-  tourMonth: string;
   arrivalDate: string;
   arrivalTime: string;
   departureDate: string;

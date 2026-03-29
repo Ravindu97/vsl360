@@ -14,7 +14,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from '@/utils/sessionDraft';
 
 const createBookingSchema = z.object({
-  tourMonth: z.string().min(1, 'Required'),
   numberOfDays: z.coerce.number().min(1),
   arrivalDate: z.string().min(1, 'Required'),
   arrivalTime: z.string().min(1, 'Required'),
@@ -37,7 +36,6 @@ type CreateBookingForm = z.infer<typeof createBookingSchema>;
 const BOOKING_CREATE_DRAFT_KEY = 'vsl360.booking.create.draft';
 
 const defaultFormValues: CreateBookingForm = {
-  tourMonth: '',
   numberOfDays: 1,
   arrivalDate: '',
   arrivalTime: '',
@@ -196,11 +194,6 @@ export function BookingCreatePage() {
             <CardTitle>Tour Details</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Tour Month *</Label>
-              <Input placeholder="e.g. January 2026" {...register('tourMonth')} />
-              {errors.tourMonth && <p className="text-xs text-destructive">{errors.tourMonth.message}</p>}
-            </div>
             <div className="space-y-2">
               <Label>Number of Days *</Label>
               <Input type="number" min={1} {...register('numberOfDays')} />

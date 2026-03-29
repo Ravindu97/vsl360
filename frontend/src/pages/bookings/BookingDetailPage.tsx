@@ -36,7 +36,7 @@ export function BookingDetailPage() {
             <StatusBadge status={booking.status} />
           </div>
           <p className="text-sm text-muted-foreground">
-            {booking.client?.name} &middot; {booking.numberOfDays} days &middot; {booking.tourMonth}
+            {booking.client?.name} &middot; {booking.numberOfDays} days
           </p>
         </div>
       </div>

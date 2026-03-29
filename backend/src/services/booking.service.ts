@@ -42,7 +42,6 @@ export class BookingService {
       data: {
         bookingId,
         numberOfDays: data.numberOfDays,
-        tourMonth: data.tourMonth,
         arrivalDate: new Date(data.arrivalDate),
         arrivalTime: data.arrivalTime,
         departureDate: new Date(data.departureDate),
@@ -82,7 +81,7 @@ export class BookingService {
   async findAll(
     userRole: UserRole,
     userId: string,
-    filters: { status?: string; search?: string; tourMonth?: string; arrivalFrom?: string; arrivalTo?: string; salesOwnerId?: string },
+    filters: { status?: string; search?: string; arrivalFrom?: string; arrivalTo?: string; salesOwnerId?: string },
     page = 1,
     pageSize = 10,
   ) {
@@ -118,15 +117,10 @@ export class BookingService {
       conditions.push({
         OR: [
           { bookingId: { contains: term, mode: 'insensitive' } },
-          { tourMonth: { contains: term, mode: 'insensitive' } },
           { client: { name: { contains: term, mode: 'insensitive' } } },
           { client: { citizenship: { contains: term, mode: 'insensitive' } } },
         ],
       });
-    }
-
-    if (filters.tourMonth) {
-      conditions.push({ tourMonth: { equals: filters.tourMonth, mode: 'insensitive' } });
     }
 
     if (filters.arrivalFrom) {
@@ -216,7 +210,6 @@ export class BookingService {
       where: { id },
       data: {
         ...(data.numberOfDays !== undefined && { numberOfDays: data.numberOfDays }),
-        ...(data.tourMonth && { tourMonth: data.tourMonth }),
         ...(data.arrivalDate && { arrivalDate: new Date(data.arrivalDate) }),
         ...(data.arrivalTime && { arrivalTime: data.arrivalTime }),
         ...(data.departureDate && { departureDate: new Date(data.departureDate) }),

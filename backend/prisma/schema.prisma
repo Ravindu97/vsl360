@@ -65,7 +65,6 @@ model Booking {
 
   // Tour Information
   numberOfDays         Int
-  tourMonth            String
   arrivalDate          DateTime
   arrivalTime          String
   departureDate        DateTime

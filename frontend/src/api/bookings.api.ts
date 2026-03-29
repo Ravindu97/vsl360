@@ -4,7 +4,6 @@ import type { Booking, PaginatedResponse } from '@/types';
 export interface BookingFilters {
   status?: string;
   search?: string;
-  tourMonth?: string;
   arrivalFrom?: string;
   arrivalTo?: string;
   salesOwnerId?: string;
