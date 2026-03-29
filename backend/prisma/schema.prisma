@@ -148,8 +148,10 @@ model TransportPlan {
   booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   vehicleModel          String
+  vehicleIdNumber       String?
   vehicleNotes          String?
   babySeatRequired      Boolean @default(false)
+  wheelchairRequired    Boolean @default(false)
   driverName            String?
   driverLanguage        String
 

@@ -94,8 +94,10 @@ export interface TransportPlan {
   id: string;
   bookingId: string;
   vehicleModel: string;
+  vehicleIdNumber?: string;
   vehicleNotes?: string;
   babySeatRequired: boolean;
+  wheelchairRequired: boolean;
   driverName?: string;
   driverLanguage: string;
   arrivalPickupLocation?: string;

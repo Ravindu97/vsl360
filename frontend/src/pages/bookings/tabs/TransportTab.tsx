@@ -22,8 +22,11 @@ interface Props {
 
 const transportSchema = z.object({
   vehicleModel: z.string().min(1, 'Required'),
+  vehicleModel: z.string().min(1, 'Required'),
+  vehicleIdNumber: z.string().optional(),
   vehicleNotes: z.string().optional(),
   babySeatRequired: z.boolean(),
+  wheelchairRequired: z.boolean(),
   driverName: z.string().optional(),
   driverLanguage: z.string().min(1, 'Required'),
   arrivalPickupLocation: z.string().optional(),
@@ -66,8 +69,8 @@ export function TransportTab({ booking }: Props) {
   const planForm = useForm<TransportForm>({
     resolver: zodResolver(transportSchema),
     defaultValues: plan
-      ? { ...plan, babySeatRequired: plan.babySeatRequired ?? false }
-      : { vehicleModel: '', driverLanguage: 'English', babySeatRequired: false },
+      ? { ...plan, babySeatRequired: plan.babySeatRequired ?? false, wheelchairRequired: plan.wheelchairRequired ?? false }
+      : { vehicleModel: '', driverLanguage: 'English', babySeatRequired: false, wheelchairRequired: false },
   });
 
   const dayForm = useForm<DayPlanForm>({
@@ -116,58 +119,101 @@ export function TransportTab({ booking }: Props) {
         </CardHeader>
         <CardContent>
           {editingPlan && canManage ? (
-            <form onSubmit={planForm.handleSubmit((d) => savePlan.mutate(d))} className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1">
-                <Label>Vehicle Model *</Label>
-                <Input {...planForm.register('vehicleModel')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Driver Language *</Label>
-                <Input {...planForm.register('driverLanguage')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Driver Name</Label>
-                <Input {...planForm.register('driverName')} />
-              </div>
-              <div className="space-y-1 flex items-end gap-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input type="checkbox" {...planForm.register('babySeatRequired')} className="rounded" />
-                  Baby Seat Required
-                </label>
-              </div>
-              <div className="space-y-1">
-                <Label>Vehicle Notes</Label>
-                <Input {...planForm.register('vehicleNotes')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Arrival Pickup Location</Label>
-                <Input {...planForm.register('arrivalPickupLocation')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Arrival Pickup Time</Label>
-                <Input type="time" {...planForm.register('arrivalPickupTime')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Arrival Pickup Notes</Label>
-                <Input {...planForm.register('arrivalPickupNotes')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Departure Drop Location</Label>
-                <Input {...planForm.register('departureDropLocation')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Departure Drop Time</Label>
-                <Input type="time" {...planForm.register('departureDropTime')} />
-              </div>
-              <div className="space-y-1">
-                <Label>Departure Drop Notes</Label>
-                <Input {...planForm.register('departureDropNotes')} />
-              </div>
+            <form onSubmit={planForm.handleSubmit((d) => savePlan.mutate(d))} className="space-y-6">
+              {/* Vehicle Details */}
+              <fieldset className="rounded-md border p-4 space-y-3">
+                <legend className="px-2 text-sm font-semibold text-muted-foreground">Vehicle Details</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label>Vehicle Model *</Label>
+                    <Input {...planForm.register('vehicleModel')} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Vehicle ID Number</Label>
+                    <Input {...planForm.register('vehicleIdNumber')} />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label>Vehicle Notes</Label>
+                    <Input {...planForm.register('vehicleNotes')} />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Driver Details */}
+              <fieldset className="rounded-md border p-4 space-y-3">
+                <legend className="px-2 text-sm font-semibold text-muted-foreground">Driver Details</legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label>Driver Name</Label>
+                    <Input {...planForm.register('driverName')} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Driver Language *</Label>
+                    <Input {...planForm.register('driverLanguage')} />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Special Requirements */}
+              <fieldset className="rounded-md border p-4 space-y-3">
+                <legend className="px-2 text-sm font-semibold text-muted-foreground">Special Requirements</legend>
+                <div className="flex flex-wrap gap-6">
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" {...planForm.register('babySeatRequired')} className="rounded" />
+                    Baby Seat Required
+                  </label>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" {...planForm.register('wheelchairRequired')} className="rounded" />
+                    Wheelchair Required
+                  </label>
+                </div>
+              </fieldset>
+
+              {/* Arrival Pickup */}
+              <fieldset className="rounded-md border p-4 space-y-3">
+                <legend className="px-2 text-sm font-semibold text-muted-foreground">Arrival Pickup</legend>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <Label>Location</Label>
+                    <Input {...planForm.register('arrivalPickupLocation')} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Time</Label>
+                    <Input type="time" {...planForm.register('arrivalPickupTime')} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Notes</Label>
+                    <Input {...planForm.register('arrivalPickupNotes')} />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Departure Drop */}
+              <fieldset className="rounded-md border p-4 space-y-3">
+                <legend className="px-2 text-sm font-semibold text-muted-foreground">Departure Drop</legend>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-1">
+                    <Label>Location</Label>
+                    <Input {...planForm.register('departureDropLocation')} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Time</Label>
+                    <Input type="time" {...planForm.register('departureDropTime')} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Notes</Label>
+                    <Input {...planForm.register('departureDropNotes')} />
+                  </div>
+                </div>
+              </fieldset>
+
+              {/* Internal Notes */}
               <div className="space-y-1">
                 <Label>Internal Notes</Label>
                 <Textarea {...planForm.register('internalNotes')} />
               </div>
-              <div className="sm:col-span-2 flex gap-2">
+
+              <div className="flex gap-2">
                 <Button type="submit" size="sm" disabled={savePlan.isPending}>
                   <Save className="mr-1 h-3 w-3" /> {savePlan.isPending ? 'Saving...' : 'Save'}
                 </Button>
@@ -177,13 +223,21 @@ export function TransportTab({ booking }: Props) {
               </div>
             </form>
           ) : plan ? (
-            <div className="grid gap-3 text-sm sm:grid-cols-2">
-              <Info label="Vehicle" value={plan.vehicleModel} />
-              <Info label="Driver" value={plan.driverName} />
-              <Info label="Language" value={plan.driverLanguage} />
-              <Info label="Baby Seat" value={plan.babySeatRequired ? 'Yes' : 'No'} />
-              <Info label="Arrival Pickup" value={[plan.arrivalPickupLocation, plan.arrivalPickupTime].filter(Boolean).join(' at ')} />
-              <Info label="Departure Drop" value={[plan.departureDropLocation, plan.departureDropTime].filter(Boolean).join(' at ')} />
+            <div className="space-y-4">
+              <div className="grid gap-3 text-sm sm:grid-cols-3">
+                <Info label="Vehicle" value={plan.vehicleModel} />
+                <Info label="Vehicle ID" value={plan.vehicleIdNumber} />
+                <Info label="Driver" value={`${plan.driverName || '—'} (${plan.driverLanguage})`} />
+              </div>
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+                <Info label="Arrival Pickup" value={[plan.arrivalPickupLocation, plan.arrivalPickupTime].filter(Boolean).join(' at ')} />
+                <Info label="Departure Drop" value={[plan.departureDropLocation, plan.departureDropTime].filter(Boolean).join(' at ')} />
+              </div>
+              <div className="flex gap-6 text-sm">
+                {plan.babySeatRequired && <span className="rounded-full bg-blue-50 px-3 py-0.5 text-blue-700 text-xs font-medium">Baby Seat</span>}
+                {plan.wheelchairRequired && <span className="rounded-full bg-blue-50 px-3 py-0.5 text-blue-700 text-xs font-medium">Wheelchair</span>}
+                {!plan.babySeatRequired && !plan.wheelchairRequired && <span className="text-xs text-muted-foreground">No special requirements</span>}
+              </div>
             </div>
           ) : (
             <EmptyState title="No transport plan" description="Create a transport plan for this booking" />

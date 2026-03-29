@@ -20,19 +20,20 @@ interface Props {
 
 const DOC_LABELS: Record<DocumentType, string> = {
   [DocumentType.INVOICE]: 'Invoice',
-  [DocumentType.TRANSPORT_DETAILS]: 'Transport Details',
+  [DocumentType.TRANSPORT_DETAILS]: 'Transport Confirmation',
   [DocumentType.HOTEL_RESERVATION]: 'Hotel Reservation',
   [DocumentType.FULL_ITINERARY]: 'Full Itinerary',
-  [DocumentType.TRAVEL_CONFIRMATION]: 'Travel Confirmation',
+  [DocumentType.TRAVEL_CONFIRMATION]: 'Hotel Confirmation',
 };
 
 const ROLE_ALLOWED_TYPES: Record<Role, DocumentType[]> = {
   [Role.SALES]: [DocumentType.INVOICE],
   [Role.RESERVATION]: [DocumentType.TRAVEL_CONFIRMATION],
-  [Role.TRANSPORT]: [DocumentType.TRAVEL_CONFIRMATION],
+  [Role.TRANSPORT]: [DocumentType.TRAVEL_CONFIRMATION, DocumentType.TRANSPORT_DETAILS],
   [Role.OPS_MANAGER]: [
     DocumentType.INVOICE,
     DocumentType.TRAVEL_CONFIRMATION,
+    DocumentType.TRANSPORT_DETAILS,
     DocumentType.FULL_ITINERARY,
   ],
 };

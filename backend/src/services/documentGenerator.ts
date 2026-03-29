@@ -401,6 +401,7 @@ export class DocumentGeneratorService {
       where: { id: bookingId },
       include: {
         client: true,
+        paxList: true,
         transportPlan: { include: { dayPlans: { orderBy: { dayNumber: 'asc' } } } },
       },
     });
@@ -409,15 +410,23 @@ export class DocumentGeneratorService {
       throw new Error('Booking, client, or transport data not found');
     }
 
+    const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
+    const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
+    const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+
     const layout = this.pickTransportLayout(booking.transportPlan);
 
     const template = this.loadTemplate('transport');
     const html = template({
-      themeImage: this.themeImage,
+      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
       transport: booking.transportPlan,
+      adults,
+      children,
+      infants,
+      totalGuests: adults + children + infants,
     });
 
     const filename = `transport_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;

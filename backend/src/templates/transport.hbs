@@ -3,174 +3,435 @@
 <head>
   <meta charset="utf-8">
   <style>
-    @page { margin: 9mm; }
-    :root {
-      --ocean-blue: #204050;
-      --tropical-green: #3d6b54;
-      --sand-beige: #f0e0e0;
-      --sunset-gold: #c08020;
-      --paper: #f0f0f0;
-      --ink: #1f2933;
-      --muted: #6a7280;
-    }
+    @page { margin: 14mm 16mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Mundial', 'Helvetica Neue', Arial, sans-serif; color: var(--ink); font-size: 12px; line-height: 1.4; background: var(--paper); }
+    body {
+      font-family: 'Trebuchet MS', 'Lucida Sans', Arial, sans-serif;
+      color: #3b3230;
+      font-size: 12px;
+      line-height: 1.55;
+      background: #fff;
+    }
+
     .page {
-      border: 1px solid #dde2ea;
-      border-radius: 10px;
-      padding: 14px;
-      background: #f5f6f8;
-      min-height: calc(297mm - 18mm);
       display: flex;
       flex-direction: column;
+      min-height: calc(297mm - 28mm);
     }
     .content { flex: 1; }
-    .header { border-bottom: 3px solid var(--ocean-blue); padding-bottom: 10px; margin-bottom: 12px; }
-    .header h1 { font-family: 'Alegros', Georgia, serif; color: var(--ocean-blue); font-size: 21px; }
-    .header .subtitle { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 1px; }
-    .section { margin-bottom: 14px; }
-    .section h2 { font-family: 'Alegros', Georgia, serif; font-size: 14px; color: var(--ocean-blue); border-bottom: 1px solid #d9dce3; padding-bottom: 5px; margin-bottom: 8px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .field { margin-bottom: 4px; }
-    .field .label { color: var(--muted); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.4px; }
-    .field .value { font-weight: 600; }
-    .badge { display: inline-block; padding: 2px 8px; border-radius: 11px; font-size: 11px; font-weight: 600; }
-    .badge-yes { background: #d7e9dc; color: #1e4f3a; }
-    .badge-no { background: #eceff3; color: #5f6875; }
-    table { width: 100%; border-collapse: collapse; margin-top: 8px; border: 1px solid #d6d9df; border-radius: 8px; overflow: hidden; }
-    thead th { background: var(--ocean-blue); color: white; padding: 7px 8px; text-align: left; font-size: 11.5px; }
-    tbody td { padding: 7px 8px; border-bottom: 1px solid #dfe3ea; font-size: 11.5px; vertical-align: top; }
-    tbody tr:nth-child(even) { background: #f7f7f8; }
-    .notes-box { background: #f7f0e3; padding: 9px 10px; border-radius: 6px; border-left: 3px solid var(--sunset-gold); margin-top: 6px; }
-    .intro { background: #f3f6f9; border: 1px solid #d7dfe8; border-radius: 8px; padding: 8px 10px; margin: 10px 0 12px; color: #384253; }
-    .transfer-box { background: #f9fafc; border: 1px solid #dde2ea; border-radius: 8px; padding: 9px; }
-    .transfer-title { font-family: 'Alegros', Georgia, serif; color: var(--ocean-blue); font-size: 13px; margin-bottom: 5px; }
-    .footer { margin-top: auto; text-align: center; color: var(--muted); font-size: 10.8px; border-top: 1px solid #d9dce3; padding-top: 8px; }
-    .tagline { color: var(--ocean-blue); font-weight: 600; margin-top: 4px; }
 
-    /* Adaptive layout tuning based on content density */
-    body.compact { font-size: 11.5px; line-height: 1.34; }
-    body.compact .page { padding: 12px; }
-    body.compact .section { margin-bottom: 12px; }
-    body.compact .section h2 { margin-bottom: 6px; }
-    body.compact .grid { gap: 7px; }
-    body.compact .field .label { font-size: 9px; }
-    body.compact thead th { padding: 6px 7px; font-size: 11px; }
-    body.compact tbody td { padding: 6px 7px; font-size: 11px; }
-    body.compact .notes-box { padding: 7px 8px; }
-    body.compact .intro { padding: 7px 8px; margin: 8px 0 8px; }
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 10px;
+    }
+    .logo img {
+      max-height: 52px;
+      max-width: 200px;
+      object-fit: contain;
+    }
+    .logo-fallback {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #b08d57;
+    }
+    .company-info { text-align: right; }
+    .company-name {
+      font-weight: 700;
+      font-size: 13px;
+      color: #3b3230;
+    }
+    .company-detail {
+      font-size: 11px;
+      color: #555;
+    }
+    .header-line {
+      border: none;
+      border-top: 2.5px solid #b08d57;
+      margin: 0 0 20px 0;
+    }
 
-    body.ultra { font-size: 11px; line-height: 1.28; }
-    body.ultra .page { padding: 10px; }
-    body.ultra .header { margin-bottom: 8px; padding-bottom: 8px; }
-    body.ultra .header h1 { font-size: 19px; }
-    body.ultra .header .subtitle { font-size: 10px; }
-    body.ultra .section { margin-bottom: 9px; }
-    body.ultra .section h2 { font-size: 13px; margin-bottom: 5px; padding-bottom: 3px; }
-    body.ultra .grid { gap: 6px; }
-    body.ultra .field { margin-bottom: 2px; }
-    body.ultra .field .label { font-size: 8.6px; }
-    body.ultra .transfer-box { padding: 7px; }
-    body.ultra .transfer-title { font-size: 12px; margin-bottom: 3px; }
-    body.ultra thead th { padding: 5px 6px; font-size: 10.5px; }
-    body.ultra tbody td { padding: 5px 6px; font-size: 10.5px; }
-    body.ultra .notes-box { padding: 6px 7px; margin-top: 4px; }
-    body.ultra .footer { margin-top: auto; font-size: 10px; padding-top: 6px; }
+    /* ── Greeting ── */
+    .greeting {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: #3b3230;
+      margin-bottom: 8px;
+    }
+    .intro-text {
+      font-size: 12px;
+      color: #3b3230;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    /* ── Section Title ── */
+    .section-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #3b3230;
+      margin-bottom: 8px;
+    }
+
+    /* ── Overview Grid ── */
+    .tour-overview {
+      margin-bottom: 22px;
+    }
+    .overview-grid {
+      display: flex;
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .overview-col {
+      flex: 1;
+    }
+    .overview-group-title {
+      font-weight: 700;
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #e0dbd6;
+    }
+    .overview-row {
+      display: flex;
+      margin-bottom: 2px;
+      font-size: 12px;
+    }
+    .overview-label {
+      width: 120px;
+      color: #777;
+      flex-shrink: 0;
+    }
+    .overview-value {
+      color: #3b3230;
+      font-weight: 500;
+    }
+
+    /* ── Transfer Boxes ── */
+    .transfer-grid {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .transfer-box {
+      flex: 1;
+      border: 1px solid #e0dbd6;
+      border-radius: 6px;
+      padding: 10px 14px;
+      background: #faf8f6;
+    }
+    .transfer-box-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #3b3230;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #e0dbd6;
+      padding-bottom: 4px;
+    }
+    .transfer-row {
+      display: flex;
+      margin-bottom: 2px;
+      font-size: 11.5px;
+    }
+    .transfer-label {
+      width: 80px;
+      color: #777;
+      flex-shrink: 0;
+    }
+    .transfer-value {
+      font-weight: 600;
+      color: #3b3230;
+    }
+    .transfer-notes {
+      font-size: 11px;
+      color: #666;
+      font-style: italic;
+      margin-top: 4px;
+    }
+
+    /* ── Day Plan Table ── */
+    .day-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 20px 0;
+      font-size: 11.5px;
+    }
+    .day-table thead th {
+      background: #3b3230;
+      color: #fff;
+      padding: 9px 12px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    .day-table tbody td {
+      padding: 8px 12px;
+      text-align: center;
+      border-bottom: 1px solid #e0dbd6;
+      color: #3b3230;
+    }
+    .day-table tbody tr:nth-child(even) {
+      background: #f9f7f5;
+    }
+
+    /* ── Notes Box ── */
+    .notes-section {
+      margin-bottom: 18px;
+    }
+    .notes-box {
+      background: #faf8f6;
+      border-left: 3px solid #b08d57;
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #3b3230;
+      margin-top: 4px;
+    }
+
+    /* ── Closing ── */
+    .closing-text {
+      font-size: 12px;
+      color: #3b3230;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      text-align: justify;
+    }
+    .sign-off {
+      font-size: 12px;
+      color: #3b3230;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+    .sign-off .name {
+      font-weight: 700;
+    }
+
+    /* ── Computer Generated Note ── */
+    .computer-generated-note {
+      font-size: 10px;
+      color: #888;
+      font-style: italic;
+      margin-top: 16px;
+    }
+
+    /* ── Footer ── */
+    .footer { margin-top: auto; }
+    .contact-bar {
+      background: #8b6a42;
+      color: #fff;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-radius: 6px;
+      font-size: 11px;
+      letter-spacing: 0.2px;
+    }
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Compact mode ── */
+    body.compact { font-size: 11px; line-height: 1.45; }
+    body.compact .greeting { font-size: 19px; margin-bottom: 6px; }
+    body.compact .intro-text { font-size: 11px; margin-bottom: 16px; }
+    body.compact .section-title { font-size: 13px; margin-bottom: 6px; }
+    body.compact .tour-overview { margin-bottom: 16px; }
+    body.compact .overview-row { font-size: 11px; }
+    body.compact .overview-grid { gap: 10px; }
+    body.compact .overview-label { width: 100px; }
+    body.compact .transfer-grid { margin-bottom: 16px; gap: 10px; }
+    body.compact .transfer-box { padding: 8px 10px; }
+    body.compact .day-table { font-size: 10.5px; }
+    body.compact .day-table thead th { padding: 7px 8px; font-size: 11px; }
+    body.compact .day-table tbody td { padding: 6px 8px; }
+    body.compact .closing-text { font-size: 11px; margin-bottom: 16px; }
+    body.compact .sign-off { font-size: 11px; }
+    body.compact .contact-bar { padding: 10px 18px; font-size: 10px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
   <div class="page">
-  <div class="content">
-  <div class="header">
-    <h1>TRANSPORT DETAILS</h1>
-    <span class="subtitle">Curated Travel Experiences | Internal Coordination</span>
-  </div>
+    <div class="content">
 
-  {{#unless (eq layoutMode "ultra")}}
-  <div class="intro">
-    Movement plans designed for comfort, timing precision, and a smooth journey through each chapter of the island experience.
-  </div>
-  {{/unless}}
-
-  <div class="section">
-    <h2>Booking Information</h2>
-    <div class="grid">
-      <div class="field"><span class="label">Booking ID</span><div class="value">{{booking.bookingId}}</div></div>
-      <div class="field"><span class="label">Client</span><div class="value">{{client.name}}</div></div>
-      <div class="field"><span class="label">Travel Dates</span><div class="value">{{formatDate booking.arrivalDate}} — {{formatDate booking.departureDate}}</div></div>
-      <div class="field"><span class="label">Duration</span><div class="value">{{booking.numberOfDays}} Days</div></div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h2>Vehicle & Driver</h2>
-    <div class="grid">
-      <div class="field"><span class="label">Vehicle Model</span><div class="value">{{transport.vehicleModel}}</div></div>
-      <div class="field"><span class="label">Driver</span><div class="value">{{transport.driverName}}</div></div>
-      <div class="field"><span class="label">Driver Language</span><div class="value">{{transport.driverLanguage}}</div></div>
-      <div class="field"><span class="label">Baby Seat</span><div class="value">{{#if transport.babySeatRequired}}<span class="badge badge-yes">Required</span>{{else}}<span class="badge badge-no">Not Required</span>{{/if}}</div></div>
-    </div>
-    {{#if transport.vehicleNotes}}
-    <div class="notes-box">{{transport.vehicleNotes}}</div>
-    {{/if}}
-  </div>
-
-  <div class="section">
-    <h2>Transfer Windows</h2>
-    <div class="grid">
-      <div class="transfer-box">
-        <div class="transfer-title">Arrival</div>
-        <div class="field"><span class="label">Location</span><div class="value">{{transport.arrivalPickupLocation}}</div></div>
-        <div class="field"><span class="label">Time</span><div class="value">{{transport.arrivalPickupTime}}</div></div>
-        {{#if transport.arrivalPickupNotes}}
-        <div class="notes-box">{{transport.arrivalPickupNotes}}</div>
-        {{/if}}
+      <!-- Header -->
+      <div class="header">
+        <div class="logo">
+          {{#if brandLogoImage}}
+            <img src="{{brandLogoImage}}" alt="VSL 360" />
+          {{else}}
+            <div class="logo-fallback">VSL 360</div>
+          {{/if}}
+        </div>
+        <div class="company-info">
+          <div class="company-name">Visit Sri Lanka 360 (Pvt) Ltd</div>
+          <div class="company-detail">1/111, De Mel Road, Moratuwa, 10400</div>
+          <div class="company-detail">Business Registration No: PV 00330941</div>
+        </div>
       </div>
-      <div class="transfer-box">
-        <div class="transfer-title">Departure</div>
-        <div class="field"><span class="label">Location</span><div class="value">{{transport.departureDropLocation}}</div></div>
-        <div class="field"><span class="label">Time</span><div class="value">{{transport.departureDropTime}}</div></div>
-        {{#if transport.departureDropNotes}}
-        <div class="notes-box">{{transport.departureDropNotes}}</div>
-        {{/if}}
+      <hr class="header-line" />
+
+      <!-- Greeting -->
+      <div class="greeting">Dear {{client.name}}</div>
+      <div class="intro-text">
+        We are pleased to confirm your transport arrangements for your upcoming tour in Sri Lanka. Below are the detailed transport plans for your journey.
+      </div>
+
+      <!-- Transport Overview -->
+      <div class="tour-overview">
+        <div class="section-title">Transport Overview</div>
+        <div class="overview-grid">
+          <div class="overview-col">
+            <div class="overview-group-title">Tour Details</div>
+            <div class="overview-row">
+              <div class="overview-label">Country</div>
+              <div class="overview-value">: {{client.citizenship}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">From</div>
+              <div class="overview-value">: {{formatDate booking.arrivalDate}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">To</div>
+              <div class="overview-value">: {{formatDate booking.departureDate}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Guests</div>
+              <div class="overview-value">: {{padZero totalGuests}} {{guestBreakdown adults children infants}}</div>
+            </div>
+          </div>
+          <div class="overview-col">
+            <div class="overview-group-title">Vehicle &amp; Driver</div>
+            <div class="overview-row">
+              <div class="overview-label">Vehicle</div>
+              <div class="overview-value">: {{transport.vehicleModel}}</div>
+            </div>
+            {{#if transport.vehicleIdNumber}}
+            <div class="overview-row">
+              <div class="overview-label">Vehicle ID</div>
+              <div class="overview-value">: {{transport.vehicleIdNumber}}</div>
+            </div>
+            {{/if}}
+            <div class="overview-row">
+              <div class="overview-label">Driver</div>
+              <div class="overview-value">: {{transport.driverName}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Language</div>
+              <div class="overview-value">: {{transport.driverLanguage}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Baby Seat</div>
+              <div class="overview-value">: {{#if transport.babySeatRequired}}Yes{{else}}No{{/if}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Wheelchair</div>
+              <div class="overview-value">: {{#if transport.wheelchairRequired}}Yes{{else}}No{{/if}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transfer Details -->
+      <div class="section-title">Transfer Details</div>
+      <div class="transfer-grid">
+        <div class="transfer-box">
+          <div class="transfer-box-title">Arrival Pickup</div>
+          <div class="transfer-row">
+            <div class="transfer-label">Location</div>
+            <div class="transfer-value">: {{transport.arrivalPickupLocation}}</div>
+          </div>
+          <div class="transfer-row">
+            <div class="transfer-label">Time</div>
+            <div class="transfer-value">: {{transport.arrivalPickupTime}}</div>
+          </div>
+          {{#if transport.arrivalPickupNotes}}
+          <div class="transfer-notes">{{transport.arrivalPickupNotes}}</div>
+          {{/if}}
+        </div>
+        <div class="transfer-box">
+          <div class="transfer-box-title">Departure Drop</div>
+          <div class="transfer-row">
+            <div class="transfer-label">Location</div>
+            <div class="transfer-value">: {{transport.departureDropLocation}}</div>
+          </div>
+          <div class="transfer-row">
+            <div class="transfer-label">Time</div>
+            <div class="transfer-value">: {{transport.departureDropTime}}</div>
+          </div>
+          {{#if transport.departureDropNotes}}
+          <div class="transfer-notes">{{transport.departureDropNotes}}</div>
+          {{/if}}
+        </div>
+      </div>
+
+      <!-- Day-by-Day Transport Plan -->
+      {{#if transport.dayPlans.length}}
+      <div class="section-title">Day-by-Day Transport Plan</div>
+      <table class="day-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Description</th>
+            <th>Pickup</th>
+            <th>Drop</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{#each transport.dayPlans}}
+          <tr>
+            <td>Day {{this.dayNumber}}</td>
+            <td>{{this.description}}</td>
+            <td>{{this.pickupLocation}}{{#if this.pickupTime}} ({{this.pickupTime}}){{/if}}</td>
+            <td>{{this.dropLocation}}</td>
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+      {{/if}}
+
+      {{#if transport.vehicleNotes}}
+      <div class="notes-section">
+        <div class="section-title">Vehicle Notes</div>
+        <div class="notes-box">{{transport.vehicleNotes}}</div>
+      </div>
+      {{/if}}
+
+      <!-- Closing -->
+      <div class="closing-text">
+        We look forward to welcoming you to Sri Lanka and ensuring a safe, comfortable, and memorable journey. Please do not hesitate to contact us if you need any further assistance.
+      </div>
+
+      <div class="sign-off">
+        Warm regards,<br /><br />
+        <span class="name">Pawara Soysa</span><br />
+        Managing Director<br />
+        Visit Sri Lanka 360
+      </div>
+
+      <div class="computer-generated-note">
+        This is a computer generated document. Doesn't require a signature.
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="contact-bar">
+        <div class="contact-item">&#9742;&nbsp; Tel: +94727715854</div>
+        <div class="contact-item">&#9993;&nbsp; Email: infovsl360@gmail.com</div>
+        <div class="contact-item">&#127760;&nbsp; www.visitsrilanka360.com</div>
       </div>
     </div>
-  </div>
-
-  {{#if transport.dayPlans.length}}
-  <div class="section">
-    <h2>Day-by-Day Transport Plan</h2>
-    <table>
-      <thead>
-        <tr><th>Day</th><th>Description</th><th>Pickup</th><th>Drop</th><th>Notes</th></tr>
-      </thead>
-      <tbody>
-        {{#each transport.dayPlans}}
-        <tr>
-          <td>Day {{this.dayNumber}}</td>
-          <td>{{this.description}}</td>
-          <td>{{this.pickupLocation}}{{#if this.pickupTime}} ({{this.pickupTime}}){{/if}}</td>
-          <td>{{this.dropLocation}}</td>
-          <td>{{this.notes}}</td>
-        </tr>
-        {{/each}}
-      </tbody>
-    </table>
-  </div>
-  {{/if}}
-
-  {{#if transport.internalNotes}}
-  <div class="section">
-    <h2>Internal Notes</h2>
-    <div class="notes-box">{{transport.internalNotes}}</div>
-  </div>
-  {{/if}}
-  </div>
-
-  <div class="footer">
-    <p>VSL 360 — Internal Transport Document</p>
-    <p class="tagline">Experience Sri Lanka Completely</p>
-  </div>
   </div>
 </body>
 </html>

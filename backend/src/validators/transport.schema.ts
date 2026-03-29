@@ -2,8 +2,10 @@ import { z } from 'zod';
 
 export const createTransportSchema = z.object({
   vehicleModel: z.string().min(1, 'Vehicle model is required'),
+  vehicleIdNumber: z.string().optional(),
   vehicleNotes: z.string().optional(),
   babySeatRequired: z.boolean().default(false),
+  wheelchairRequired: z.boolean().default(false),
   driverName: z.string().optional(),
   driverLanguage: z.string().min(1, 'Driver language is required'),
   arrivalPickupLocation: z.string().optional(),
