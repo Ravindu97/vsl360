@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Check } from 'lucide-react';
 import { bookingsApi } from '@/api/bookings.api';
 import { useAuthStore } from '@/store/authStore';
 import { canEditBooking, canApproveDocuments, canAdvanceToReservationStatuses, canAdvanceToTransportStatuses, canAdvanceToCosting, canAdvanceToDocumentsReady } from '@/utils/permissions';
 import { formatDate, formatDateTime, formatCurrency } from '@/utils/formatters';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { BookingStatus, type Booking } from '@/types';
 import { STATUS_LABELS } from '@/utils/constants';
@@ -29,6 +31,19 @@ const statusTransitions: Partial<Record<BookingStatus, BookingStatus[]>> = {
   [BookingStatus.DOCUMENTS_READY]: [BookingStatus.OPS_APPROVED],
   [BookingStatus.OPS_APPROVED]: [BookingStatus.COMPLETED],
 };
+
+const PIPELINE_STEPS = [
+  { label: 'Inquiry', completedWhen: [BookingStatus.INQUIRY_RECEIVED], activeWhen: [BookingStatus.INQUIRY_RECEIVED] },
+  { label: 'Client', completedWhen: [BookingStatus.CLIENT_PROFILE_CREATED], activeWhen: [BookingStatus.CLIENT_PROFILE_CREATED] },
+  { label: 'Pax', completedWhen: [BookingStatus.PAX_DETAILS_ADDED], activeWhen: [BookingStatus.PAX_DETAILS_ADDED] },
+  { label: 'Costing', completedWhen: [BookingStatus.COSTING_COMPLETED], activeWhen: [BookingStatus.COSTING_COMPLETED] },
+  { label: 'Sales', completedWhen: [BookingStatus.SALES_CONFIRMED], activeWhen: [BookingStatus.SALES_CONFIRMED] },
+  { label: 'Hotels', completedWhen: [BookingStatus.RESERVATION_COMPLETED], activeWhen: [BookingStatus.RESERVATION_PENDING, BookingStatus.RESERVATION_COMPLETED] },
+  { label: 'Transport', completedWhen: [BookingStatus.TRANSPORT_COMPLETED], activeWhen: [BookingStatus.TRANSPORT_PENDING, BookingStatus.TRANSPORT_COMPLETED] },
+  { label: 'Docs', completedWhen: [BookingStatus.DOCUMENTS_READY], activeWhen: [BookingStatus.DOCUMENTS_READY] },
+  { label: 'Approved', completedWhen: [BookingStatus.OPS_APPROVED], activeWhen: [BookingStatus.OPS_APPROVED] },
+  { label: 'Done', completedWhen: [BookingStatus.COMPLETED], activeWhen: [BookingStatus.COMPLETED] },
+];
 
 export function OverviewTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
@@ -149,6 +164,54 @@ export function OverviewTab({ booking }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Booking Progress & Status */}
+      <Card>
+        <CardContent className="pt-6">
+          <StatusPipeline booking={booking} />
+          {canChangeStatus && (nextStatuses.length > 0 || Boolean(revertStatus)) && (
+            <div className="border-t mt-5 pt-4">
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Advance to</Label>
+                  <Select value={newStatus} onValueChange={setNewStatus}>
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder="Select next status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {nextStatuses.map((s) => (
+                        <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                      ))}
+                      {revertStatus && (
+                        <SelectItem value={revertStatus}>
+                          ↩ Revert to {STATUS_LABELS[revertStatus]}
+                        </SelectItem>
+                      )}
+                      <SelectItem value={BookingStatus.CANCELLED}>Cancel Booking</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5 flex-1 min-w-[200px]">
+                  <Label className="text-xs text-muted-foreground">Notes (optional)</Label>
+                  <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add a note about this change..." />
+                </div>
+                <Button
+                  disabled={!newStatus || statusMutation.isPending}
+                  onClick={handleStatusUpdate}
+                  size="sm"
+                >
+                  {statusMutation.isPending ? 'Updating...' : 'Update Status'}
+                </Button>
+              </div>
+              {validationError && (
+                <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-2.5 text-sm text-red-700">
+                  {validationError}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Row 1: Tour Details + Client */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -263,47 +326,67 @@ export function OverviewTab({ booking }: Props) {
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
 
-      {canChangeStatus && (nextStatuses.length > 0 || Boolean(revertStatus)) && (
-        <Card>
-          <CardHeader><CardTitle>Update Status</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-3">
-              <Select value={newStatus} onValueChange={setNewStatus}>
-                <SelectTrigger className="w-[250px]">
-                  <SelectValue placeholder="Select next status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {nextStatuses.map((s) => (
-                    <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
-                  ))}
-                  {revertStatus && (
-                    <SelectItem value={revertStatus}>
-                      {`Revert to ${STATUS_LABELS[revertStatus]}`}
-                    </SelectItem>
-                  )}
-                  <SelectItem value={BookingStatus.CANCELLED}>Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Notes (optional)</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add a note about this status change..." />
-            </div>
-            {validationError && (
-              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                {validationError}
-              </div>
-            )}
-            <Button
-              disabled={!newStatus || statusMutation.isPending}
-              onClick={handleStatusUpdate}
-            >
-              {statusMutation.isPending ? 'Updating...' : 'Update Status'}
-            </Button>
-          </CardContent>
-        </Card>
+function StatusPipeline({ booking }: { booking: Booking }) {
+  const reached = new Set(booking.statusHistory.map(h => h.toStatus));
+  reached.add(booking.status);
+  const isCancelled = booking.status === BookingStatus.CANCELLED;
+
+  const steps = PIPELINE_STEPS.map(step => {
+    const isCurrent = step.activeWhen.includes(booking.status);
+    const isDone = step.completedWhen.some(s => reached.has(s));
+    return {
+      label: step.label,
+      state: (isCurrent ? 'active' : isDone ? 'done' : 'upcoming') as 'active' | 'done' | 'upcoming',
+      isDone,
+    };
+  });
+
+  return (
+    <div>
+      {isCancelled && (
+        <div className="mb-4 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700 font-medium text-center">
+          This booking has been cancelled
+        </div>
       )}
+      <div className="flex items-start overflow-x-auto pb-1">
+        {steps.map((step, i) => (
+          <Fragment key={i}>
+            {i > 0 && (
+              <div className={cn(
+                "h-0.5 flex-1 min-w-3 mt-3.5 shrink-0",
+                step.state !== 'upcoming' ? 'bg-emerald-500' : 'bg-gray-200'
+              )} />
+            )}
+            <div className="flex flex-col items-center" style={{ minWidth: '44px' }}>
+              <div className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center shrink-0",
+                step.state === 'done' && 'bg-emerald-500 text-white',
+                step.state === 'active' && 'bg-blue-600 text-white ring-4 ring-blue-100',
+                step.state === 'upcoming' && 'border-2 border-gray-300 bg-white',
+              )}>
+                {(step.state === 'done' || (step.state === 'active' && step.isDone)) && (
+                  <Check className="w-3.5 h-3.5" />
+                )}
+                {step.state === 'active' && !step.isDone && (
+                  <div className="w-2 h-2 bg-white rounded-full" />
+                )}
+              </div>
+              <span className={cn(
+                "text-[10px] mt-1.5 text-center whitespace-nowrap leading-tight",
+                step.state === 'done' && 'text-emerald-700 font-medium',
+                step.state === 'active' && 'text-blue-700 font-semibold',
+                step.state === 'upcoming' && 'text-muted-foreground',
+              )}>
+                {step.label}
+              </span>
+            </div>
+          </Fragment>
+        ))}
+      </div>
     </div>
   );
 }
