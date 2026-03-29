@@ -22,7 +22,6 @@ interface Props {
 
 const transportSchema = z.object({
   vehicleModel: z.string().min(1, 'Required'),
-  vehicleModel: z.string().min(1, 'Required'),
   vehicleIdNumber: z.string().optional(),
   vehicleNotes: z.string().optional(),
   babySeatRequired: z.boolean(),

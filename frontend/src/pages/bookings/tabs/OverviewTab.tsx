@@ -1,6 +1,9 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Check, Pencil, Save, X } from 'lucide-react';
 import { bookingsApi } from '@/api/bookings.api';
 import { useAuthStore } from '@/store/authStore';
 import { canEditBooking, canApproveDocuments, canAdvanceToReservationStatuses, canAdvanceToTransportStatuses, canAdvanceToCosting, canAdvanceToDocumentsReady } from '@/utils/permissions';
@@ -9,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { BookingStatus, type Booking } from '@/types';
@@ -51,6 +55,8 @@ export function OverviewTab({ booking }: Props) {
   const [newStatus, setNewStatus] = useState('');
   const [notes, setNotes] = useState('');
   const [validationError, setValidationError] = useState<string>('');
+  const [editingTour, setEditingTour] = useState(false);
+  const allowEdit = user && canEditBooking(user.role);
 
   // Clear validation error when status changes
   useEffect(() => {
@@ -214,20 +220,7 @@ export function OverviewTab({ booking }: Props) {
 
       {/* Row 1: Tour Details + Client */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle>Tour Details</CardTitle></CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <Row label="Tour Month" value={booking.tourMonth} />
-            <Row label="Duration" value={`${booking.numberOfDays} days`} />
-            <Row label="Arrival" value={`${formatDate(booking.arrivalDate)} at ${booking.arrivalTime}`} />
-            <Row label="Departure" value={`${formatDate(booking.departureDate)} at ${booking.departureTime}`} />
-            <Row label="Sales Owner" value={booking.salesOwner?.name} />
-            <Row label="Created" value={formatDateTime(booking.createdAt)} />
-            {booking.additionalActivities && <Row label="Activities" value={booking.additionalActivities} />}
-            {booking.specialCelebrations && <Row label="Celebrations" value={booking.specialCelebrations} />}
-            {booking.generalNotes && <Row label="Notes" value={booking.generalNotes} />}
-          </CardContent>
-        </Card>
+        <TourDetailsCard booking={booking} editing={editingTour} onEdit={() => setEditingTour(true)} onClose={() => setEditingTour(false)} allowEdit={!!allowEdit} />
 
         <Card>
           <CardHeader><CardTitle>Client & Passengers</CardTitle></CardHeader>
@@ -327,6 +320,121 @@ export function OverviewTab({ booking }: Props) {
         </Card>
       </div>
     </div>
+  );
+}
+
+const tourDetailsSchema = z.object({
+  tourMonth: z.string().min(1, 'Required'),
+  numberOfDays: z.coerce.number().min(1),
+  arrivalDate: z.string().min(1, 'Required'),
+  arrivalTime: z.string().min(1, 'Required'),
+  departureDate: z.string().min(1, 'Required'),
+  departureTime: z.string().min(1, 'Required'),
+  additionalActivities: z.string().optional(),
+  specialCelebrations: z.string().optional(),
+  generalNotes: z.string().optional(),
+});
+
+function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { booking: Booking; editing: boolean; onEdit: () => void; onClose: () => void; allowEdit: boolean }) {
+  const queryClient = useQueryClient();
+  const form = useForm({
+    resolver: zodResolver(tourDetailsSchema),
+    defaultValues: {
+      tourMonth: booking.tourMonth,
+      numberOfDays: booking.numberOfDays,
+      arrivalDate: booking.arrivalDate?.slice(0, 10) ?? '',
+      arrivalTime: booking.arrivalTime,
+      departureDate: booking.departureDate?.slice(0, 10) ?? '',
+      departureTime: booking.departureTime,
+      additionalActivities: booking.additionalActivities ?? '',
+      specialCelebrations: booking.specialCelebrations ?? '',
+      generalNotes: booking.generalNotes ?? '',
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: (data: any) => bookingsApi.update(booking.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+      onClose();
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>Tour Details</CardTitle>
+        {allowEdit && !editing && (
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Pencil className="mr-2 h-3 w-3" /> Edit
+          </Button>
+        )}
+      </CardHeader>
+      <CardContent>
+        {editing ? (
+          <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Tour Month</Label>
+                <Input placeholder="e.g. January 2026" {...form.register('tourMonth')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Number of Days</Label>
+                <Input type="number" min={1} {...form.register('numberOfDays')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Arrival Date</Label>
+                <Input type="date" {...form.register('arrivalDate')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Arrival Time</Label>
+                <Input type="time" {...form.register('arrivalTime')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Departure Date</Label>
+                <Input type="date" {...form.register('departureDate')} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Departure Time</Label>
+                <Input type="time" {...form.register('departureTime')} />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Additional Activities</Label>
+              <Textarea rows={2} {...form.register('additionalActivities')} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Special Celebrations</Label>
+              <Textarea rows={2} {...form.register('specialCelebrations')} />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">General Notes</Label>
+              <Textarea rows={2} {...form.register('generalNotes')} />
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" size="sm" disabled={mutation.isPending}>
+                <Save className="mr-2 h-3 w-3" />{mutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={onClose}>
+                <X className="mr-2 h-3 w-3" /> Cancel
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <div className="space-y-3 text-sm">
+            <Row label="Tour Month" value={booking.tourMonth} />
+            <Row label="Duration" value={`${booking.numberOfDays} days`} />
+            <Row label="Arrival" value={`${formatDate(booking.arrivalDate)} at ${booking.arrivalTime}`} />
+            <Row label="Departure" value={`${formatDate(booking.departureDate)} at ${booking.departureTime}`} />
+            <Row label="Sales Owner" value={booking.salesOwner?.name} />
+            <Row label="Created" value={formatDateTime(booking.createdAt)} />
+            {booking.additionalActivities && <Row label="Activities" value={booking.additionalActivities} />}
+            {booking.specialCelebrations && <Row label="Celebrations" value={booking.specialCelebrations} />}
+            {booking.generalNotes && <Row label="Notes" value={booking.generalNotes} />}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

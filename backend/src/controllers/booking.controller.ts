@@ -14,9 +14,18 @@ export class BookingController {
 
   async findAll(req: AuthRequest, res: Response): Promise<void> {
     const status = req.query.status as string | undefined;
+    const search = req.query.search as string | undefined;
+    const tourMonth = req.query.tourMonth as string | undefined;
+    const arrivalFrom = req.query.arrivalFrom as string | undefined;
+    const arrivalTo = req.query.arrivalTo as string | undefined;
+    const salesOwnerId = req.query.salesOwnerId as string | undefined;
     const page = Number(req.query.page ?? 1);
     const pageSize = Number(req.query.pageSize ?? 10);
-    const bookings = await bookingService.findAll(req.user!.role, req.user!.userId, status, page, pageSize);
+    const bookings = await bookingService.findAll(
+      req.user!.role, req.user!.userId,
+      { status, search, tourMonth, arrivalFrom, arrivalTo, salesOwnerId },
+      page, pageSize,
+    );
     res.json(bookings);
   }
 

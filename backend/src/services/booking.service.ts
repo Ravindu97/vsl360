@@ -56,6 +56,7 @@ export class BookingService {
           create: {
             name: data.client.name,
             citizenship: data.client.citizenship,
+            languagePreference: data.client.languagePreference ?? 'English',
             email: data.client.email,
             contactNumber: data.client.contactNumber,
           },
@@ -78,31 +79,69 @@ export class BookingService {
     return booking;
   }
 
-  async findAll(userRole: UserRole, userId: string, status?: string, page = 1, pageSize = 10) {
-    const where: any = {};
+  async findAll(
+    userRole: UserRole,
+    userId: string,
+    filters: { status?: string; search?: string; tourMonth?: string; arrivalFrom?: string; arrivalTo?: string; salesOwnerId?: string },
+    page = 1,
+    pageSize = 10,
+  ) {
+    const conditions: any[] = [];
     const safePage = Math.max(1, page);
     const safePageSize = Math.max(1, Math.min(pageSize, 100));
 
     // Sales people only see their own bookings
     if (userRole === 'SALES') {
-      where.salesOwnerId = userId;
+      conditions.push({ salesOwnerId: userId });
     }
 
     // Reservation/Transport see only confirmed+ bookings
     if (userRole === 'RESERVATION' || userRole === 'TRANSPORT') {
-      where.status = {
-        notIn: [
-          BOOKING_STATUS.INQUIRY_RECEIVED,
-          BOOKING_STATUS.CLIENT_PROFILE_CREATED,
-          BOOKING_STATUS.PAX_DETAILS_ADDED,
-          BOOKING_STATUS.COSTING_COMPLETED,
-        ],
-      };
+      conditions.push({
+        status: {
+          notIn: [
+            BOOKING_STATUS.INQUIRY_RECEIVED,
+            BOOKING_STATUS.CLIENT_PROFILE_CREATED,
+            BOOKING_STATUS.PAX_DETAILS_ADDED,
+            BOOKING_STATUS.COSTING_COMPLETED,
+          ],
+        },
+      });
     }
 
-    if (status) {
-      where.status = status as BookingStatusValue;
+    if (filters.status) {
+      conditions.push({ status: filters.status as BookingStatusValue });
     }
+
+    if (filters.search) {
+      const term = filters.search.trim();
+      conditions.push({
+        OR: [
+          { bookingId: { contains: term, mode: 'insensitive' } },
+          { tourMonth: { contains: term, mode: 'insensitive' } },
+          { client: { name: { contains: term, mode: 'insensitive' } } },
+          { client: { citizenship: { contains: term, mode: 'insensitive' } } },
+        ],
+      });
+    }
+
+    if (filters.tourMonth) {
+      conditions.push({ tourMonth: { equals: filters.tourMonth, mode: 'insensitive' } });
+    }
+
+    if (filters.arrivalFrom) {
+      conditions.push({ arrivalDate: { gte: new Date(filters.arrivalFrom) } });
+    }
+
+    if (filters.arrivalTo) {
+      conditions.push({ arrivalDate: { lte: new Date(filters.arrivalTo) } });
+    }
+
+    if (filters.salesOwnerId) {
+      conditions.push({ salesOwnerId: filters.salesOwnerId });
+    }
+
+    const where = conditions.length > 0 ? { AND: conditions } : {};
 
     const [items, total] = await Promise.all([
       prisma.booking.findMany({

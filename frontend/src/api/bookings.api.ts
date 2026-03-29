@@ -1,11 +1,20 @@
 import api from './client';
 import type { Booking, PaginatedResponse } from '@/types';
 
+export interface BookingFilters {
+  status?: string;
+  search?: string;
+  tourMonth?: string;
+  arrivalFrom?: string;
+  arrivalTo?: string;
+  salesOwnerId?: string;
+}
+
 export const bookingsApi = {
-  list: (status?: string, page = 1, pageSize = 10) =>
+  list: (filters: BookingFilters = {}, page = 1, pageSize = 10) =>
     api.get<PaginatedResponse<Booking>>('/bookings', {
       params: {
-        ...(status ? { status } : {}),
+        ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v)),
         page,
         pageSize,
       },

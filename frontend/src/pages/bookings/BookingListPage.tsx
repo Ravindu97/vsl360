@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Eye, Trash2 } from 'lucide-react';
-import { bookingsApi } from '@/api/bookings.api';
+import { Plus, Eye, Trash2, Search, X, SlidersHorizontal } from 'lucide-react';
+import { bookingsApi, type BookingFilters } from '@/api/bookings.api';
 import { useAuthStore } from '@/store/authStore';
 import { canCreateBooking } from '@/utils/permissions';
 import { formatDate } from '@/utils/formatters';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -16,6 +18,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { BookingStatus, type Booking, type PaginatedResponse } from '@/types';
 import { STATUS_LABELS } from '@/utils/constants';
+import { usersApi } from '@/api/users.api';
 
 const PAGE_SIZE = 10;
 
@@ -24,12 +27,45 @@ export function BookingListPage() {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [tourMonth, setTourMonth] = useState('');
+  const [arrivalFrom, setArrivalFrom] = useState('');
+  const [arrivalTo, setArrivalTo] = useState('');
+  const [salesOwnerId, setSalesOwnerId] = useState('ALL');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const filters: BookingFilters = {
+    ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
+    ...(search ? { search } : {}),
+    ...(tourMonth ? { tourMonth } : {}),
+    ...(arrivalFrom ? { arrivalFrom } : {}),
+    ...(arrivalTo ? { arrivalTo } : {}),
+    ...(salesOwnerId !== 'ALL' ? { salesOwnerId } : {}),
+  };
+
+  const activeFilterCount = [tourMonth, arrivalFrom, arrivalTo, salesOwnerId !== 'ALL' ? salesOwnerId : ''].filter(Boolean).length;
+
+  const { data: usersData } = useQuery({
+    queryKey: ['users-all'],
+    queryFn: () => usersApi.list(1, 100),
+  });
+  const salesUsers = ((usersData?.data as any)?.items ?? []).filter((u: any) => u.isActive);
+
   const { data, isLoading } = useQuery<{ data: PaginatedResponse<Booking> }>({
-    queryKey: ['bookings', statusFilter === 'ALL' ? undefined : statusFilter, page, PAGE_SIZE],
-    queryFn: () => bookingsApi.list(statusFilter === 'ALL' ? undefined : statusFilter, page, PAGE_SIZE),
+    queryKey: ['bookings', filters, page, PAGE_SIZE],
+    queryFn: () => bookingsApi.list(filters, page, PAGE_SIZE),
   });
 
   const deleteMutation = useMutation({
@@ -50,6 +86,24 @@ export function BookingListPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Bookings</h1>
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search ID, client, month..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-9 w-[240px]"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                className="absolute right-2 top-2.5 text-muted-foreground hover:text-foreground"
+                onClick={() => { setSearchInput(''); }}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <Select value={statusFilter} onValueChange={(value) => {
             setStatusFilter(value);
             setPage(1);
@@ -66,6 +120,19 @@ export function BookingListPage() {
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant={showFilters ? 'secondary' : 'outline'}
+            size="icon"
+            onClick={() => setShowFilters(!showFilters)}
+            className="relative"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {activeFilterCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                {activeFilterCount}
+              </span>
+            )}
+          </Button>
           {user && canCreateBooking(user.role) && (
             <Button onClick={() => navigate('/bookings/new')}>
               <Plus className="mr-2 h-4 w-4" />
@@ -74,6 +141,61 @@ export function BookingListPage() {
           )}
         </div>
       </div>
+
+      {showFilters && (
+        <div className="rounded-md border bg-muted/30 p-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Tour Month</Label>
+              <Input
+                placeholder="e.g. January 2026"
+                value={tourMonth}
+                onChange={(e) => { setTourMonth(e.target.value); setPage(1); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Arrival From</Label>
+              <Input
+                type="date"
+                value={arrivalFrom}
+                onChange={(e) => { setArrivalFrom(e.target.value); setPage(1); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Arrival To</Label>
+              <Input
+                type="date"
+                value={arrivalTo}
+                onChange={(e) => { setArrivalTo(e.target.value); setPage(1); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Sales Owner</Label>
+              <Select value={salesOwnerId} onValueChange={(v) => { setSalesOwnerId(v); setPage(1); }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Owners" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Owners</SelectItem>
+                  {salesUsers.map((u: any) => (
+                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {activeFilterCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-3 text-xs"
+              onClick={() => { setTourMonth(''); setArrivalFrom(''); setArrivalTo(''); setSalesOwnerId('ALL'); setPage(1); }}
+            >
+              <X className="mr-1 h-3 w-3" /> Clear all filters
+            </Button>
+          )}
+        </div>
+      )}
 
       {bookings.length === 0 ? (
         <EmptyState
