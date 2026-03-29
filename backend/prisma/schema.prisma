@@ -97,12 +97,13 @@ model Client {
   bookingId String  @unique
   booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
-  name          String
-  citizenship   String
-  email         String
-  contactNumber String
-  passportCopy  String?
-  flightTicket  String?
+  name               String
+  citizenship        String
+  languagePreference String   @default("English")
+  email              String
+  contactNumber      String
+  passportCopy       String?
+  flightTicket       String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

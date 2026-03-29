@@ -49,6 +49,7 @@ export interface Client {
   bookingId: string;
   name: string;
   citizenship: string;
+  languagePreference: string;
   email: string;
   contactNumber: string;
   passportCopy?: string;

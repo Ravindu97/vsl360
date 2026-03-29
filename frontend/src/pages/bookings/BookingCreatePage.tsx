@@ -26,6 +26,7 @@ const createBookingSchema = z.object({
   client: z.object({
     name: z.string().min(1, 'Client name is required'),
     citizenship: z.string().min(1, 'Required'),
+    languagePreference: z.string().min(1, 'Required'),
     email: z.string().email('Invalid email'),
     contactNumber: z.string().min(1, 'Required'),
   }),
@@ -48,6 +49,7 @@ const defaultFormValues: CreateBookingForm = {
   client: {
     name: '',
     citizenship: '',
+    languagePreference: 'English',
     email: '',
     contactNumber: '',
   },
@@ -170,6 +172,11 @@ export function BookingCreatePage() {
               <Label>Citizenship *</Label>
               <Input {...register('client.citizenship')} />
               {errors.client?.citizenship && <p className="text-xs text-destructive">{errors.client.citizenship.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>Language Preference *</Label>
+              <Input {...register('client.languagePreference')} />
+              {errors.client?.languagePreference && <p className="text-xs text-destructive">{errors.client.languagePreference.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Email *</Label>

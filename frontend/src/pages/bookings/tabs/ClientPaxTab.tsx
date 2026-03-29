@@ -22,6 +22,7 @@ interface Props {
 const clientSchema = z.object({
   name: z.string().min(1),
   citizenship: z.string().min(1),
+  languagePreference: z.string().min(1),
   email: z.string().email(),
   contactNumber: z.string().min(1),
 });
@@ -46,6 +47,7 @@ export function ClientPaxTab({ booking }: Props) {
     defaultValues: {
       name: booking.client?.name ?? '',
       citizenship: booking.client?.citizenship ?? '',
+      languagePreference: booking.client?.languagePreference ?? 'English',
       email: booking.client?.email ?? '',
       contactNumber: booking.client?.contactNumber ?? '',
     },
@@ -114,6 +116,10 @@ export function ClientPaxTab({ booking }: Props) {
                 <Input {...clientForm.register('citizenship')} />
               </div>
               <div className="space-y-2">
+                <Label>Language Preference</Label>
+                <Input {...clientForm.register('languagePreference')} />
+              </div>
+              <div className="space-y-2">
                 <Label>Email</Label>
                 <Input type="email" {...clientForm.register('email')} />
               </div>
@@ -134,6 +140,7 @@ export function ClientPaxTab({ booking }: Props) {
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <Info label="Name" value={booking.client?.name} />
               <Info label="Citizenship" value={booking.client?.citizenship} />
+              <Info label="Language" value={booking.client?.languagePreference} />
               <Info label="Email" value={booking.client?.email} />
               <Info label="Contact" value={booking.client?.contactNumber} />
             </div>

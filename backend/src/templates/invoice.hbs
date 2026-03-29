@@ -269,6 +269,7 @@
         <div class="bill-to">
           <p class="bill-to-label">Billed To:</p>
           <p class="bill-to-name">{{client.name}}</p>
+          {{#if client.languagePreference}}<p class="bill-to-detail">Language: {{client.languagePreference}}</p>{{/if}}
           {{#if client.contactNumber}}<p class="bill-to-detail">Phone: {{client.contactNumber}}</p>{{/if}}
           {{#if client.email}}<p class="bill-to-detail">{{client.email}}</p>{{/if}}
         </div>

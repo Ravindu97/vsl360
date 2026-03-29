@@ -13,6 +13,7 @@ export const createBookingSchema = z.object({
   client: z.object({
     name: z.string().min(1, 'Guest name is required'),
     citizenship: z.string().min(1, 'Citizenship is required'),
+    languagePreference: z.string().min(1, 'Language preference is required').default('English'),
     email: z.string().email('Invalid email'),
     contactNumber: z.string().min(1, 'Contact number is required'),
   }),
