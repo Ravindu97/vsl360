@@ -238,6 +238,10 @@
           <div class="overview-value">: {{transport.vehicleModel}}</div>
         </div>
         {{/if}}
+        <div class="overview-row">
+          <div class="overview-label">Meal Plan</div>
+          <div class="overview-value">: {{mealPlanSummary hotels}}</div>
+        </div>
       </div>
 
       <!-- Hotel Itinerary Table -->
@@ -248,7 +252,7 @@
             <th>Date</th>
             <th>Location</th>
             <th>Hotel Name</th>
-            <th>Meal Plan</th>
+            <th>Room Category</th>
           </tr>
         </thead>
         <tbody>
@@ -258,7 +262,7 @@
             <td>{{formatDate this.date}}</td>
             <td>{{this.location}}</td>
             <td>{{this.hotelName}}</td>
-            <td>{{this.mealPlan}}</td>
+            <td>{{this.roomCategory}}</td>
           </tr>
           {{/each}}
         </tbody>

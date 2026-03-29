@@ -54,6 +54,19 @@ Handlebars.registerHelper('roomSummary', (hotels: any[]) => {
   return parts.join(', ');
 });
 
+Handlebars.registerHelper('mealPlanSummary', (hotels: any[]) => {
+  if (!hotels || hotels.length === 0) return '—';
+  const codeMap: Record<string, string> = {
+    'bb': 'BB', 'hb': 'HB', 'fb': 'FB', 'ro': 'RO',
+  };
+  const unique = new Set<string>();
+  for (const h of hotels) {
+    const raw = (h.mealPlan || '').trim().toLowerCase();
+    unique.add(codeMap[raw] || h.mealPlan || '—');
+  }
+  return Array.from(unique).join(', ');
+});
+
 type PdfRenderOptions = {
   margin?: { top: string; right: string; bottom: string; left: string };
   scale?: number;
@@ -594,7 +607,7 @@ export class DocumentGeneratorService {
         date,
         location: this.extractLocation(h.hotelName),
         hotelName: h.hotelName,
-        mealPlan: this.formatMealPlanCode(h.mealPlan),
+        roomCategory: h.roomCategory || '—',
       };
     });
 
