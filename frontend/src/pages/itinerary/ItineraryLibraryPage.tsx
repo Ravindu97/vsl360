@@ -263,7 +263,21 @@ export function ItineraryLibraryPage() {
                 onChange={(event) => setDestinationForm((prev) => ({ ...prev, name: event.target.value }))}
                 placeholder="e.g., Kandy"
               />
-              <Label>Slug (optional)</Label>
+              <Label className="flex items-center gap-2">
+                Slug (optional) - if entered manually, use lowercase kebab-case.
+                <span className="relative inline-flex items-center group">
+                  <span
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-semibold text-muted-foreground"
+                    aria-label="Slug format help"
+                  >
+                    ?
+                  </span>
+                  <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border bg-background p-2 text-xs font-normal leading-relaxed text-foreground shadow-md group-hover:block">
+                    Slug is used as a stable, URL-friendly identifier for filtering, linking, and API calls. It should stay lowercase with hyphens only.
+                    Examples: kandy, nuwara-eliya, arugam-bay.
+                  </span>
+                </span>
+              </Label>
               <Input
                 value={destinationForm.slug}
                 onChange={(event) => setDestinationForm((prev) => ({ ...prev, slug: event.target.value }))}
