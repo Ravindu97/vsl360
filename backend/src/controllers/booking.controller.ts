@@ -61,6 +61,24 @@ export class BookingController {
     }
   }
 
+  async getItineraryPlan(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const result = await bookingService.getItineraryPlan(String(req.params.id));
+      res.json(result);
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+
+  async saveItineraryPlan(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const result = await bookingService.saveItineraryPlan(String(req.params.id), req.body, req.user!.userId);
+      res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
   async delete(req: AuthRequest, res: Response): Promise<void> {
     try {
       await bookingService.delete(String(req.params.id));

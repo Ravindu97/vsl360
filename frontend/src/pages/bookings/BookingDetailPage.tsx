@@ -11,6 +11,7 @@ import { HotelsTab } from './tabs/HotelsTab';
 import { TransportTab } from './tabs/TransportTab';
 import { InvoiceTab } from './tabs/InvoiceTab';
 import { AttachmentsTab } from './tabs/AttachmentsTab';
+import { ItineraryPlanTab } from './tabs/ItineraryPlanTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
 import { HistoryTab } from './tabs/HistoryTab';
 
@@ -49,6 +50,7 @@ export function BookingDetailPage() {
           <TabsTrigger value="transport">Transport</TabsTrigger>
           <TabsTrigger value="invoice">Invoice</TabsTrigger>
           <TabsTrigger value="attachments">Attachments</TabsTrigger>
+          <TabsTrigger value="itinerary-plan">Itinerary Plan</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
@@ -58,6 +60,7 @@ export function BookingDetailPage() {
         <TabsContent value="transport"><TransportTab booking={booking} /></TabsContent>
         <TabsContent value="invoice"><InvoiceTab booking={booking} /></TabsContent>
         <TabsContent value="attachments"><AttachmentsTab booking={booking} /></TabsContent>
+        <TabsContent value="itinerary-plan"><ItineraryPlanTab booking={booking} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab booking={booking} /></TabsContent>
         <TabsContent value="history"><HistoryTab booking={booking} /></TabsContent>
       </Tabs>

@@ -3,7 +3,7 @@ import { bookingController } from '../controllers/booking.controller';
 import { authenticate } from '../middleware/auth';
 import { authorize } from '../middleware/authorize';
 import { validate } from '../middleware/validate';
-import { createBookingSchema, updateBookingSchema, updateStatusSchema } from '../validators/booking.schema';
+import { createBookingSchema, updateBookingSchema, updateStatusSchema, saveItineraryPlanSchema } from '../validators/booking.schema';
 
 const router = Router();
 
@@ -27,6 +27,13 @@ router.put(
   '/:id/status',
   validate(updateStatusSchema),
   (req, res) => bookingController.updateStatus(req, res)
+);
+router.get('/:id/itinerary-plan', (req, res) => bookingController.getItineraryPlan(req, res));
+router.put(
+  '/:id/itinerary-plan',
+  authorize('SALES', 'OPS_MANAGER'),
+  validate(saveItineraryPlanSchema),
+  (req, res) => bookingController.saveItineraryPlan(req, res)
 );
 router.delete(
   '/:id',

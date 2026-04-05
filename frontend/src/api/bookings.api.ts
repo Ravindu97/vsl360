@@ -28,5 +28,10 @@ export const bookingsApi = {
   updateStatus: (id: string, status: string, notes?: string) =>
     api.put(`/bookings/${id}/status`, { status, notes }),
 
+  getItineraryPlan: (id: string) => api.get<{ days: any[]; updatedAt?: string }>(`/bookings/${id}/itinerary-plan`),
+
+  saveItineraryPlan: (id: string, data: { days: any[] }) =>
+    api.put<{ days: any[]; updatedAt: string }>(`/bookings/${id}/itinerary-plan`, data),
+
   delete: (id: string) => api.delete(`/bookings/${id}`),
 };
