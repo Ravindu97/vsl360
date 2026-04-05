@@ -1,6 +1,12 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 
+const inferPaxType = (age: number): 'INFANT' | 'CHILD' | 'ADULT' => {
+  if (age <= 6) return 'INFANT';
+  if (age <= 12) return 'CHILD';
+  return 'ADULT';
+};
+
 export class PaxController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
     const paxList = await prisma.pax.findMany({
@@ -11,10 +17,15 @@ export class PaxController {
   }
 
   async create(req: Request, res: Response): Promise<void> {
+    const age = Number(req.body.age);
+    const type = inferPaxType(age);
+
     const pax = await prisma.pax.create({
       data: {
         bookingId: req.params.id,
         ...req.body,
+        age,
+        type,
       },
     });
     res.status(201).json(pax);
@@ -22,9 +33,21 @@ export class PaxController {
 
   async update(req: Request, res: Response): Promise<void> {
     try {
+      if (req.body.type && req.body.age === undefined) {
+        res.status(400).json({ error: 'Age is required when updating passenger type' });
+        return;
+      }
+
+      const dataToUpdate = { ...req.body };
+      if (req.body.age !== undefined) {
+        const age = Number(req.body.age);
+        dataToUpdate.age = age;
+        dataToUpdate.type = inferPaxType(age);
+      }
+
       const pax = await prisma.pax.update({
         where: { id: req.params.paxId },
-        data: req.body,
+        data: dataToUpdate,
       });
       res.json(pax);
     } catch (error: any) {

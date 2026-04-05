@@ -50,6 +50,57 @@ const invoiceSchema = z.object({
 
 type InvoiceForm = z.infer<typeof invoiceSchema>;
 
+type PolicyBreakdown = {
+  adults: number;
+  children: number;
+  infants: number;
+  adultUnits: number;
+  childUnits: number;
+  totalUnits: number;
+  adultRate: number;
+  childRate: number;
+  infantRate: number;
+  adultSubtotal: number;
+  childSubtotal: number;
+  infantSubtotal: number;
+  computedTotal: number;
+};
+
+function computePolicyBreakdown(booking: Booking, costPerPerson: number): PolicyBreakdown {
+  const adults = (booking.client ? 1 : 0) + booking.paxList.filter((p) => p.type === PaxType.ADULT).length;
+  const children = booking.paxList.filter((p) => p.type === PaxType.CHILD).length;
+  const infants = booking.paxList.filter((p) => p.type === PaxType.INFANT).length;
+
+  const adultUnits = adults;
+  const childUnits = children * 0.5;
+  const totalUnits = adultUnits + childUnits;
+
+  const adultRate = costPerPerson;
+  const childRate = costPerPerson * 0.5;
+  const infantRate = 0;
+
+  const adultSubtotal = adultUnits * costPerPerson;
+  const childSubtotal = children * childRate;
+  const infantSubtotal = 0;
+  const computedTotal = adultSubtotal + childSubtotal;
+
+  return {
+    adults,
+    children,
+    infants,
+    adultUnits,
+    childUnits,
+    totalUnits,
+    adultRate,
+    childRate,
+    infantRate,
+    adultSubtotal,
+    childSubtotal,
+    infantSubtotal,
+    computedTotal,
+  };
+}
+
 export function InvoiceTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
@@ -57,10 +108,11 @@ export function InvoiceTab({ booking }: Props) {
   const [editing, setEditing] = useState(false);
   const [saveError, setSaveError] = useState<string>('');
   const [newInclusion, setNewInclusion] = useState('');
+  const [autoPolicyMode, setAutoPolicyMode] = useState(true);
 
-  const adults = (booking.client ? 1 : 0) + booking.paxList.filter(p => p.type === PaxType.ADULT).length;
-  const children = booking.paxList.filter(p => p.type === PaxType.CHILD).length;
-  const infants = booking.paxList.filter(p => p.type === PaxType.INFANT).length;
+  const adults = (booking.client ? 1 : 0) + booking.paxList.filter((p) => p.type === PaxType.ADULT).length;
+  const children = booking.paxList.filter((p) => p.type === PaxType.CHILD).length;
+  const infants = booking.paxList.filter((p) => p.type === PaxType.INFANT).length;
   const totalGuests = adults + children + infants;
 
   const { data } = useQuery({
@@ -101,6 +153,9 @@ export function InvoiceTab({ booking }: Props) {
   const watchedCost = watch('costPerPerson');
   const watchedTotal = watch('totalAmount');
   const watchedAdvance = watch('advancePaid');
+  const policy = computePolicyBreakdown(booking, Number(watchedCost) || 0);
+  const totalDiff = (Number(watchedTotal) || 0) - policy.computedTotal;
+  const hasManualMismatch = !autoPolicyMode && Math.abs(totalDiff) >= 0.01;
 
   const lastAutoTotalRef = useRef<number>(invoice?.totalAmount ?? 0);
   const lastAutoBalanceRef = useRef<number>(invoice?.balanceAmount ?? 0);
@@ -113,20 +168,20 @@ export function InvoiceTab({ booking }: Props) {
       setSaveError('');
       setInclusions(invoice?.tourInclusions?.split('\n').filter(Boolean) ?? []);
       setNewInclusion('');
+      setAutoPolicyMode(true);
     }
-  }, [editing, getValues]);
+  }, [editing, getValues, invoice?.tourInclusions]);
 
-  // Auto-compute Total = Cost Per Person × Total Guests
+  // Auto-compute Total using policy rates:
+  // Adult = 100%, Child = 50%, Infant = 0%
   useEffect(() => {
-    if (!editing || totalGuests === 0) return;
+    if (!editing || !autoPolicyMode) return;
     const cost = Number(watchedCost) || 0;
-    const computedTotal = cost * totalGuests;
-    const currentTotal = Number(getValues('totalAmount')) || 0;
-    if (currentTotal === lastAutoTotalRef.current) {
-      setValue('totalAmount', computedTotal, { shouldDirty: true });
-      lastAutoTotalRef.current = computedTotal;
-    }
-  }, [watchedCost, editing, totalGuests, getValues, setValue]);
+    const breakdown = computePolicyBreakdown(booking, cost);
+    const computedTotal = breakdown.computedTotal;
+    setValue('totalAmount', computedTotal, { shouldDirty: true });
+    lastAutoTotalRef.current = computedTotal;
+  }, [watchedCost, booking, editing, autoPolicyMode, setValue]);
 
   // Auto-compute Balance = Total − Advance Paid
   useEffect(() => {
@@ -134,12 +189,9 @@ export function InvoiceTab({ booking }: Props) {
     const total = Number(watchedTotal) || 0;
     const advance = Number(watchedAdvance) || 0;
     const computedBalance = Math.max(0, total - advance);
-    const currentBalance = Number(getValues('balanceAmount')) || 0;
-    if (currentBalance === lastAutoBalanceRef.current) {
-      setValue('balanceAmount', computedBalance, { shouldDirty: true });
-      lastAutoBalanceRef.current = computedBalance;
-    }
-  }, [watchedTotal, watchedAdvance, editing, getValues, setValue]);
+    setValue('balanceAmount', computedBalance, { shouldDirty: true });
+    lastAutoBalanceRef.current = computedBalance;
+  }, [watchedTotal, watchedAdvance, editing, setValue]);
 
   const saveMutation = useMutation({
     mutationFn: (data: InvoiceForm) =>
@@ -158,6 +210,17 @@ export function InvoiceTab({ booking }: Props) {
     },
   });
 
+  const handleSave = (data: InvoiceForm) => {
+    if (hasManualMismatch) {
+      const proceed = window.confirm(
+        `Manual total differs from policy by ${formatCurrency(totalDiff)}. Do you want to save anyway?`
+      );
+      if (!proceed) return;
+    }
+
+    saveMutation.mutate(data);
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -170,7 +233,7 @@ export function InvoiceTab({ booking }: Props) {
       </CardHeader>
       <CardContent>
         {editing && canManage ? (
-          <form onSubmit={form.handleSubmit((d) => saveMutation.mutate(d))} className="grid gap-4 sm:grid-cols-2">
+          <form onSubmit={form.handleSubmit(handleSave)} className="grid gap-4 sm:grid-cols-2">
             {saveError && (
               <div className="sm:col-span-2 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {saveError}
@@ -185,6 +248,73 @@ export function InvoiceTab({ booking }: Props) {
                 <span className="rounded border border-primary/30 bg-primary/10 px-2 py-0.5 text-xs font-semibold">Total: {totalGuests}</span>
               </div>
             </div>
+            <div className="sm:col-span-2 rounded-lg border bg-muted/20 p-3 text-xs">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="font-medium text-muted-foreground">Passenger policy cost breakdown</p>
+                <label className="inline-flex items-center gap-2 text-xs font-medium">
+                  <input
+                    type="checkbox"
+                    checked={autoPolicyMode}
+                    onChange={(e) => setAutoPolicyMode(e.target.checked)}
+                  />
+                  Auto-calculate total from policy
+                </label>
+              </div>
+              <div className="mt-2 overflow-x-auto">
+                <table className="min-w-full text-xs">
+                  <thead>
+                    <tr className="border-b text-muted-foreground">
+                      <th className="px-2 py-1 text-left">Category</th>
+                      <th className="px-2 py-1 text-left">Pax</th>
+                      <th className="px-2 py-1 text-left">Rate Rule</th>
+                      <th className="px-2 py-1 text-left">Applied Rate</th>
+                      <th className="px-2 py-1 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b/60">
+                      <td className="px-2 py-1">Adults</td>
+                      <td className="px-2 py-1">{policy.adults}</td>
+                      <td className="px-2 py-1">100%</td>
+                      <td className="px-2 py-1">{formatCurrency(policy.adultRate)}</td>
+                      <td className="px-2 py-1 text-right">{formatCurrency(policy.adultSubtotal)}</td>
+                    </tr>
+                    <tr className="border-b/60">
+                      <td className="px-2 py-1">Children</td>
+                      <td className="px-2 py-1">{policy.children}</td>
+                      <td className="px-2 py-1">50%</td>
+                      <td className="px-2 py-1">{formatCurrency(policy.childRate)}</td>
+                      <td className="px-2 py-1 text-right">{formatCurrency(policy.childSubtotal)}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-2 py-1">Infants</td>
+                      <td className="px-2 py-1">{policy.infants}</td>
+                      <td className="px-2 py-1">Free</td>
+                      <td className="px-2 py-1">{formatCurrency(policy.infantRate)}</td>
+                      <td className="px-2 py-1 text-right">{formatCurrency(policy.infantSubtotal)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="font-semibold">Computed total: {formatCurrency(policy.computedTotal)}</p>
+                {!autoPolicyMode && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setValue('totalAmount', policy.computedTotal, { shouldDirty: true })}
+                  >
+                    Use computed total
+                  </Button>
+                )}
+              </div>
+              {hasManualMismatch && (
+                <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
+                  Warning: manual total is different from policy by {formatCurrency(totalDiff)}.
+                </div>
+              )}
+            </div>
             <div className="space-y-2">
               <Label>Cost Per Person (USD) *</Label>
               <Input type="number" step="0.01" {...form.register('costPerPerson')} />
@@ -192,8 +322,20 @@ export function InvoiceTab({ booking }: Props) {
             </div>
             <div className="space-y-2">
               <Label>Total Amount (USD) *</Label>
-              <Input type="number" step="0.01" {...form.register('totalAmount')} />
-              <p className="text-xs text-muted-foreground">Auto: Cost × {totalGuests} guests</p>
+              <Input
+                type="number"
+                step="0.01"
+                {...form.register('totalAmount')}
+                disabled={autoPolicyMode}
+                className={autoPolicyMode ? 'bg-muted text-muted-foreground' : ''}
+              />
+              {autoPolicyMode ? (
+                <p className="text-xs text-muted-foreground">Auto: Adult full + Child 50% + Infant free</p>
+              ) : (
+                <p className={`text-xs ${Math.abs(totalDiff) < 0.01 ? 'text-emerald-700' : 'text-amber-700'}`}>
+                  Manual mode: {Math.abs(totalDiff) < 0.01 ? 'matches policy total' : `difference from policy is ${formatCurrency(totalDiff)}`}
+                </p>
+              )}
               {errors.totalAmount && <p className="text-xs text-red-600">{errors.totalAmount.message}</p>}
             </div>
             <div className="space-y-2">
@@ -203,7 +345,13 @@ export function InvoiceTab({ booking }: Props) {
             </div>
             <div className="space-y-2">
               <Label>Balance Amount (USD) *</Label>
-              <Input type="number" step="0.01" {...form.register('balanceAmount')} />
+              <Input
+                type="number"
+                step="0.01"
+                {...form.register('balanceAmount')}
+                disabled
+                className="bg-muted text-muted-foreground"
+              />
               <p className="text-xs text-muted-foreground">Auto: Total − Advance</p>
               {errors.balanceAmount && <p className="text-xs text-red-600">{errors.balanceAmount.message}</p>}
             </div>
@@ -285,6 +433,52 @@ export function InvoiceTab({ booking }: Props) {
               <Info label="Advance Paid" value={formatCurrency(invoice.advancePaid)} />
               <Info label="Balance" value={formatCurrency(invoice.balanceAmount)} />
             </div>
+            {(() => {
+              const readonlyPolicy = computePolicyBreakdown(booking, Number(invoice.costPerPerson));
+              return (
+                <div className="rounded-lg border bg-muted/20 p-3 text-sm">
+                  <p className="text-xs font-medium text-muted-foreground">Passenger Policy Cost Breakdown</p>
+                  <div className="mt-2 overflow-x-auto">
+                    <table className="min-w-full text-xs">
+                      <thead>
+                        <tr className="border-b text-muted-foreground">
+                          <th className="px-2 py-1 text-left">Category</th>
+                          <th className="px-2 py-1 text-left">Pax</th>
+                          <th className="px-2 py-1 text-left">Applied Rate</th>
+                          <th className="px-2 py-1 text-right">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b/60">
+                          <td className="px-2 py-1">Adults</td>
+                          <td className="px-2 py-1">{readonlyPolicy.adults}</td>
+                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.adultRate)}</td>
+                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.adultSubtotal)}</td>
+                        </tr>
+                        <tr className="border-b/60">
+                          <td className="px-2 py-1">Children</td>
+                          <td className="px-2 py-1">{readonlyPolicy.children}</td>
+                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.childRate)}</td>
+                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.childSubtotal)}</td>
+                        </tr>
+                        <tr>
+                          <td className="px-2 py-1">Infants</td>
+                          <td className="px-2 py-1">{readonlyPolicy.infants}</td>
+                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.infantRate)}</td>
+                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.infantSubtotal)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 font-semibold">Computed Total: {formatCurrency(readonlyPolicy.computedTotal)}</p>
+                  {Math.abs(Number(invoice.totalAmount) - readonlyPolicy.computedTotal) >= 0.01 && (
+                    <p className="mt-1 text-xs text-amber-700">
+                      Saved invoice total differs from policy by {formatCurrency(Number(invoice.totalAmount) - readonlyPolicy.computedTotal)}.
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
             {invoice.paymentNotes && (
               <div className="text-sm">
                 <p className="text-muted-foreground text-xs">Payment Notes</p>

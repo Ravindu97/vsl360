@@ -73,6 +73,58 @@ type PdfRenderOptions = {
   preferCSSPageSize?: boolean;
 };
 
+type InvoiceCostBreakdown = {
+  adults: number;
+  children: number;
+  infants: number;
+  adultUnits: number;
+  childUnits: number;
+  totalUnits: number;
+  adultRate: number;
+  childRate: number;
+  infantRate: number;
+  adultSubtotal: number;
+  childSubtotal: number;
+  infantSubtotal: number;
+  computedTotal: number;
+};
+
+const computeInvoiceCostBreakdown = (booking: any): InvoiceCostBreakdown => {
+  const costPerPerson = Number(booking.invoice.costPerPerson);
+  const adults = (booking.client ? 1 : 0) + booking.paxList.filter((p: any) => p.type === 'ADULT').length;
+  const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
+  const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+
+  const adultUnits = adults;
+  const childUnits = children * 0.5;
+  const totalUnits = adultUnits + childUnits;
+
+  const adultRate = costPerPerson;
+  const childRate = costPerPerson * 0.5;
+  const infantRate = 0;
+
+  const adultSubtotal = adults * adultRate;
+  const childSubtotal = children * childRate;
+  const infantSubtotal = infants * infantRate;
+  const computedTotal = adultSubtotal + childSubtotal + infantSubtotal;
+
+  return {
+    adults,
+    children,
+    infants,
+    adultUnits,
+    childUnits,
+    totalUnits,
+    adultRate,
+    childRate,
+    infantRate,
+    adultSubtotal,
+    childSubtotal,
+    infantSubtotal,
+    computedTotal,
+  };
+};
+
 export class DocumentGeneratorService {
   private templatesDir: string;
   private outputDir: string;
@@ -363,6 +415,7 @@ export class DocumentGeneratorService {
     }
 
     const layout = this.pickInvoiceLayout(booking.invoice);
+    const costBreakdown = computeInvoiceCostBreakdown(booking);
 
     const template = this.loadTemplate('invoice');
     const tourInclusionsList = booking.invoice.tourInclusions
@@ -377,6 +430,7 @@ export class DocumentGeneratorService {
       client: booking.client,
       invoice: booking.invoice,
       paxCount: booking.paxList.length + 1, // +1 for main guest
+      costBreakdown,
       tourInclusionsList,
     });
 

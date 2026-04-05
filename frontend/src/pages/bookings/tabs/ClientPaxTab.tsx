@@ -30,11 +30,19 @@ const clientSchema = z.object({
 const paxSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   relationship: z.string().optional(),
-  type: z.nativeEnum(PaxType),
-  age: z.coerce.number().optional(),
+  age: z.preprocess(
+    (value) => (value === '' || value === null || value === undefined ? undefined : Number(value)),
+    z.number({ required_error: 'Age is required' }).int().min(0, 'Age is required').max(120, 'Please provide a valid age')
+  ),
 });
 
 type PaxForm = z.infer<typeof paxSchema>;
+
+function inferPaxType(age: number): PaxType {
+  if (age <= 6) return PaxType.INFANT;
+  if (age <= 12) return PaxType.CHILD;
+  return PaxType.ADULT;
+}
 
 export function ClientPaxTab({ booking }: Props) {
   const queryClient = useQueryClient();
@@ -71,15 +79,18 @@ export function ClientPaxTab({ booking }: Props) {
 
   const paxForm = useForm<PaxForm>({
     resolver: zodResolver(paxSchema),
-    defaultValues: { type: PaxType.ADULT },
+    defaultValues: { age: undefined },
   });
 
+  const watchedAge = paxForm.watch('age');
+  const inferredType = inferPaxType(Number.isFinite(Number(watchedAge)) ? Number(watchedAge) : 0);
+
   const createPax = useMutation({
-    mutationFn: (data: PaxForm) => paxApi.create(booking.id, data),
+    mutationFn: (data: PaxForm) => paxApi.create(booking.id, { ...data, type: inferPaxType(data.age) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pax', booking.id] });
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
-      paxForm.reset({ type: PaxType.ADULT });
+      paxForm.reset({ age: undefined });
       setAddingPax(false);
     },
   });
@@ -159,6 +170,10 @@ export function ClientPaxTab({ booking }: Props) {
           )}
         </CardHeader>
         <CardContent>
+          <div className="mb-4 rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            Passenger policy: 0 to 6 years = Infant (free), 7 to 12 years = Child (50%), above 12 years = Adult (full rate).
+          </div>
+
           {addingPax && (
             <form
               onSubmit={paxForm.handleSubmit((d) => createPax.mutate(d))}
@@ -173,19 +188,24 @@ export function ClientPaxTab({ booking }: Props) {
                 <Input {...paxForm.register('relationship')} />
               </div>
               <div className="space-y-1">
-                <Label>Type</Label>
-                <select
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm"
-                  {...paxForm.register('type')}
-                >
-                  {Object.values(PaxType).map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
+                <Label>Type (Auto)</Label>
+                <Select value={inferredType} disabled>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(PaxType).map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label>Age</Label>
                 <Input type="number" {...paxForm.register('age')} />
+                {paxForm.formState.errors.age && (
+                  <p className="text-xs text-red-600">{paxForm.formState.errors.age.message}</p>
+                )}
               </div>
               <div className="flex items-end gap-2">
                 <Button type="submit" size="sm" disabled={createPax.isPending}>
