@@ -19,6 +19,7 @@ import invoiceRoutes from './routes/invoice.routes';
 import attachmentRoutes from './routes/attachment.routes';
 import documentRoutes from './routes/document.routes';
 import reportRoutes from './routes/report.routes';
+import itineraryRoutes from './routes/itinerary.routes';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use('/api/bookings/:id/invoice', invoiceRoutes);
 app.use('/api/bookings/:id/attachments', attachmentRoutes);
 app.use('/api/bookings/:id/documents', documentRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/itinerary', itineraryRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

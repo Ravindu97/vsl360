@@ -4,6 +4,7 @@ import {
   BookOpen,
   Users,
   BarChart3,
+  Library,
 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -12,6 +13,7 @@ import { Role } from '@/types';
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: null },
   { name: 'Bookings', href: '/bookings', icon: BookOpen, roles: null },
+  { name: 'Itinerary Library', href: '/itinerary', icon: Library, roles: [Role.OPS_MANAGER] },
   { name: 'Users', href: '/users', icon: Users, roles: [Role.OPS_MANAGER] },
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: [Role.OPS_MANAGER] },
 ];

@@ -1,0 +1,126 @@
+destinations:
+  - destination_code: DST_001
+    name: Negombo
+    slug: negombo
+    is_active: true
+    sort_order: 1
+  - destination_code: DST_002
+    name: Sigiriya
+    slug: sigiriya
+    is_active: true
+    sort_order: 2
+  - destination_code: DST_003
+    name: Polonnaruwa
+    slug: polonnaruwa
+    is_active: true
+    sort_order: 3
+  - destination_code: DST_004
+    name: Anuradhapura
+    slug: anuradhapura
+    is_active: true
+    sort_order: 4
+  - destination_code: DST_005
+    name: Trincomalee
+    slug: trincomalee
+    is_active: true
+    sort_order: 5
+  - destination_code: DST_006
+    name: Chilaw
+    slug: chilaw
+    is_active: true
+    sort_order: 6
+  - destination_code: DST_007
+    name: Dambulla
+    slug: dambulla
+    is_active: true
+    sort_order: 7
+  - destination_code: DST_008
+    name: Kandy
+    slug: kandy
+    is_active: true
+    sort_order: 8
+  - destination_code: DST_009
+    name: 'Nuwara Eliya'
+    slug: nuwara-eliya
+    is_active: true
+    sort_order: 9
+  - destination_code: DST_010
+    name: Ella
+    slug: ella
+    is_active: true
+    sort_order: 10
+  - destination_code: DST_011
+    name: Yala
+    slug: yala
+    is_active: true
+    sort_order: 11
+  - destination_code: DST_012
+    name: Kataragama
+    slug: kataragama
+    is_active: true
+    sort_order: 12
+  - destination_code: DST_013
+    name: Tangalle
+    slug: tangalle
+    is_active: true
+    sort_order: 13
+  - destination_code: DST_014
+    name: Mirissa
+    slug: mirissa
+    is_active: true
+    sort_order: 14
+  - destination_code: DST_015
+    name: Weligama
+    slug: weligama
+    is_active: true
+    sort_order: 15
+  - destination_code: DST_016
+    name: Ahangama
+    slug: ahangama
+    is_active: true
+    sort_order: 16
+  - destination_code: DST_017
+    name: Unawatuna
+    slug: unawatuna
+    is_active: true
+    sort_order: 17
+  - destination_code: DST_018
+    name: Galle
+    slug: galle
+    is_active: true
+    sort_order: 18
+  - destination_code: DST_019
+    name: Bentota
+    slug: bentota
+    is_active: true
+    sort_order: 19
+  - destination_code: DST_020
+    name: Colombo
+    slug: colombo
+    is_active: true
+    sort_order: 20
+  - destination_code: DST_021
+    name: Kalutara
+    slug: kalutara
+    is_active: true
+    sort_order: 21
+  - destination_code: DST_022
+    name: Kalpitiya
+    slug: kalpitiya
+    is_active: true
+    sort_order: 22
+  - destination_code: DST_023
+    name: Pasikuda
+    slug: pasikuda
+    is_active: true
+    sort_order: 23
+  - destination_code: DST_024
+    name: Koggala
+    slug: koggala
+    is_active: true
+    sort_order: 24
+  - destination_code: DST_025
+    name: 'Arugam Bay'
+    slug: arugam-bay
+    is_active: true
+    sort_order: 25

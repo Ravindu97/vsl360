@@ -1,5 +1,18 @@
 import api from './client';
-import type { Pax, Client, HotelBooking, TransportPlan, Invoice, Attachment, GeneratedDocument, TransportDayPlan, PaginatedResponse } from '@/types';
+import type {
+  Pax,
+  Client,
+  HotelBooking,
+  TransportPlan,
+  Invoice,
+  Attachment,
+  GeneratedDocument,
+  TransportDayPlan,
+  PaginatedResponse,
+  ItineraryActivity,
+  ItineraryDestination,
+  PaginatedResponse,
+} from '@/types';
 
 // Client (Main Guest)
 export const clientApi = {
@@ -70,4 +83,68 @@ export const documentsApi = {
 export const reportsApi = {
   dashboard: () => api.get('/reports/dashboard'),
   bookings: (params?: any) => api.get('/reports/bookings', { params }),
+};
+
+// Itinerary library
+export const itineraryApi = {
+  listDestinations: (params?: { search?: string; page?: number; pageSize?: number }) =>
+    api.get<PaginatedResponse<ItineraryDestination>>('/itinerary/destinations', { params }),
+  createDestination: (data: { name: string; slug?: string; isActive?: boolean }) =>
+    api.post<ItineraryDestination>('/itinerary/destinations', data),
+  updateDestination: (destinationId: string, data: { name?: string; slug?: string; isActive?: boolean }) =>
+    api.put<ItineraryDestination>(`/itinerary/destinations/${destinationId}`, data),
+  deleteDestination: (destinationId: string) =>
+    api.delete(`/itinerary/destinations/${destinationId}`),
+
+  listActivities: (params?: { destinationId?: string; search?: string; category?: string; page?: number; pageSize?: number }) =>
+    api.get<PaginatedResponse<ItineraryActivity>>('/itinerary/activities', { params }),
+  createActivity: (data: {
+    destinationId: string;
+    title: string;
+    description: string;
+    category: string;
+    isSeasonal?: boolean;
+  }) => api.post<ItineraryActivity>('/itinerary/activities', data),
+  updateActivity: (activityId: string, data: {
+    destinationId?: string;
+    title?: string;
+    description?: string;
+    category?: string;
+    isSeasonal?: boolean;
+  }) => api.put<ItineraryActivity>(`/itinerary/activities/${activityId}`, data),
+  deleteActivity: (activityId: string) =>
+    api.delete(`/itinerary/activities/${activityId}`),
+
+  exportCatalog: () =>
+    api.get<{
+      exportedAt: string;
+      destinationCount: number;
+      activityCount: number;
+      destinations: Array<{ id: string; name: string; slug: string; isActive: boolean; sortOrder: number }>;
+      activities: Array<{
+        id: string;
+        destinationId: string;
+        title: string;
+        description: string;
+        category: string;
+        isSeasonal: boolean;
+        sortOrder: number;
+        sourceRow?: number | null;
+      }>;
+    }>('/itinerary/export'),
+
+  importCatalog: (data: {
+    replaceAll?: boolean;
+    destinations: Array<{ id: string; name: string; slug: string; isActive?: boolean; sortOrder: number }>;
+    activities: Array<{
+      id: string;
+      destinationId: string;
+      title: string;
+      description: string;
+      category: string;
+      isSeasonal?: boolean;
+      sortOrder: number;
+      sourceRow?: number | null;
+    }>;
+  }) => api.post('/itinerary/import', data),
 };

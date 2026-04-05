@@ -1,0 +1,1007 @@
+meta:
+  generated_at: 2026-04-05T05:20:12.889Z
+  source_file: itineary_details.csv
+  destination_count: 25
+  activity_count: 97
+
+destinations:
+  - destination_code: DST_001
+    name: Negombo
+    slug: negombo
+    is_active: true
+    sort_order: 1
+  - destination_code: DST_002
+    name: Sigiriya
+    slug: sigiriya
+    is_active: true
+    sort_order: 2
+  - destination_code: DST_003
+    name: Polonnaruwa
+    slug: polonnaruwa
+    is_active: true
+    sort_order: 3
+  - destination_code: DST_004
+    name: Anuradhapura
+    slug: anuradhapura
+    is_active: true
+    sort_order: 4
+  - destination_code: DST_005
+    name: Trincomalee
+    slug: trincomalee
+    is_active: true
+    sort_order: 5
+  - destination_code: DST_006
+    name: Chilaw
+    slug: chilaw
+    is_active: true
+    sort_order: 6
+  - destination_code: DST_007
+    name: Dambulla
+    slug: dambulla
+    is_active: true
+    sort_order: 7
+  - destination_code: DST_008
+    name: Kandy
+    slug: kandy
+    is_active: true
+    sort_order: 8
+  - destination_code: DST_009
+    name: 'Nuwara Eliya'
+    slug: nuwara-eliya
+    is_active: true
+    sort_order: 9
+  - destination_code: DST_010
+    name: Ella
+    slug: ella
+    is_active: true
+    sort_order: 10
+  - destination_code: DST_011
+    name: Yala
+    slug: yala
+    is_active: true
+    sort_order: 11
+  - destination_code: DST_012
+    name: Kataragama
+    slug: kataragama
+    is_active: true
+    sort_order: 12
+  - destination_code: DST_013
+    name: Tangalle
+    slug: tangalle
+    is_active: true
+    sort_order: 13
+  - destination_code: DST_014
+    name: Mirissa
+    slug: mirissa
+    is_active: true
+    sort_order: 14
+  - destination_code: DST_015
+    name: Weligama
+    slug: weligama
+    is_active: true
+    sort_order: 15
+  - destination_code: DST_016
+    name: Ahangama
+    slug: ahangama
+    is_active: true
+    sort_order: 16
+  - destination_code: DST_017
+    name: Unawatuna
+    slug: unawatuna
+    is_active: true
+    sort_order: 17
+  - destination_code: DST_018
+    name: Galle
+    slug: galle
+    is_active: true
+    sort_order: 18
+  - destination_code: DST_019
+    name: Bentota
+    slug: bentota
+    is_active: true
+    sort_order: 19
+  - destination_code: DST_020
+    name: Colombo
+    slug: colombo
+    is_active: true
+    sort_order: 20
+  - destination_code: DST_021
+    name: Kalutara
+    slug: kalutara
+    is_active: true
+    sort_order: 21
+  - destination_code: DST_022
+    name: Kalpitiya
+    slug: kalpitiya
+    is_active: true
+    sort_order: 22
+  - destination_code: DST_023
+    name: Pasikuda
+    slug: pasikuda
+    is_active: true
+    sort_order: 23
+  - destination_code: DST_024
+    name: Koggala
+    slug: koggala
+    is_active: true
+    sort_order: 24
+  - destination_code: DST_025
+    name: 'Arugam Bay'
+    slug: arugam-bay
+    is_active: true
+    sort_order: 25
+
+activities:
+  - activity_code: ACT_0001
+    destination_code: DST_001
+    destination_slug: negombo
+    title: 'Lagoon boat safari (mangroves, birds, sunset)'
+    description: 'Discover the serene beauty of Negombo Lagoon with a peaceful boat safari through lush mangrove forests. As you glide along calm waters, you''ll witness a rich ecosystem filled with exotic birds, traditional fishing methods, and untouched nature. The experience becomes truly magical during sunset, when the sky reflects golden hues over the lagoon. Creating a perfect setting for photography and relaxation. This is one of the best nature experiences in Negombo for travelers seeking tranquility and scenic beauty.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 1
+    source_row: 3
+  - activity_code: ACT_0002
+    destination_code: DST_001
+    destination_slug: negombo
+    title: 'Fish market visit (early morning local experience)'
+    description: 'Start your day with an authentic cultural experience at Negombo''s bustling fish market, one of the largest in Sri Lanka. Early in the morning, you''ll see fishermen bringing in their fresh catch straight from the ocean, while locals negotiate and trade in a lively atmosphere. The market offers a raw and real glimpse into Sri Lankan coastal life, making it a must-visit for travelers who want to explore local traditions, seafood culture, and daily routines beyond typical tourist spots.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 2
+    source_row: 4
+  - activity_code: ACT_0003
+    destination_code: DST_001
+    destination_slug: negombo
+    title: 'Dutch canal boat ride'
+    description: 'Step back in time with a relaxing boat ride along the historic Dutch Canal, a colonial-era waterway surrounded by tropical greenery and village life. As you cruise through this scenic route, you''ll observe local homes, fishing communities, and quiet landscapes that showcase the authentic charm of Negombo. This slow-paced experience is perfect for those who enjoy cultural exploration combined with peaceful surroundings.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 3
+    source_row: 5
+  - activity_code: ACT_0004
+    destination_code: DST_001
+    destination_slug: negombo
+    title: 'Beach relaxation / jet skiing'
+    description: 'Unwind on the golden sandy beaches of Negombo, where the sound of the waves and ocean breeze create the perfect tropical escape. Whether you prefer to relax under the sun or enjoy thrilling water sports like jet skiing, this experience offers something for every traveler. It''s an ideal way to balance your journey with both relaxation and adventure along Sri Lanka''s beautiful west coast.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 4
+    source_row: 6
+  - activity_code: ACT_0005
+    destination_code: DST_001
+    destination_slug: negombo
+    title: 'City cycling tour'
+    description: 'Explore Negombo like a local with a guided cycling tour through charming streets, coastal roads, and traditional neighborhoods. This immersive experience allows you to interact with locals, discover hidden gems, and observe everyday Sri Lankan life up close. From small temples to vibrant markets, cycling offers a unique and eco-friendly way to experience the culture and lifestyle of this coastal town.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 5
+    source_row: 7
+  - activity_code: ACT_0006
+    destination_code: DST_002
+    destination_slug: sigiriya
+    title: 'Sigiriya Rock Fortress climb (UNESCO site)'
+    description: 'Step into history as you climb the iconic Sigiriya Rock Fortress, a UNESCO World Heritage Site and one of Sri Lanka''s most famous landmarks. Rising dramatically from the jungle, this ancient royal citadel offers a fascinating journey through frescoes, mirror walls, and lion-shaped gateways. As you reach the summit, you''ll be rewarded with breathtaking panoramic views of lush greenery and surrounding villages. This is a must-do experience for travelers seeking culture, history, and unforgettable views in Sri Lanka.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 6
+    source_row: 10
+  - activity_code: ACT_0007
+    destination_code: DST_002
+    destination_slug: sigiriya
+    title: 'Pidurangala Rock sunrise hike'
+    description: 'For one of the most breathtaking sunrise experiences in Sri Lanka, hike up Pidurangala Rock in the early morning. The short yet adventurous climb takes you through forest paths and rocky terrain, leading to a stunning viewpoint overlooking Sigiriya Rock and the surrounding landscapes. Watching the sunrise from the top, as the sky turns shades of orange and gold, is a truly magical moment and a favorite among photographers and nature lovers.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 7
+    source_row: 11
+  - activity_code: ACT_0008
+    destination_code: DST_002
+    destination_slug: sigiriya
+    title: 'Village safari'
+    description: 'Experience authentic Sri Lankan village life with a unique cultural safari in the Sigiriya countryside. Travel by traditional bullock cart through rural paths, enjoy a peaceful canoe ride across a scenic lake, and visit a local village home where you''ll learn to cook traditional Sri Lankan dishes. This immersive experience allows you to connect with locals, understand their lifestyle, and enjoy fresh, homemade cuisine, making it one of the most memorable cultural activities in Sri Lanka.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 8
+    source_row: 12
+  - activity_code: ACT_0009
+    destination_code: DST_002
+    destination_slug: sigiriya
+    title: 'Elephant safari in Minneriya / Kaudulla'
+    description: 'Witness the majestic beauty of wild elephants in their natural habitat with a safari in Minneriya National Park or Kaudulla National Park. These parks are famous for the "Gathering," where large herds of elephants come together near water reservoirs. The safari offers an exciting opportunity to see elephants, birds, and other wildlife up close, making it a must-do for nature enthusiasts and wildlife lovers visiting Sri Lanka.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 9
+    source_row: 13
+  - activity_code: ACT_0010
+    destination_code: DST_002
+    destination_slug: sigiriya
+    title: 'Ayurvedic spa experience'
+    description: 'Relax and rejuvenate with a traditional Ayurvedic spa experience in Sigiriya, inspired by Sri Lanka''s ancient healing practices. Enjoy herbal treatments, therapeutic massages, and natural oils designed to restore balance to your body and mind. Surrounded by peaceful nature, this wellness experience is perfect after a day of exploration, offering deep relaxation and a touch of luxury to your journey.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 10
+    source_row: 14
+  - activity_code: ACT_0011
+    destination_code: DST_003
+    destination_slug: polonnaruwa
+    title: 'Ancient city cycling tour (UNESCO ruins)'
+    description: 'Explore the timeless beauty of Ancient City of Polonnaruwa with a guided cycling tour through its well-preserved ruins. Ride along quiet pathways surrounded by ancient temples, royal palaces, and sacred monuments dating back over 1,000 years. This eco-friendly experience allows you to fully immerse yourself in the history and scale of the kingdom at your own pace, making it one of the best ways to discover Polonnaruwa''s cultural heritage.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 11
+    source_row: 16
+  - activity_code: ACT_0012
+    destination_code: DST_003
+    destination_slug: polonnaruwa
+    title: 'Explore ancient city'
+    description: 'Step into the golden age of Sri Lankan history as you explore the remarkable ruins of Polonnaruwa, once the thriving capital of the island. Discover iconic sites such as the Royal Palace, sacred quadrangles, and the beautifully carved Buddha statues at Gal Vihara. Surrounded by lush greenery and peaceful surroundings, this experience offers a deep cultural and spiritual connection, perfect for travelers interested in history, architecture, and heritage.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 12
+    source_row: 17
+  - activity_code: ACT_0013
+    destination_code: DST_004
+    destination_slug: anuradhapura
+    title: 'Sacred city temple tour'
+    description: 'Discover the spiritual heart of Sri Lanka with a visit to the Sacred City of Anuradhapura, one of the oldest continuously inhabited cities in the world. The highlight of this sacred journey is the revered Sri Maha Bodhi, believed to be grown from a cutting of the original Bodhi tree under which Buddha attained enlightenment. Surrounded by ancient monasteries and peaceful surroundings, this experience offers a profound connection to Sri Lanka''s rich Buddhist heritage.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 13
+    source_row: 21
+  - activity_code: ACT_0014
+    destination_code: DST_004
+    destination_slug: anuradhapura
+    title: 'Ruwanwelisaya & Jetavanaramaya stupas'
+    description: 'Witness the grandeur of ancient Sri Lankan architecture as you visit the iconic Ruwanwelisaya and Jetavanaramaya, two of the most impressive stupas in the world. These massive white domes stand as symbols of devotion and engineering brilliance, attracting pilgrims and travelers alike. Walking around these sacred monuments, especially during prayer times, allows you to experience the powerful spiritual energy and timeless beauty of Anuradhapura.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 14
+    source_row: 22
+  - activity_code: ACT_0015
+    destination_code: DST_004
+    destination_slug: anuradhapura
+    title: 'Local pilgrimage experience'
+    description: 'Immerse yourself in the authentic spiritual life of Sri Lanka by joining a local pilgrimage experience in Anuradhapura. Observe devotees dressed in white offering flowers, lighting oil lamps, and practicing ancient rituals passed down through generations. This unique cultural interaction allows you to witness genuine faith and devotion, providing a deeper understanding of Sri Lanka''s traditions and spiritual lifestyle.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 15
+    source_row: 23
+  - activity_code: ACT_0016
+    destination_code: DST_005
+    destination_slug: trincomalee
+    title: 'Whale & dolphin watching (seasonal)'
+    description: 'Embark on an unforgettable ocean adventure in Trincomalee with a whale and dolphin watching experience (best during the season). Cruise into the deep blue waters of the Indian Ocean, where you may witness majestic blue whales, playful dolphins, and other marine life in their natural habitat. This thrilling yet peaceful journey is perfect for nature lovers and offers one of the most unique wildlife experiences in Sri Lanka.'
+    category: WILDLIFE
+    is_seasonal: true
+    source_order: 16
+    source_row: 26
+  - activity_code: ACT_0017
+    destination_code: DST_005
+    destination_slug: trincomalee
+    title: 'Snorkeling at Pigeon Island'
+    description: 'Discover the vibrant underwater world of Pigeon Island National Park, one of the best snorkeling spots in Sri Lanka. Swim among colorful coral reefs, tropical fish, and even reef sharks in crystal-clear waters. This protected marine park offers an easy and enjoyable snorkeling experience for both beginners and experienced travelers, making it a must-visit for anyone exploring Trincomalee.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 17
+    source_row: 27
+  - activity_code: ACT_0018
+    destination_code: DST_005
+    destination_slug: trincomalee
+    title: 'Visit Koneswaram Temple (cliff views) & Visit Fort Frederick'
+    description: 'Visit the sacred Koneswaram Temple, dramatically perched on a cliff overlooking the ocean. Known as the "Temple of a Thousand Pillars," it offers breathtaking panoramic views and deep spiritual significance. Combine this with a visit to Fort Frederick, a historic site surrounded by greenery and home to friendly deer roaming freely. This experience blends culture, history, and stunning coastal scenery.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 18
+    source_row: 28
+  - activity_code: ACT_0019
+    destination_code: DST_005
+    destination_slug: trincomalee
+    title: 'Nilaveli beach relaxation'
+    description: 'Unwind on the pristine shores of Nilaveli Beach, famous for its soft white sand and calm turquoise waters. Far from the crowds, this tranquil beach is perfect for sunbathing, swimming, or simply enjoying the peaceful coastal atmosphere. Whether you''re looking to relax or capture picture-perfect moments, Nilaveli offers one of the most beautiful beach experiences in Sri Lanka.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 19
+    source_row: 29
+  - activity_code: ACT_0020
+    destination_code: DST_006
+    destination_slug: chilaw
+    title: 'Munneswaram & Manavari temple'
+    description: 'Explore the spiritual heritage of Chilaw with a visit to the sacred Munneswaram Temple and Manavari Temple. These ancient temples are deeply connected to the Ramayana legend and attract devotees from India and around the world. Surrounded by peaceful surroundings and rich history, this experience offers a meaningful cultural and spiritual journey, perfect for those seeking divine connection and heritage exploration.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 20
+    source_row: 31
+  - activity_code: ACT_0021
+    destination_code: DST_006
+    destination_slug: chilaw
+    title: 'Lagoon fishing experience'
+    description: 'Enjoy a unique and authentic local experience with traditional fishing in the calm lagoons of Chilaw. Join local fishermen as they demonstrate age-old techniques, giving you a hands-on opportunity to try fishing yourself. Set against a backdrop of mangroves and serene waters, this activity offers a glimpse into the daily life of coastal communities and a chance to connect with nature in a peaceful setting.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 21
+    source_row: 32
+  - activity_code: ACT_0022
+    destination_code: DST_006
+    destination_slug: chilaw
+    title: 'Quiet beach relaxation'
+    description: 'Escape the crowds and unwind on the untouched beaches of Chilaw, where tranquility meets natural beauty. With soft sands, gentle waves, and a calm atmosphere, these beaches are perfect for relaxation, long walks, and enjoying the sunset. Ideal for travelers seeking a peaceful coastal retreat, Chilaw offers a refreshing break away from busy tourist hotspots.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 22
+    source_row: 33
+  - activity_code: ACT_0023
+    destination_code: DST_007
+    destination_slug: dambulla
+    title: 'Dambulla Cave Temple (UNESCO)'
+    description: 'Discover the awe-inspiring beauty of the Dambulla Cave Temple, one of the most well-preserved cave temple complexes in Asia. Carved into a rock, this sacred site features stunning Buddha statues, intricate wall paintings, and centuries-old murals that tell stories of Sri Lanka''s Buddhist heritage. As you explore the peaceful caves, surrounded by panoramic views of the countryside, you''ll experience a deep sense of spirituality and history.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 23
+    source_row: 38
+  - activity_code: ACT_0024
+    destination_code: DST_007
+    destination_slug: dambulla
+    title: 'Golden Buddha Temple visit'
+    description: 'Visit the iconic Golden Temple of Dambulla, home to a towering golden Buddha statue that welcomes visitors from afar. This impressive landmark combines modern architecture with religious significance and serves as an important spiritual center. The temple complex also houses a museum showcasing Buddhist art and history, making it a perfect stop for cultural exploration and photography.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 24
+    source_row: 39
+  - activity_code: ACT_0025
+    destination_code: DST_007
+    destination_slug: dambulla
+    title: 'Ayurvedic Spice garden tour'
+    description: 'Engage your senses with a visit to a traditional spice garden in Dambulla, where you''ll learn about Sri Lanka''s world-famous herbs and spices. Walk through lush gardens filled with cinnamon, cardamom, pepper, and medicinal plants, while experts explain their uses in Ayurveda and local cuisine. This interactive experience often includes demonstrations and herbal treatments, offering both knowledge and relaxation in a natural setting.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 25
+    source_row: 40
+  - activity_code: ACT_0026
+    destination_code: DST_008
+    destination_slug: kandy
+    title: 'Visit Temple of the Tooth'
+    description: 'Experience the spiritual heart of Sri Lanka with a visit to the sacred Temple of the Sacred Tooth Relic, one of the most revered Buddhist sites in the world. Located within the royal palace complex, this temple houses a relic of Lord Buddha and attracts thousands of pilgrims daily. Witness traditional rituals, explore the beautiful architecture, and feel the deep spiritual atmosphere that makes Kandy a must-visit destination.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 26
+    source_row: 43
+  - activity_code: ACT_0027
+    destination_code: DST_008
+    destination_slug: kandy
+    title: 'Cultural dance show'
+    description: 'Immerse yourself in Sri Lanka''s vibrant traditions with an energetic cultural dance performance in Kandy. Featuring traditional Kandyan dances, fire walking, and drumming, this lively show reflects the island''s rich heritage and artistic expression. It''s a captivating experience that brings Sri Lankan culture to life through rhythm, color, and movement.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 27
+    source_row: 44
+  - activity_code: ACT_0028
+    destination_code: DST_008
+    destination_slug: kandy
+    title: 'Kandy lake evening walk'
+    description: 'Enjoy a peaceful stroll around the scenic Kandy Lake, located in the heart of the city. Surrounded by lush hills and historic landmarks, the lake offers a calm and romantic atmosphere, especially during sunset. This relaxing walk is perfect for unwinding after a day of sightseeing while taking in the beauty of Kandy.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 28
+    source_row: 45
+  - activity_code: ACT_0029
+    destination_code: DST_008
+    destination_slug: kandy
+    title: 'Gem museum visit'
+    description: 'Discover the fascinating world of Sri Lanka''s precious stones with a visit to a gem museum in Kandy. Learn about the island''s rich history in gem mining, see rare stones such as sapphires and rubies, and understand the craftsmanship behind fine jewelry. This experience is both educational and exciting, especially for those interested in luxury and local artistry.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 29
+    source_row: 46
+  - activity_code: ACT_0030
+    destination_code: DST_008
+    destination_slug: kandy
+    title: 'Peradeniya Botanical Garden'
+    description: 'Explore the lush beauty of Royal Botanic Gardens, Peradeniya, one of the finest botanical gardens in Asia. Spread over vast grounds, it features a stunning collection of orchids, palm avenues, bamboo groves, and exotic plants from around the world. This serene environment is perfect for nature lovers, photography enthusiasts, and anyone seeking a refreshing escape.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 30
+    source_row: 47
+  - activity_code: ACT_0031
+    destination_code: DST_008
+    destination_slug: kandy
+    title: 'Ayurvedic Spice garden tour'
+    description: 'Enhance your wellness journey with a visit to a traditional spice garden near Kandy. Discover the secrets of Sri Lanka''s natural herbs and spices, including cinnamon, cloves, and nutmeg, widely used in Ayurvedic treatments. Guided tours often include demonstrations and relaxing herbal therapies, offering a perfect blend of knowledge, culture, and rejuvenation.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 31
+    source_row: 48
+  - activity_code: ACT_0032
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Tea plantation & factory visit'
+    description: 'Step into the heart of Sri Lanka''s tea country in Nuwara Eliya with a visit to lush tea plantations and a working factory. Walk through rolling green hills where world-famous Ceylon tea is grown, and witness the fascinating process from leaf to cup. Enjoy freshly brewed tea while soaking in breathtaking views, making this a must-do experience for nature lovers and culture enthusiasts.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 32
+    source_row: 50
+  - activity_code: ACT_0033
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Enjoy Train ride'
+    description: 'Enjoy one of the most beautiful train journeys in the world through the misty hills of Sri Lanka. Travel between Kandy and Nuwara Eliya (Nanu Oya station), passing through tea estates, tunnels, and picturesque villages. This iconic train ride offers stunning panoramic views and unforgettable moments, making it a highlight for photographers and travelers alike.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 33
+    source_row: 51
+  - activity_code: ACT_0034
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Visit Ramboda waterfall'
+    description: 'Witness the majestic beauty of Ramboda Falls, one of the tallest and most scenic waterfalls in the country. Surrounded by lush greenery and misty mountains, this cascading waterfall creates a refreshing and tranquil atmosphere. It''s an ideal stop for nature lovers and a perfect photo opportunity during your journey through the hill country.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 34
+    source_row: 52
+  - activity_code: ACT_0035
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Explore Hanuman temple'
+    description: 'Visit the sacred Sri Bhakta Hanuman Temple, an important site connected to the Ramayana legend. Surrounded by mountains and tea plantations, this temple holds deep spiritual significance for Hindu travelers. The peaceful environment and mythological connection make it a meaningful cultural and religious experience.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 35
+    source_row: 53
+  - activity_code: ACT_0036
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Visit Gregory Lake'
+    description: 'Relax and unwind at Gregory Lake, a scenic spot surrounded by hills and cool climate. Enjoy activities such as boat rides, cycling, or simply a leisurely walk along the lakeside. This popular attraction offers a perfect blend of relaxation and recreation in the heart of Nuwara Eliya.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 36
+    source_row: 54
+  - activity_code: ACT_0037
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Visit to local Strawberry farms'
+    description: 'Experience a delightful visit to strawberry farms in Nuwara Eliya, where the cool climate creates ideal conditions for fresh produce. Walk through the farms, taste freshly picked strawberries, and enjoy desserts made from local ingredients. This charming experience is especially loved by families and couples.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 37
+    source_row: 55
+  - activity_code: ACT_0038
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Visit to Ambewela farm'
+    description: 'Discover the picturesque Ambewela Farm, often called "Little New Zealand" of Sri Lanka. Surrounded by rolling grasslands, this farm is home to high-quality dairy production and offers a peaceful countryside experience. Visitors can explore the farm, see animals, and enjoy fresh dairy products in a scenic setting.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 38
+    source_row: 56
+  - activity_code: ACT_0039
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Explore Horton Plains'
+    description: 'Explore the breathtaking landscapes of Horton Plains National Park, a UNESCO-listed natural reserve known for its unique biodiversity. Walk through misty grasslands and cloud forests to reach famous viewpoints like World''s End and Baker''s Falls. This nature experience is perfect for those seeking scenic beauty and a refreshing escape into the wild.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 39
+    source_row: 57
+  - activity_code: ACT_0040
+    destination_code: DST_009
+    destination_slug: nuwara-eliya
+    title: 'Trip to Little England cottages'
+    description: 'Experience the colonial charm of Nuwara Eliya, often referred to as "Little England," with its cozy cottages, red-brick houses, and cool climate. A visit to these charming properties offers a glimpse into the British-era lifestyle, surrounded by beautifully maintained gardens and scenic landscapes. It''s a perfect experience for relaxation, photography, and enjoying the peaceful hill country atmosphere.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 40
+    source_row: 58
+  - activity_code: ACT_0041
+    destination_code: DST_010
+    destination_slug: ella
+    title: 'Visit Nine Arch Bridge visit'
+    description: 'Witness one of Sri Lanka''s most iconic landmarks, the Nine Arch Bridge, a stunning colonial-era railway bridge surrounded by lush jungle and tea plantations. Time your visit to see a train crossing the bridge for the perfect photo opportunity. This picturesque spot is a must-visit for travelers seeking Instagram-worthy views and a touch of history in Ella.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 41
+    source_row: 60
+  - activity_code: ACT_0042
+    destination_code: DST_010
+    destination_slug: ella
+    title: 'Enjoy Ravana Pool Club'
+    description: 'Relax in style at the popular Ravana Pool Club, where luxury meets tropical vibes. Enjoy refreshing cocktails, infinity pool views, music, and a vibrant atmosphere surrounded by greenery. It''s the perfect place to unwind, socialize, and enjoy a premium leisure experience in Ella.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 42
+    source_row: 61
+  - activity_code: ACT_0043
+    destination_code: DST_010
+    destination_slug: ella
+    title: 'Little Adam''s Peak hike'
+    description: 'Enjoy a scenic and easy hike to Little Adam''s Peak, offering breathtaking panoramic views of the surrounding mountains and tea plantations. The well-marked trail makes it accessible for all fitness levels, and the sunrise or sunset views from the top are truly unforgettable. This is one of the best short hikes in Ella for nature lovers.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 43
+    source_row: 62
+  - activity_code: ACT_0044
+    destination_code: DST_010
+    destination_slug: ella
+    title: 'Flying Ravana zipline'
+    description: 'Add some adrenaline to your trip with the thrilling Flying Ravana Zipline, one of the fastest zip lines in South Asia. Glide over lush green hills and enjoy stunning aerial views of Ella''s landscape. This exciting experience is perfect for adventure seekers looking for a unique perspective of the region.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 44
+    source_row: 63
+  - activity_code: ACT_0045
+    destination_code: DST_010
+    destination_slug: ella
+    title: 'Explore Ella town'
+    description: 'Discover the laid-back charm of Ella, a vibrant town surrounded by nature. Stroll through its cozy streets filled with cafes, boutique shops, and friendly locals. The relaxed atmosphere, combined with cool weather and scenic views, makes Ella a favorite destination for travelers from around the world.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 45
+    source_row: 64
+  - activity_code: ACT_0046
+    destination_code: DST_010
+    destination_slug: ella
+    title: 'Ella Rock hike'
+    description: 'Challenge yourself with a rewarding hike to Ella Rock, one of the most scenic viewpoints in the region. The trail takes you through railway tracks, tea plantations, and forest paths, leading to breathtaking views from the summit. This hike is perfect for adventure lovers seeking both excitement and natural beauty.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 46
+    source_row: 65
+  - activity_code: ACT_0047
+    destination_code: DST_010
+    destination_slug: ella
+    title: 'Café hopping'
+    description: 'Indulge in Ella''s vibrant café culture by exploring its many unique and stylish spots. From scenic mountain-view cafés to cozy hidden gems in Ella, you can enjoy freshly brewed coffee, delicious international cuisine, and relaxed vibes. This experience is perfect for unwinding, socializing, and capturing beautiful travel moments.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 47
+    source_row: 66
+  - activity_code: ACT_0048
+    destination_code: DST_011
+    destination_slug: yala
+    title: 'Jeep safari in Yala National Park'
+    description: 'Embark on an exciting wildlife adventure in Yala National Park, the most famous national park in Sri Lanka, known for having one of the highest densities of leopards in the world. Travel through diverse landscapes, lagoons, and open grasslands in a private jeep, guided by experienced trackers. Along the way, you may encounter elephants, crocodiles, sloth bears, and a wide variety of bird species. This thrilling safari experience offers a perfect blend of nature, adventure, and unforgettable moments in the wild.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 48
+    source_row: 68
+  - activity_code: ACT_0049
+    destination_code: DST_012
+    destination_slug: kataragama
+    title: 'Kataragama temple visit'
+    description: 'Visit the sacred Kataragama Temple, one of the most important pilgrimage sites in Sri Lanka, revered by Buddhists, Hindus, and Muslims alike. Dedicated to Lord Skanda (Kataragama Deviyo), this spiritual complex attracts devotees from across the country and beyond. Surrounded by a peaceful yet vibrant atmosphere, the temple offers a unique opportunity to experience Sri Lanka''s rich religious harmony and devotion.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 49
+    source_row: 70
+  - activity_code: ACT_0050
+    destination_code: DST_012
+    destination_slug: kataragama
+    title: 'Evening pooja experience'
+    description: 'Witness the powerful energy of the evening pooja at Kataragama Temple, where rituals are performed with fire, drums, and chanting. As the sun sets, the temple comes alive with devotion, creating an intense and emotional atmosphere. This spiritual ceremony offers a rare glimpse into traditional worship practices and leaves visitors with a deeply moving and unforgettable experience.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 50
+    source_row: 71
+  - activity_code: ACT_0051
+    destination_code: DST_012
+    destination_slug: kataragama
+    title: 'Explore Spiritual rituals'
+    description: 'Immerse yourself in the unique spiritual traditions of Kataragama, where devotees perform ancient rituals as acts of faith and gratitude. From offerings and prayers to symbolic practices passed down through generations, this experience allows you to witness authentic devotion up close. It''s a profound cultural encounter that provides deeper insight into Sri Lanka''s spiritual life and beliefs.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 51
+    source_row: 72
+  - activity_code: ACT_0052
+    destination_code: DST_013
+    destination_slug: tangalle
+    title: 'Silent beach relaxation'
+    description: 'Unwind on the serene shores of Tangalle, where untouched beaches and crystal-clear waters create the perfect setting for relaxation. Far from crowded tourist spots, Tangalle offers a peaceful atmosphere ideal for sunbathing, long walks, and enjoying the soothing sound of the ocean. This hidden gem is perfect for travelers seeking tranquility and a true tropical escape.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 52
+    source_row: 76
+  - activity_code: ACT_0053
+    destination_code: DST_013
+    destination_slug: tangalle
+    title: 'Visit Rekawa turtle conservation project'
+    description: 'Experience a unique wildlife encounter at the Rekawa Turtle Conservation Project, one of the most important turtle nesting sites in Sri Lanka. Visit in the evening to witness sea turtles coming ashore to lay their eggs in a natural and protected environment. This responsible and educational experience offers a rare opportunity to observe marine life up close while supporting conservation efforts.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 53
+    source_row: 77
+  - activity_code: ACT_0054
+    destination_code: DST_013
+    destination_slug: tangalle
+    title: 'Lagoon kayaking'
+    description: 'Explore the calm and scenic lagoons near Tangalle with a relaxing kayaking experience. Paddle through mangrove forests, observe birdlife, and enjoy the peaceful surroundings at your own pace. This eco-friendly activity is perfect for nature lovers looking to connect with the quiet beauty of Sri Lanka''s coastal ecosystems.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 54
+    source_row: 78
+  - activity_code: ACT_0055
+    destination_code: DST_014
+    destination_slug: mirissa
+    title: 'Whale watching tours'
+    description: 'Set out on an unforgettable ocean adventure from Mirissa, one of the best places in the world for whale watching. Cruise into the deep waters of the Indian Ocean, where you may spot majestic blue whales, sperm whales, and playful dolphins in their natural habitat. This early morning experience is a must for nature lovers and offers a rare opportunity to witness marine giants up close.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 55
+    source_row: 80
+  - activity_code: ACT_0056
+    destination_code: DST_014
+    destination_slug: mirissa
+    title: 'Explore Parrot Rock'
+    description: 'Take a short walk across the shallow waters to reach Parrot Rock, a small hill offering panoramic views of Mirissa Beach. This hidden viewpoint is perfect for capturing stunning photos of the coastline, especially during sunrise or sunset. It''s a quick yet rewarding experience for travelers exploring the area.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 56
+    source_row: 81
+  - activity_code: ACT_0057
+    destination_code: DST_014
+    destination_slug: mirissa
+    title: 'Coconut Tree Hill sunset'
+    description: 'Visit the iconic Coconut Tree Hill, one of the most photographed spots in Sri Lanka. With a row of tall coconut palms overlooking the ocean, this location offers breathtaking sunset views and a perfect tropical vibe. It''s an ideal place to relax, take photos, and enjoy the beauty of Sri Lanka''s southern coast.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 57
+    source_row: 82
+  - activity_code: ACT_0058
+    destination_code: DST_014
+    destination_slug: mirissa
+    title: 'Explore Mirissa Beach & Secret beach'
+    description: 'Enjoy the lively atmosphere of Mirissa Beach, known for its golden sands, turquoise waters, and beachfront cafés. For a more secluded experience, visit Secret Beach Mirissa, a quiet bay perfect for swimming and relaxing away from the crowds. Together, these spots offer the perfect mix of energy and tranquility.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 58
+    source_row: 83
+  - activity_code: ACT_0059
+    destination_code: DST_014
+    destination_slug: mirissa
+    title: 'Beach nightlife'
+    description: 'Experience the vibrant nightlife of Mirissa, where beachside bars and restaurants come alive after sunset. Enjoy music, seafood dinners, fire shows, and lively parties right by the ocean. This energetic atmosphere makes Mirissa a favorite destination for young travelers and those looking to enjoy Sri Lanka''s coastal nightlife.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 59
+    source_row: 84
+  - activity_code: ACT_0060
+    destination_code: DST_014
+    destination_slug: mirissa
+    title: 'Enjoy Surfing experience'
+    description: 'Ride the waves along the الساحل of Mirissa, where gentle breaks make it an ideal spot for both beginners and intermediate surfers. With warm waters and professional instructors available, surfing in Mirissa is a fun and exciting way to experience the ocean. It''s a must-try activity for adventure seekers visiting the south coast.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 60
+    source_row: 85
+  - activity_code: ACT_0061
+    destination_code: DST_015
+    destination_slug: weligama
+    title: 'Enjoy Surfing experience'
+    description: 'Ride the gentle waves of Weligama, one of the best beginner-friendly surfing destinations in Sri Lanka. With its wide sandy bay and consistent waves, Weligama offers the perfect conditions for learning and improving your surfing skills. Professional instructors and surf schools are readily available, making it an exciting and accessible experience for all levels.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 61
+    source_row: 87
+  - activity_code: ACT_0062
+    destination_code: DST_015
+    destination_slug: weligama
+    title: 'Stilt fishermen experience'
+    description: 'Witness the iconic tradition of stilt fishing along the الساحل near Weligama, a unique cultural practice found only in Sri Lanka. Perched on wooden stilts above the shallow waters, fishermen demonstrate their age-old fishing technique, creating a truly memorable and photogenic scene. This experience offers insight into local heritage and is a must-see for cultural explorers.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 62
+    source_row: 88
+  - activity_code: ACT_0063
+    destination_code: DST_015
+    destination_slug: weligama
+    title: 'Beach cafés & chill vibe'
+    description: 'Relax and soak in the laid-back atmosphere of Weligama, known for its trendy beach cafés and relaxed coastal lifestyle. Enjoy freshly brewed coffee, healthy meals, and ocean views while listening to the sound of the waves. This chill vibe makes Weligama a favorite spot for digital nomads, couples, and travelers looking to unwind by the sea.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 63
+    source_row: 89
+  - activity_code: ACT_0064
+    destination_code: DST_016
+    destination_slug: ahangama
+    title: 'Advanced surfing'
+    description: 'Ride powerful waves along Ahangama, a hotspot for experienced surfers seeking consistent reef and point breaks. Known for its stronger waves and less crowded surf spots, Ahangama offers the perfect setting to challenge your skills and elevate your surfing experience. This destination attracts surf enthusiasts from around the world looking for both adventure and a relaxed coastal atmosphere.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 64
+    source_row: 92
+  - activity_code: ACT_0065
+    destination_code: DST_016
+    destination_slug: ahangama
+    title: 'Boutique café hopping'
+    description: 'Explore the stylish café scene of Ahangama, known for its trendy boutique cafés and creative spaces. From artisan coffee to healthy brunch options, each café offers a unique ambiance blending modern design with tropical charm. This experience is perfect for travelers who enjoy good food, aesthetic interiors, and a relaxed social vibe by the ocean.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 65
+    source_row: 93
+  - activity_code: ACT_0066
+    destination_code: DST_016
+    destination_slug: ahangama
+    title: 'Instagram-style beach photography spots'
+    description: 'Capture stunning travel moments at some of the most photogenic locations in Ahangama. From palm-lined beaches and oceanfront villas to unique coastal viewpoints, Ahangama is a paradise for photography lovers and content creators. Whether it''s sunrise, sunset, or candid beach shots, every corner offers a perfect backdrop for your Instagram-worthy memories.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 66
+    source_row: 94
+  - activity_code: ACT_0067
+    destination_code: DST_017
+    destination_slug: unawatuna
+    title: 'Jungle Beach visit'
+    description: 'Escape to the hidden paradise of Jungle Beach, a secluded bay surrounded by lush greenery and calm turquoise waters. Accessible through a short jungle trail, this peaceful beach offers a perfect retreat away from the crowds. Ideal for swimming, relaxing, and enjoying nature, Jungle Beach is a must-visit for travelers seeking a quiet and scenic coastal experience.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 67
+    source_row: 96
+  - activity_code: ACT_0068
+    destination_code: DST_017
+    destination_slug: unawatuna
+    title: 'Enjoy Snorkeling experience'
+    description: 'Discover the underwater beauty of Unawatuna with an exciting snorkeling experience in its clear, shallow waters. Swim among colorful fish, coral reefs, and diverse marine life in one of Sri Lanka''s best beginner-friendly snorkeling spots. This activity is perfect for families, couples, and anyone looking to explore the ocean in a fun and easy way.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 68
+    source_row: 97
+  - activity_code: ACT_0069
+    destination_code: DST_017
+    destination_slug: unawatuna
+    title: 'Enjoy Diving experience'
+    description: 'Explore deeper into the ocean with a diving experience in Unawatuna, where you can discover vibrant coral gardens, shipwrecks, and rich marine biodiversity. Guided by professional instructors, this experience caters to both beginners and certified divers. It''s an unforgettable adventure for those looking to experience Sri Lanka''s underwater world up close.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 69
+    source_row: 98
+  - activity_code: ACT_0070
+    destination_code: DST_017
+    destination_slug: unawatuna
+    title: 'Rumassala Peace pagoda'
+    description: 'Visit the serene Japanese Peace Pagoda Rumassala, located on a hill overlooking the океан. This peaceful Buddhist stupa offers breathtaking panoramic views of the coastline and surrounding जंगल. Known for its calm and spiritual atmosphere, it''s an ideal spot for meditation, sunset views, and quiet reflection away from the busy beach scene.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 70
+    source_row: 99
+  - activity_code: ACT_0071
+    destination_code: DST_017
+    destination_slug: unawatuna
+    title: 'Beach parties & restaurants'
+    description: 'Enjoy the lively atmosphere of Unawatuna, famous for its beachfront restaurants, live music, and vibrant beach parties. As the sun sets, the shoreline transforms into a social hub where you can enjoy fresh seafood, cocktails, and entertainment right by the ocean. This experience is perfect for travelers looking to combine relaxation with nightlife.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 71
+    source_row: 100
+  - activity_code: ACT_0072
+    destination_code: DST_018
+    destination_slug: galle
+    title: 'Galle Fort walking tour (UNESCO)'
+    description: 'Step into history with a walking tour of the iconic Galle Fort, a beautifully preserved colonial fortress built by the Portuguese and later expanded by the Dutch. Wander through cobblestone streets lined with charming villas, boutique hotels, and historic landmarks. This immersive experience offers a perfect blend of culture, architecture, and seaside charm, making it one of the most unique destinations in Sri Lanka.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 72
+    source_row: 102
+  - activity_code: ACT_0073
+    destination_code: DST_018
+    destination_slug: galle
+    title: 'Lighthouse & sunset views'
+    description: 'Enjoy breathtaking coastal views at the historic Galle Lighthouse, located within the fort overlooking the океан. As the sun begins to set, the sky transforms into vibrant shades of orange and pink, creating a magical atmosphere along the fort walls. This is one of the best sunset spots on the south coast, perfect for photography and relaxation.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 73
+    source_row: 103
+  - activity_code: ACT_0074
+    destination_code: DST_018
+    destination_slug: galle
+    title: 'Shopping (boutiques, handicrafts)'
+    description: 'Explore the vibrant shopping scene inside Galle Fort, where you''ll find unique boutiques, art galleries, and local handicraft stores. From handmade jewelry and textiles to souvenirs and designer pieces, shopping here offers a perfect mix of tradition and modern style. It''s an ideal experience for travelers looking to take home something special from Sri Lanka.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 74
+    source_row: 104
+  - activity_code: ACT_0075
+    destination_code: DST_018
+    destination_slug: galle
+    title: 'Café culture (very popular with Europeans)'
+    description: 'Experience the lively café culture of Galle Fort, known for its trendy cafés, artisan coffee, and international cuisine. With its European-style ambiance and coastal views, the fort has become a favorite spot for travelers from around the world. Whether you''re enjoying brunch, fresh seafood, or a sunset coffee, this experience perfectly combines relaxation with a sophisticated vibe.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 75
+    source_row: 105
+  - activity_code: ACT_0076
+    destination_code: DST_019
+    destination_slug: bentota
+    title: 'Water sports (jet ski, banana boat, parasailing)'
+    description: 'Experience the thrill of water sports in Bentota, one of the best destinations in Sri Lanka for adventure activities. From high-speed jet skiing to fun-filled banana boat rides and breathtaking parasailing over the океан, there''s something for every adrenaline seeker. This exciting experience perfectly combines fun, adventure, and stunning coastal views.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 76
+    source_row: 108
+  - activity_code: ACT_0077
+    destination_code: DST_019
+    destination_slug: bentota
+    title: 'Bentota river safari'
+    description: 'Explore the rich biodiversity of the Bentota River with a scenic boat safari through mangroves and calm waterways. As you cruise along the river, you may spot crocodiles, exotic birds, and local wildlife while visiting small islands and cinnamon plantations. This relaxing yet adventurous journey offers a unique perspective of Sri Lanka''s natural beauty.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 77
+    source_row: 109
+  - activity_code: ACT_0078
+    destination_code: DST_019
+    destination_slug: bentota
+    title: 'Turtle hatchery visit'
+    description: 'Visit a turtle conservation center near Bentota and learn about efforts to protect endangered sea turtles. Observe baby turtles, understand the hatching process, and even witness their release into the океан (depending on timing). This meaningful and educational experience is perfect for families and wildlife lovers, offering a closer connection to marine conservation in Sri Lanka.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 78
+    source_row: 110
+  - activity_code: ACT_0079
+    destination_code: DST_019
+    destination_slug: bentota
+    title: 'Kande Viharaya temple'
+    description: 'Step into a powerful spiritual experience at the majestic Kande Viharaya Temple, home to one of the tallest seated Buddha statues in the world. As you walk through the sacred temple grounds, you feel a deep sense of peace, devotion, and cultural richness. The sound of chanting, the scent of incense, and the golden Buddha create a truly emotional connection with Sri Lanka''s Buddhist heritage.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 79
+    source_row: 111
+  - activity_code: ACT_0080
+    destination_code: DST_019
+    destination_slug: bentota
+    title: 'Madu river safari & Cinnamon islands'
+    description: 'Discover the magical world of the Madu River, where nature unfolds in its purest form. A boat safari through winding mangroves takes you past small islands, hidden temples, and untouched ecosystems. You will witness exotic birds, water monitors, and peaceful village life along the riverbanks - a journey that feels like entering a living natural paradise filled with calm and wonder.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 80
+    source_row: 112
+  - activity_code: ACT_0081
+    destination_code: DST_020
+    destination_slug: colombo
+    title: 'Colombo city tour (Gangaramaya, Independence Square)'
+    description: 'Discover the dynamic capital of Sri Lanka with a guided tour of Colombo, where modern life blends seamlessly with cultural heritage. Visit iconic landmarks such as the sacred Gangaramaya Temple and the historic Independence Memorial Hall. This experience offers a perfect introduction to the city''s history, architecture, and spiritual significance.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 81
+    source_row: 114
+  - activity_code: ACT_0082
+    destination_code: DST_020
+    destination_slug: colombo
+    title: 'Shopping (One Galle Face, Pettah market)'
+    description: 'Enjoy a diverse shopping experience in Colombo, from modern malls to traditional markets. Visit One Galle Face Mall for international brands, dining, and ocean views, or explore the bustling streets of Pettah Market for local goods, textiles, and a vibrant street shopping atmosphere. This blend of old and new makes Colombo a shopper''s paradise.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 82
+    source_row: 115
+  - activity_code: ACT_0083
+    destination_code: DST_020
+    destination_slug: colombo
+    title: 'Rooftop dining & nightlife'
+    description: 'Experience the energetic nightlife of Colombo with rooftop dining and stylish lounges overlooking the city skyline and океан. Enjoy gourmet cuisine, creative cocktails, and live music in a sophisticated setting. Whether it''s a romantic dinner or a night out with friends, Colombo offers some of the best nightlife experiences in Sri Lanka.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 83
+    source_row: 116
+  - activity_code: ACT_0084
+    destination_code: DST_020
+    destination_slug: colombo
+    title: 'Street food tour'
+    description: 'Dive into the flavors of Colombo with an exciting street food tour through its lively neighborhoods. Taste local favorites like kottu roti, hoppers, and fresh seafood while exploring hidden food spots loved by locals. This culinary journey offers a delicious way to experience Sri Lanka''s culture, traditions, and everyday life.'
+    category: GENERAL
+    is_seasonal: false
+    source_order: 84
+    source_row: 117
+  - activity_code: ACT_0085
+    destination_code: DST_021
+    destination_slug: kalutara
+    title: 'Kalutara Bodhiya temple visit'
+    description: 'Visit the sacred Kalutara Bodhiya, one of the most revered Buddhist sites in Sri Lanka, beautifully located along the Kalu Ganga river. This historic temple is home to a sacred Bodhi tree believed to be a descendant of the original tree under which Buddha attained enlightenment. Surrounded by a peaceful atmosphere, it offers a deeply spiritual experience where visitors can observe rituals, offer prayers, and connect with Sri Lanka''s rich religious heritage.'
+    category: SPIRITUAL
+    is_seasonal: false
+    source_order: 85
+    source_row: 119
+  - activity_code: ACT_0086
+    destination_code: DST_021
+    destination_slug: kalutara
+    title: 'Beach relaxation'
+    description: 'Unwind on the tranquil beaches of Kalutara, where golden sands and gentle waves create the perfect setting for relaxation. Less crowded than other coastal destinations, Kalutara offers a calm and refreshing escape ideal for sunbathing, leisurely walks, and enjoying the soothing ocean breeze. It''s the perfect place to slow down and end your journey on a peaceful note.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 86
+    source_row: 120
+  - activity_code: ACT_0087
+    destination_code: DST_022
+    destination_slug: kalpitiya
+    title: 'Dolphin watching'
+    description: 'Embark on an unforgettable marine adventure in Kalpitiya, one of the best places in Sri Lanka for dolphin watching. Cruise into the open ocean where you can witness large pods of spinner dolphins jumping and playing alongside the boat. This early morning experience offers breathtaking views of the sea and a magical connection with marine wildlife in their natural habitat.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 87
+    source_row: 123
+  - activity_code: ACT_0088
+    destination_code: DST_022
+    destination_slug: kalpitiya
+    title: 'Kite surfing'
+    description: 'Experience world-class kite surfing in Kalpitiya, known for its consistent winds and ideal lagoon conditions. Whether you are a beginner or an advanced rider, Kalpitiya offers perfect flat waters and professional instructors to elevate your skills. This destination is considered one of the top kite surfing spots in Asia, attracting adventure seekers from around the globe.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 88
+    source_row: 124
+  - activity_code: ACT_0089
+    destination_code: DST_022
+    destination_slug: kalpitiya
+    title: 'Lagoon kayaking'
+    description: 'Explore the peaceful lagoons of Kalpitiya with a relaxing kayaking experience through mangroves and calm waters. Paddle at your own pace while observing birdlife and enjoying the untouched natural surroundings. This eco-friendly activity is perfect for travelers looking to connect with nature and enjoy a quiet escape.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 89
+    source_row: 125
+  - activity_code: ACT_0090
+    destination_code: DST_023
+    destination_slug: pasikuda
+    title: 'Calm shallow beach swimming'
+    description: 'Enjoy the peaceful waters of Pasikuda, famous for its exceptionally calm and shallow sea. Stretching far into the ocean, the gentle waters make it one of the safest beaches in Sri Lanka for swimming, especially for families and non-swimmers. With soft golden and crystal-clear water, Pasikuda offers a perfect setting for relaxation and carefree beach time.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 90
+    source_row: 127
+  - activity_code: ACT_0091
+    destination_code: DST_023
+    destination_slug: pasikuda
+    title: Snorkeling
+    description: 'Discover the underwater beauty of Pasikuda with a relaxing snorkeling experience in its clear, shallow waters. Explore colorful marine life and coral formations while enjoying excellent visibility and calm conditions. This easy and enjoyable activity is ideal for beginners and anyone looking to experience Sri Lanka''s marine world in a safe and peaceful environment.'
+    category: LEISURE
+    is_seasonal: false
+    source_order: 91
+    source_row: 128
+  - activity_code: ACT_0092
+    destination_code: DST_024
+    destination_slug: koggala
+    title: 'Koggala lake boat safari'
+    description: 'Explore the tranquil waters of Koggala Lake with a scenic boat safari through mangroves and small islands. As you cruise across the lake, you''ll encounter rich birdlife, traditional fishing scenes, and untouched natural beauty. This relaxing journey offers a unique blend of nature and culture, making it one of the most peaceful experiences on Sri Lanka''s south coast.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 92
+    source_row: 131
+  - activity_code: ACT_0093
+    destination_code: DST_024
+    destination_slug: koggala
+    title: 'Cinnamon island visit'
+    description: 'Visit a traditional cinnamon island in Koggala Lake and discover how Sri Lanka''s world-famous cinnamon is cultivated and processed. Watch local artisans demonstrate peeling techniques and learn about the history of this valuable spice. This authentic cultural experience provides a deeper understanding of local livelihoods while offering a chance to enjoy the serene island atmosphere.'
+    category: CULTURAL
+    is_seasonal: false
+    source_order: 93
+    source_row: 132
+  - activity_code: ACT_0094
+    destination_code: DST_025
+    destination_slug: arugam-bay
+    title: Surfing
+    description: 'Experience the legendary waves of Arugam Bay, known as one of the best surf points in the world. The long, clean right-hand point breaks create the perfect ride for both beginners and professional surfers. As you stand on the board, feel the warm ocean breeze, endless blue horizon, and pure adrenaline that makes Arugam Bay a true surfer''s paradise in Sri Lanka.'
+    category: ADVENTURE
+    is_seasonal: false
+    source_order: 94
+    source_row: 134
+  - activity_code: ACT_0095
+    destination_code: DST_025
+    destination_slug: arugam-bay
+    title: 'Lagoon safari (crocodiles, elephants)'
+    description: 'Escape into the hidden wilderness just minutes away from the beach. A lagoon safari in Arugam Bay takes you through calm mangrove waters where nature reveals its raw beauty. Watch crocodiles resting silently along the banks, elephants moving gracefully nearby, and flocks of exotic birds flying over the lagoon - a peaceful yet thrilling wildlife experience in untouched nature.'
+    category: WILDLIFE
+    is_seasonal: false
+    source_order: 95
+    source_row: 135
+  - activity_code: ACT_0096
+    destination_code: DST_025
+    destination_slug: arugam-bay
+    title: 'Beach parties'
+    description: 'When the sun sets, Arugam Bay transforms into a vibrant coastal celebration. Seasonal beach parties bring together travelers from all over the world under the stars, with live music, fire dances, and oceanfront DJ nights. The sound of waves blends with the rhythm of music, creating unforgettable tropical nights filled with energy, freedom, and connection.'
+    category: CULTURAL
+    is_seasonal: true
+    source_order: 96
+    source_row: 136
+  - activity_code: ACT_0097
+    destination_code: DST_025
+    destination_slug: arugam-bay
+    title: 'Yoga & wellness retreats'
+    description: 'Slow down and reconnect with yourself in the peaceful rhythm of Arugam Bay. Surrounded by palm trees and ocean views, yoga and wellness retreats offer daily sessions of yoga, meditation, and healing practices. It is the perfect place to restore balance, breathe deeply, and experience inner peace while listening to the calming sound of the Indian Ocean.'
+    category: WELLNESS
+    is_seasonal: false
+    source_order: 97
+    source_row: 137

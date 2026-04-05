@@ -218,3 +218,32 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   totalPages: number;
 }
+
+export type ItineraryCategory =
+  | 'GENERAL'
+  | 'WILDLIFE'
+  | 'SPIRITUAL'
+  | 'CULTURAL'
+  | 'ADVENTURE'
+  | 'LEISURE'
+  | 'WELLNESS';
+
+export interface ItineraryDestination {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface ItineraryActivity {
+  id: string;
+  destinationId: string;
+  destinationSlug?: string;
+  title: string;
+  description: string;
+  category: ItineraryCategory;
+  isSeasonal: boolean;
+  sortOrder: number;
+  sourceRow?: number | null;
+}
