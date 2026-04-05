@@ -183,10 +183,32 @@
       border: 1px solid #dde2ea;
       border-radius: 10px;
       background: #f5f6f8;
+      background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');
+      background-size: cover;
+      background-position: center bottom;
+      background-repeat: no-repeat;
       min-height: calc(297mm - 24mm);
       overflow: hidden;
       margin-top: 8mm;
       page-break-inside: avoid;
+      position: relative;
+    }
+    .page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(248, 249, 251, 0.82) 0%,
+        rgba(248, 249, 251, 0.9) 52%,
+        rgba(248, 249, 251, 0.96) 100%
+      );
+      z-index: 0;
+      pointer-events: none;
+    }
+    .page > * {
+      position: relative;
+      z-index: 1;
     }
     .daily-top-image {
       height: 132px;
@@ -339,7 +361,7 @@
     .closing-page {
       border: 1px solid #dde2ea;
       border-radius: 10px;
-      background: #ffffff;
+      background: transparent;
       overflow: hidden;
       margin-top: 0;
       page-break-inside: avoid;
