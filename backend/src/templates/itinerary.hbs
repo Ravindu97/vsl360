@@ -373,7 +373,8 @@
     .closing-top-image {
       height: 160px;
       background-size: cover;
-      background-position: center center;
+      background-position: center top;
+      background-repeat: no-repeat;
       position: relative;
     }
     .closing-badge {
@@ -390,6 +391,7 @@
     }
     .closing-badge img { max-width: 148px; max-height: 84px; object-fit: contain; }
     .closing-body {
+      flex: 1;
       padding: 28px 40px 8px;
     }
     .closing-body h2 {
@@ -415,13 +417,29 @@
     }
     .closing-divider hr { flex: 1; border: none; border-top: 1px solid #c5cad3; }
     .closing-spacer {
-      flex: 1;
+      flex: 0 0 34px;
       min-height: 34px;
     }
     .closing-bottom-image {
-      height: 100px;
+      height: 108px;
       background-size: cover;
       background-position: center bottom;
+      position: relative;
+    }
+    .closing-bottom-image::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 56px;
+      background: linear-gradient(
+        180deg,
+        rgba(245, 246, 248, 0.98) 0%,
+        rgba(245, 246, 248, 0.72) 48%,
+        rgba(245, 246, 248, 0) 100%
+      );
+      pointer-events: none;
     }
     body.compact .closing-top-image { height: 140px; }
     body.compact .closing-badge { width: 200px; height: 94px; }
@@ -429,7 +447,9 @@
     body.compact .closing-body h2 { font-size: 20px; }
     body.compact .closing-body p { font-size: 12px; }
     body.compact .closing-divider { padding: 10px 32px 6px; }
-    body.compact .closing-spacer { min-height: 24px; }
+    body.compact .closing-spacer { flex-basis: 24px; min-height: 24px; }
+    body.compact .closing-bottom-image { height: 94px; }
+    body.compact .closing-bottom-image::before { height: 44px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
@@ -596,10 +616,10 @@
   {{/each}}
 
   <div class="page closing-page">
-    <div class="closing-top-image" style="background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');">
+    <div class="closing-top-image" style="background-image: url('{{#if @root.coverTemplateImage}}{{@root.coverTemplateImage}}{{else}}{{@root.themeImage}}{{/if}}');">
       <div class="closing-badge">
-        {{#if brandLogoImage}}
-        <img src="{{brandLogoImage}}" alt="VSL 360">
+        {{#if @root.brandLogoImage}}
+        <img src="{{@root.brandLogoImage}}" alt="VSL 360">
         {{else}}
         <div class="logo">VSL <span>360</span></div>
         {{/if}}
@@ -617,7 +637,7 @@
       <hr>
     </div>
     <div class="closing-spacer"></div>
-    <div class="closing-bottom-image" style="background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');"></div>
+    <div class="closing-bottom-image" style="background-image: url('{{#if @root.coverTemplateImage}}{{@root.coverTemplateImage}}{{else}}{{@root.themeImage}}{{/if}}');"></div>
   </div>
 </body>
 </html>
