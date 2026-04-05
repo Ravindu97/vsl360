@@ -583,7 +583,9 @@
           </ul>
           {{/if}}
           {{#if this.hotel}}
+            {{#unless (eq this.hotel.hotelName "To Be Confirmed")}}
           <p style="margin-top: 6px;">Stay at {{this.hotel.hotelName}}</p>
+            {{/unless}}
           {{/if}}
         </div>
       </div>
