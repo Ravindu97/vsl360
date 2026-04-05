@@ -73,7 +73,20 @@ export const documentsApi = {
   generateInvoice: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/invoice`),
   generateTransport: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/transport`),
   generateReservation: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/reservation`),
-  generateItinerary: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/itinerary`),
+  generateItinerary: (
+    bookingId: string,
+    data?: {
+      planDays?: Array<{
+        dayNumber: number;
+        dateLabel?: string;
+        destinationId?: string;
+        morningActivityId?: string;
+        afternoonActivityId?: string;
+        eveningActivityId?: string;
+        notes?: string;
+      }>;
+    }
+  ) => api.post(`/bookings/${bookingId}/documents/itinerary`, data ?? {}),
   generateTravelConfirmation: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/travel-confirmation`),
   download: (bookingId: string, docId: string) =>
     api.get(`/bookings/${bookingId}/documents/${docId}/download`, { responseType: 'blob' }),

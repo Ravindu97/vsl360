@@ -13,6 +13,7 @@ import { PaginationControls } from '@/components/shared/PaginationControls';
 import { DocumentType, Role, type Booking, type GeneratedDocument, type PaginatedResponse } from '@/types';
 
 const PAGE_SIZE = 5;
+const ITINERARY_DRAFT_KEY_PREFIX = 'itinerary-plan-draft';
 
 interface Props {
   booking: Booking;
@@ -53,11 +54,45 @@ export function DocumentsTab({ booking }: Props) {
 
   const generateMutation = useMutation({
     mutationFn: (type: DocumentType) => {
+      const draftKey = `${ITINERARY_DRAFT_KEY_PREFIX}:${booking.id}`;
+      const itineraryDraft = (() => {
+        try {
+          const raw = window.localStorage.getItem(draftKey);
+          if (!raw) return undefined;
+          const parsed = JSON.parse(raw) as Array<{
+            dayNumber: number;
+            dateLabel?: string;
+            destinationId?: string;
+            morningActivityId?: string;
+            afternoonActivityId?: string;
+            eveningActivityId?: string;
+            notes?: string;
+          }>;
+
+          if (!Array.isArray(parsed)) return undefined;
+          return {
+            planDays: parsed
+              .filter((day) => Number.isInteger(day?.dayNumber))
+              .map((day) => ({
+                dayNumber: day.dayNumber,
+                dateLabel: day.dateLabel,
+                destinationId: day.destinationId || undefined,
+                morningActivityId: day.morningActivityId || undefined,
+                afternoonActivityId: day.afternoonActivityId || undefined,
+                eveningActivityId: day.eveningActivityId || undefined,
+                notes: day.notes || undefined,
+              })),
+          };
+        } catch {
+          return undefined;
+        }
+      })();
+
       switch (type) {
         case DocumentType.INVOICE: return documentsApi.generateInvoice(booking.id);
         case DocumentType.TRANSPORT_DETAILS: return documentsApi.generateTransport(booking.id);
         case DocumentType.HOTEL_RESERVATION: return documentsApi.generateReservation(booking.id);
-        case DocumentType.FULL_ITINERARY: return documentsApi.generateItinerary(booking.id);
+        case DocumentType.FULL_ITINERARY: return documentsApi.generateItinerary(booking.id, itineraryDraft);
         case DocumentType.TRAVEL_CONFIRMATION: return documentsApi.generateTravelConfirmation(booking.id);
       }
     },

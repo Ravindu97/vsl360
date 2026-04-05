@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { itineraryApi } from '@/api/endpoints.api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { documentsApi, itineraryApi } from '@/api/endpoints.api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import type { Booking, ItineraryActivity, ItineraryDestination } from '@/types';
 
 interface Props {
@@ -37,6 +38,7 @@ function buildDateLabel(arrivalDate: string, dayNumber: number): string {
 }
 
 export function ItineraryPlanTab({ booking }: Props) {
+  const queryClient = useQueryClient();
   const dayCount = Math.max(1, booking.numberOfDays || 1);
   const storageKey = `${STORAGE_KEY_PREFIX}:${booking.id}`;
 
@@ -110,6 +112,37 @@ export function ItineraryPlanTab({ booking }: Props) {
     setSavedAt(new Date().toLocaleString());
   };
 
+  const generateItineraryMutation = useMutation({
+    mutationFn: async () => {
+      saveDraft();
+      const response = await documentsApi.generateItinerary(booking.id, {
+        planDays: plans.map((day) => ({
+          dayNumber: day.dayNumber,
+          dateLabel: day.dateLabel,
+          destinationId: day.destinationId || undefined,
+          morningActivityId: day.morningActivityId || undefined,
+          afternoonActivityId: day.afternoonActivityId || undefined,
+          eveningActivityId: day.eveningActivityId || undefined,
+          notes: day.notes || undefined,
+        })),
+      });
+      return response.data as { docId: string };
+    },
+    onSuccess: async (data) => {
+      queryClient.invalidateQueries({ queryKey: ['documents', booking.id] });
+      queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+      if (data?.docId) {
+        const blob = await documentsApi.download(booking.id, data.docId);
+        const url = window.URL.createObjectURL(new Blob([blob.data]));
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `Itinerary_${booking.bookingId}.pdf`;
+        anchor.click();
+        window.URL.revokeObjectURL(url);
+      }
+    },
+  });
+
   return (
     <div className="space-y-4">
       <Card>
@@ -124,15 +157,25 @@ export function ItineraryPlanTab({ booking }: Props) {
             Build the day-by-day plan here first, then generate Full Itinerary from Documents.
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="rounded-md border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
-              onClick={saveDraft}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={saveDraft}>
               Save Draft
-            </button>
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => generateItineraryMutation.mutate()}
+              disabled={generateItineraryMutation.isPending}
+            >
+              {generateItineraryMutation.isPending ? 'Generating...' : 'Generate Full Itinerary'}
+            </Button>
             {savedAt && <span className="text-xs">Saved: {savedAt}</span>}
           </div>
+          {generateItineraryMutation.isSuccess && (
+            <p className="text-xs text-emerald-700">Itinerary generated and downloaded. A record has been saved to Documents.</p>
+          )}
+          {generateItineraryMutation.isError && (
+            <p className="text-xs text-red-700">Failed to generate itinerary. Please review day plan details and try again.</p>
+          )}
         </CardContent>
       </Card>
 

@@ -67,11 +67,12 @@ export class DocumentController {
 
   async generateItinerary(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const filePath = await documentGeneratorService.generateItinerary(
+      const { filePath, docId } = await documentGeneratorService.generateItinerary(
         String(req.params.id),
-        req.user!.userId
+        req.user!.userId,
+        req.body?.planDays
       );
-      res.json({ message: 'Itinerary generated', filePath });
+      res.json({ message: 'Itinerary generated', filePath, docId });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }

@@ -3,6 +3,7 @@ import Handlebars from 'handlebars';
 import fs from 'fs';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { Prisma } from '@prisma/client';
 import prisma from '../config/database';
 import { env } from '../config/env';
 import logger from '../utils/logger';
@@ -89,6 +90,16 @@ type InvoiceCostBreakdown = {
   childSubtotal: number;
   infantSubtotal: number;
   computedTotal: number;
+};
+
+type ItineraryPlanDayInput = {
+  dayNumber: number;
+  dateLabel?: string;
+  destinationId?: string;
+  morningActivityId?: string;
+  afternoonActivityId?: string;
+  eveningActivityId?: string;
+  notes?: string;
 };
 
 const computeInvoiceCostBreakdown = (booking: any): InvoiceCostBreakdown => {
@@ -550,7 +561,11 @@ export class DocumentGeneratorService {
     return filePath;
   }
 
-  async generateItinerary(bookingId: string, generatedBy: string): Promise<string> {
+  async generateItinerary(
+    bookingId: string,
+    generatedBy: string,
+    planDaysInput?: ItineraryPlanDayInput[]
+  ): Promise<string> {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -565,15 +580,113 @@ export class DocumentGeneratorService {
       throw new Error('Booking or client data not found');
     }
 
-    // Merge hotel and transport into day-by-day view
+    const planDays = Array.isArray(planDaysInput)
+      ? planDaysInput
+          .filter((day) => Number.isInteger(day?.dayNumber))
+          .map((day) => ({
+            dayNumber: Number(day.dayNumber),
+            dateLabel: day.dateLabel,
+            destinationId: day.destinationId,
+            morningActivityId: day.morningActivityId,
+            afternoonActivityId: day.afternoonActivityId,
+            eveningActivityId: day.eveningActivityId,
+            notes: day.notes,
+          }))
+          .filter((day) => day.dayNumber >= 1 && day.dayNumber <= booking.numberOfDays)
+      : [];
+
+    const destinationIds = Array.from(
+      new Set(planDays.map((day) => day.destinationId).filter(Boolean) as string[])
+    );
+
+    const activityIds = Array.from(
+      new Set(
+        planDays
+          .flatMap((day) => [day.morningActivityId, day.afternoonActivityId, day.eveningActivityId])
+          .filter(Boolean) as string[]
+      )
+    );
+
+    const destinations = destinationIds.length
+      ? await prisma.$queryRaw<Array<{ id: string; name: string; slug: string }>>`
+          SELECT id, name, slug
+          FROM destinations
+          WHERE id IN (${Prisma.join(destinationIds)})
+        `
+      : [];
+
+    const activities = activityIds.length
+      ? await prisma.$queryRaw<Array<{ id: string; title: string; description: string }>>`
+          SELECT id, title, description
+          FROM destination_activities
+          WHERE id IN (${Prisma.join(activityIds)})
+        `
+      : [];
+
+    const destinationMap = new Map(destinations.map((destination) => [destination.id, destination]));
+    const activityMap = new Map(activities.map((activity) => [activity.id, activity]));
+
+    // Merge hotel, transport, and itinerary plan into day-by-day view
     const days = [];
     for (let i = 1; i <= booking.numberOfDays; i++) {
       const hotel = booking.hotelPlan.find((h: any) => h.nightNumber === i);
       const dayPlan = booking.transportPlan?.dayPlans.find((d: any) => d.dayNumber === i);
+      const itineraryPlan = planDays.find((day) => day.dayNumber === i);
+      const destination = itineraryPlan?.destinationId
+        ? destinationMap.get(itineraryPlan.destinationId)
+        : null;
+      const morning = itineraryPlan?.morningActivityId
+        ? activityMap.get(itineraryPlan.morningActivityId)
+        : null;
+      const afternoon = itineraryPlan?.afternoonActivityId
+        ? activityMap.get(itineraryPlan.afternoonActivityId)
+        : null;
+      const evening = itineraryPlan?.eveningActivityId
+        ? activityMap.get(itineraryPlan.eveningActivityId)
+        : null;
+      const planActivities = [
+        morning
+          ? {
+              slot: 'Morning',
+              title: morning.title,
+              description: morning.description,
+              duration: 'Morning Session',
+            }
+          : null,
+        afternoon
+          ? {
+              slot: 'Afternoon',
+              title: afternoon.title,
+              description: afternoon.description,
+              duration: 'Afternoon Session',
+            }
+          : null,
+        evening
+          ? {
+              slot: 'Evening',
+              title: evening.title,
+              description: evening.description,
+              duration: 'Evening Session',
+            }
+          : null,
+      ].filter(Boolean);
+
       days.push({
         dayNumber: i,
         hotel: hotel || null,
         transport: dayPlan || null,
+        itinerary: itineraryPlan
+          ? {
+              dateLabel: itineraryPlan.dateLabel,
+              destinationName: destination?.name || null,
+              destinationSlug: destination?.slug || null,
+              morningActivityTitle: morning?.title || null,
+              afternoonActivityTitle: afternoon?.title || null,
+              eveningActivityTitle: evening?.title || null,
+              notes: itineraryPlan.notes || null,
+              activities: planActivities,
+            }
+          : null,
       });
     }
 
@@ -599,12 +712,13 @@ export class DocumentGeneratorService {
       totalGuests: adults + children + infants,
       days,
       transport: booking.transportPlan,
+      hasItineraryPlan: planDays.length > 0,
     });
 
     const filename = `itinerary_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
     const filePath = await this.renderPdf(html, filename, layout.pdf);
 
-    await prisma.generatedDocument.create({
+    const doc = await prisma.generatedDocument.create({
       data: {
         bookingId,
         type: 'FULL_ITINERARY',
@@ -614,7 +728,7 @@ export class DocumentGeneratorService {
     });
 
     logger.info(`Full itinerary generated for booking ${booking.bookingId}`);
-    return filePath;
+    return { filePath, docId: doc.id };
   }
 
   private pickTravelConfirmationLayout(booking: any): {

@@ -86,6 +86,14 @@
       text-align: center;
       backdrop-filter: blur(4px);
     }
+    .logo {
+      font-family: 'Alegros', Georgia, serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: #1f3f55;
+      letter-spacing: 0.4px;
+    }
+    .logo span { color: #c08020; }
 
     .cover-section { margin-bottom: 12px; }
     .cover-section-title {
@@ -118,6 +126,26 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 12px 18px;
+    }
+    .flight-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #c4c9d1;
+      border-top: 0;
+      background: rgba(250, 250, 250, 0.86);
+      font-size: 12px;
+    }
+    .flight-table th,
+    .flight-table td {
+      border: 1px solid #aeb5bf;
+      padding: 7px 8px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .flight-table th {
+      background: #ece7dd;
+      font-weight: 700;
+      color: #302b2b;
     }
     .kv {
       display: grid;
@@ -154,56 +182,137 @@
     .page {
       border: 1px solid #dde2ea;
       border-radius: 10px;
-      padding: 16px;
       background: #f5f6f8;
       min-height: calc(297mm - 24mm);
+      overflow: hidden;
+      margin-top: 8mm;
+      page-break-inside: avoid;
+    }
+    .daily-top-image {
+      height: 120px;
+      background-size: cover;
+      background-position: center center;
+      position: relative;
+      border-bottom: 1px solid #cdd3db;
+    }
+    .daily-logo-badge {
+      width: 230px;
+      height: 108px;
+      border-radius: 0 0 130px 130px;
+      background: rgba(248, 249, 251, 0.95);
+      border: 1px solid rgba(209, 177, 120, 0.45);
+      border-top: 0;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .daily-logo-badge img {
+      max-width: 148px;
+      max-height: 84px;
+      object-fit: contain;
+    }
+    .daily-content { padding: 14px 16px 16px; }
+    .daily-title {
+      background: var(--bar);
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 6px 10px;
+      margin-bottom: 10px;
+    }
+    .day-hero {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      border: 1px solid #be8f34;
+      background: linear-gradient(90deg, #e7d6b5 0%, #efe9df 100%);
+      margin-bottom: 10px;
+    }
+    .day-place-image {
+      min-height: 170px;
+      background: linear-gradient(150deg, #3a8cb8, #1f6e9c);
+      color: #ffffff;
+      padding: 14px 10px;
+      position: relative;
+      border-right: 1px solid #be8f34;
       display: flex;
       flex-direction: column;
+      justify-content: flex-end;
     }
-    .content { flex: 1; }
-    .header { text-align: center; border-bottom: 3px solid var(--ocean-blue); padding-bottom: 14px; margin-bottom: 16px; }
-    .logo { font-family: 'Alegros', Georgia, serif; font-size: 30px; font-weight: 700; color: var(--ocean-blue); }
-    .logo span { color: var(--sunset-gold); }
-    .header h1 { font-family: 'Alegros', Georgia, serif; font-size: 24px; color: var(--ocean-blue); margin-top: 6px; }
-    .header .subtitle { color: var(--muted); margin-top: 4px; }
-    .welcome { background: linear-gradient(120deg, #204050, #3d6b54); color: #fff; padding: 14px; border-radius: 10px; margin-bottom: 14px; }
-    .welcome h2 { font-family: 'Alegros', Georgia, serif; font-size: 20px; margin-bottom: 8px; }
-    .pillar { border: 1px solid #d8dde6; border-radius: 10px; margin-bottom: 10px; overflow: hidden; page-break-inside: avoid; }
-    .pillar h3 { font-family: 'Alegros', Georgia, serif; background: #f3f6f9; color: var(--ocean-blue); padding: 9px 12px; border-bottom: 1px solid #d8dde6; }
-    .pillar-body { padding: 10px 12px; }
-    .day-card { border: 1px solid #d8dde6; border-radius: 10px; margin-bottom: 10px; overflow: hidden; page-break-inside: avoid; }
-    .day-header { background: var(--ocean-blue); color: white; padding: 9px 12px; font-weight: 700; font-size: 15px; }
-    .day-body { padding: 12px; }
-    .day-body .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .detail { margin-bottom: 8px; }
-    .detail .label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .detail .value { font-weight: 600; color: #111827; }
-    .notes-section { background: #f7f0e3; border-left: 4px solid var(--sunset-gold); padding: 11px; border-radius: 8px; margin-top: 10px; page-break-inside: avoid; }
-    .notes-section h3 { font-family: 'Alegros', Georgia, serif; font-size: 15px; color: var(--ocean-blue); margin-bottom: 8px; }
-    .cta-list { margin-top: 14px; list-style: none; padding-left: 0; }
-    .cta-list li {
-      position: relative;
-      margin-bottom: 14px;
-      padding-left: 28px;
-      color: #3f4d61;
-      font-size: 14px;
-      line-height: 1.45;
-      text-align: left;
-    }
-    .cta-list li:last-child { margin-bottom: 0; }
-    .cta-list li::before {
-      content: '';
+    .day-place-image .day-index {
       position: absolute;
-      left: 0;
-      top: 0.56em;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #42546b;
+      right: 10px;
+      top: 8px;
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1;
+      opacity: 0.9;
     }
-    .footer { margin-top: auto; text-align: center; padding: 12px; background: #f4f6f8; border: 1px solid #d8dde6; border-radius: 10px; page-break-inside: avoid; }
-    .footer p { color: #5f6875; font-size: 13px; }
-    .footer .brand { font-family: 'Alegros', Georgia, serif; font-size: 18px; font-weight: 700; color: var(--ocean-blue); margin-bottom: 4px; }
+    .day-place-image .day-tag {
+      position: absolute;
+      right: 62px;
+      top: 12px;
+      transform: rotate(-90deg);
+      transform-origin: top right;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .day-place-image .place-label {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+    }
+    .day-summary {
+      padding: 10px 12px;
+      color: #312d2c;
+      font-size: 13px;
+      line-height: 1.38;
+    }
+    .day-summary h3 {
+      font-size: 16px;
+      line-height: 1.3;
+      margin-bottom: 6px;
+      color: #322d2d;
+    }
+    .day-summary .lead { font-weight: 700; margin-bottom: 4px; }
+    .day-summary ul { margin: 4px 0 0 18px; }
+    .day-summary li { margin: 2px 0; }
+    .activity-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #8c8f94;
+      background: #f7f7f8;
+      font-size: 12px;
+    }
+    .activity-table td {
+      border: 1px solid #8c8f94;
+      padding: 8px 8px;
+      vertical-align: top;
+    }
+    .activity-table td.activity-name {
+      width: 190px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #332f2f;
+      line-height: 1.25;
+    }
+    .activity-table td.activity-desc {
+      font-size: 12px;
+      line-height: 1.35;
+      color: #2f2f31;
+    }
+    .planner-notes {
+      margin-top: 9px;
+      border-left: 3px solid #be8f34;
+      background: #f6f2ea;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #413b39;
+    }
 
     body.compact { font-size: 12px; line-height: 1.42; }
     body.compact .cover-title { font-size: 44px; margin: 8px 0 8px; }
@@ -217,26 +326,14 @@
     body.compact .accommodation-table { font-size: 12px; }
     body.compact .accommodation-table td { padding: 6px 7px; }
 
-    body.compact .page { padding: 14px; }
-    body.compact .header { padding-bottom: 11px; margin-bottom: 12px; }
-    body.compact .logo { font-size: 27px; }
-    body.compact .header h1 { font-size: 22px; }
-    body.compact .welcome { padding: 11px; margin-bottom: 11px; }
-    body.compact .welcome h2 { font-size: 18px; margin-bottom: 6px; }
-    body.compact .pillar { margin-bottom: 8px; }
-    body.compact .pillar h3 { padding: 8px 10px; }
-    body.compact .pillar-body { padding: 8px 10px; }
-    body.compact .day-card { margin-bottom: 8px; }
-    body.compact .day-header { padding: 8px 10px; font-size: 14px; }
-    body.compact .day-body { padding: 10px; }
-    body.compact .day-body .grid { gap: 10px; }
-    body.compact .detail { margin-bottom: 6px; }
-    body.compact .notes-section { padding: 9px; margin-top: 8px; }
-    body.compact .notes-section h3 { font-size: 14px; margin-bottom: 6px; }
-    body.compact .footer { margin-top: auto; padding: 10px; }
-    body.compact .cta-list { margin-top: 10px; }
-    body.compact .cta-list li { margin-bottom: 10px; padding-left: 24px; font-size: 13px; }
-    body.compact .cta-list li::before { width: 7px; height: 7px; top: 0.6em; }
+    body.compact .daily-top-image { height: 108px; }
+    body.compact .daily-logo-badge { width: 210px; height: 100px; }
+    body.compact .daily-title { font-size: 17px; }
+    body.compact .day-hero { grid-template-columns: 220px 1fr; }
+    body.compact .day-place-image { min-height: 154px; }
+    body.compact .day-place-image .day-index { font-size: 48px; }
+    body.compact .day-place-image .day-tag { right: 56px; font-size: 21px; }
+    body.compact .activity-table td.activity-name { width: 170px; font-size: 14px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
@@ -260,18 +357,44 @@
         <div class="cover-section-title">Trip Overview</div>
         <div class="overview-grid">
           <div class="overview-column">
-            <div class="kv"><span class="k">Lead Guest</span><span class="sep">:</span><span class="v">{{client.name}}</span></div>
-            <div class="kv"><span class="k">Duration</span><span class="sep">:</span><span class="v">{{booking.numberOfDays}} Days</span></div>
-            <div class="kv"><span class="k">Guest Count</span><span class="sep">:</span><span class="v">{{totalGuests}} Guests</span></div>
-            <div class="kv"><span class="k">Stay Plan</span><span class="sep">:</span><span class="v">{{roomNights}} Night Stops</span></div>
+            <div class="kv"><span class="k">Group Name</span><span class="sep">:</span><span class="v">{{client.name}}</span></div>
+            <div class="kv"><span class="k">No Of Pax</span><span class="sep">:</span><span class="v">{{guestBreakdown adults children infants}}</span></div>
+            <div class="kv"><span class="k">No of Rooms</span><span class="sep">:</span><span class="v">{{roomSummary hotels}}</span></div>
+            <div class="kv"><span class="k">Meal Plan</span><span class="sep">:</span><span class="v">{{mealPlanSummary hotels}}</span></div>
           </div>
           <div class="overview-column">
             <div class="kv"><span class="k">Travel Dates</span><span class="sep">:</span><span class="v">{{formatDate booking.arrivalDate}} to {{formatDate booking.departureDate}}</span></div>
-            <div class="kv"><span class="k">Booking Ref</span><span class="sep">:</span><span class="v">{{booking.bookingId}}</span></div>
-            <div class="kv"><span class="k">Meal Plan</span><span class="sep">:</span><span class="v">{{#if hotels.0.mealPlan}}{{titleCase hotels.0.mealPlan}}{{else}}As Confirmed{{/if}}</span></div>
-            <div class="kv"><span class="k">Document Type</span><span class="sep">:</span><span class="v">Private Journey Itinerary</span></div>
+            <div class="kv"><span class="k">Pick Up Point</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupLocation}}{{transport.arrivalPickupLocation}}{{else}}Airport Arrival Lobby{{/if}}</span></div>
+            <div class="kv"><span class="k">Transfer Type</span><span class="sep">:</span><span class="v">{{#if transport.vehicleModel}}{{transport.vehicleModel}}{{else}}Private Transfer{{/if}}</span></div>
+            <div class="kv"><span class="k">Reservation No</span><span class="sep">:</span><span class="v">{{booking.bookingId}}</span></div>
           </div>
         </div>
+      </div>
+
+      <div class="cover-section">
+        <div class="cover-section-title">Flight Details</div>
+        <table class="flight-table">
+          <thead>
+            <tr>
+              <th>Arrival</th>
+              <th>Flight</th>
+              <th>Time</th>
+              <th>Departure</th>
+              <th>Flight</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{formatDate booking.arrivalDate}}</td>
+              <td>As Per Ticket</td>
+              <td>{{booking.arrivalTime}}</td>
+              <td>{{formatDate booking.departureDate}}</td>
+              <td>As Per Ticket</td>
+              <td>{{booking.departureTime}}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {{#if transport}}
@@ -312,122 +435,68 @@
     </div>
   </div>
 
-  <div class="page details-page">
-    <div class="content">
-      <div class="header">
+  {{#each days}}
+  <div class="page">
+    <div class="daily-top-image" style="background-image: url('{{#if ../coverTemplateImage}}{{../coverTemplateImage}}{{else}}{{../themeImage}}{{/if}}');">
+      <div class="daily-logo-badge">
+        {{#if ../brandLogoImage}}
+        <img src="{{../brandLogoImage}}" alt="VSL 360">
+        {{else}}
         <div class="logo">VSL <span>360</span></div>
-        <h1>Itinerary Story</h1>
-        <p class="subtitle">Experience Sri Lanka Completely</p>
-      </div>
-
-      <div class="welcome">
-        <h2>Dear {{client.name}},</h2>
-        <p>Welcome to a {{booking.numberOfDays}}-day journey shaped with local character, thoughtful comfort, and meaningful moments.</p>
-        <p>{{formatDate booking.arrivalDate}} - {{formatDate booking.departureDate}}</p>
-      </div>
-
-      <div class="pillar">
-        <h3>Destination Discovery</h3>
-        <div class="pillar-body">
-          Your route has been curated to balance iconic scenery with quieter corners of Sri Lanka, creating a complete sense of place from arrival to departure.
-        </div>
-      </div>
-
-      <div class="pillar">
-        <h3>Travel Experiences</h3>
-        <div class="pillar-body">
-          Each transfer and activity is arranged to keep your days seamless, so you can focus on the experience itself rather than the logistics.
-        </div>
-      </div>
-
-      {{#if transport}}
-      <div class="day-card">
-        <div class="day-header">Arrival Details</div>
-        <div class="day-body">
-          <div class="grid">
-            <div class="detail"><span class="label">Pickup Location</span><div class="value">{{transport.arrivalPickupLocation}}</div></div>
-            <div class="detail"><span class="label">Pickup Time</span><div class="value">{{transport.arrivalPickupTime}}</div></div>
-            <div class="detail"><span class="label">Vehicle</span><div class="value">{{transport.vehicleModel}}</div></div>
-            <div class="detail"><span class="label">Driver</span><div class="value">{{transport.driverName}} ({{transport.driverLanguage}})</div></div>
-          </div>
-        </div>
-      </div>
-      {{/if}}
-
-      {{#each days}}
-      <div class="day-card">
-        <div class="day-header">Day {{this.dayNumber}}</div>
-        <div class="day-body">
-          <div class="grid">
-            {{#if this.hotel}}
-            <div class="detail"><span class="label">Hotel</span><div class="value">{{this.hotel.hotelName}}</div></div>
-            <div class="detail"><span class="label">Room</span><div class="value">{{this.hotel.roomCategory}}</div></div>
-            <div class="detail"><span class="label">Meal Plan</span><div class="value">{{this.hotel.mealPlan}}</div></div>
-            {{#if this.hotel.mealPreference}}
-            <div class="detail"><span class="label">Meal Preference</span><div class="value">{{this.hotel.mealPreference}}</div></div>
-            {{/if}}
-            {{/if}}
-            {{#if this.transport}}
-            <div class="detail"><span class="label">Activities</span><div class="value">{{this.transport.description}}</div></div>
-            {{#if this.transport.pickupTime}}
-            <div class="detail"><span class="label">Pickup</span><div class="value">{{this.transport.pickupTime}} - {{this.transport.pickupLocation}}</div></div>
-            {{/if}}
-            {{/if}}
-          </div>
-        </div>
-      </div>
-      {{/each}}
-
-      <div class="pillar">
-        <h3>Luxury Stays</h3>
-        <div class="pillar-body">
-          Your stays are selected for comfort, atmosphere, and location, so each evening feels like part of the journey, not just a stop between destinations.
-        </div>
-      </div>
-
-      {{#if transport}}
-      <div class="day-card">
-        <div class="day-header">Departure Details</div>
-        <div class="day-body">
-          <div class="grid">
-            <div class="detail"><span class="label">Drop-off Location</span><div class="value">{{transport.departureDropLocation}}</div></div>
-            <div class="detail"><span class="label">Drop-off Time</span><div class="value">{{transport.departureDropTime}}</div></div>
-          </div>
-        </div>
-      </div>
-      {{/if}}
-
-      {{#if booking.generalNotes}}
-      <div class="notes-section">
-        <h3>Important Notes</h3>
-        <p>{{booking.generalNotes}}</p>
-      </div>
-      {{/if}}
-
-      {{#if booking.specialCelebrations}}
-      <div class="notes-section" style="margin-top: 12px;">
-        <h3>Local Culture & Celebrations</h3>
-        <p>{{booking.specialCelebrations}}</p>
-      </div>
-      {{/if}}
-
-      <div class="pillar">
-        <h3>Travel Moments</h3>
-        <div class="pillar-body">
-          Look out for candid moments in warm natural light: sunrise roads, tea-country air, coastal evenings, and conversations that make the island memorable.
-        </div>
+        {{/if}}
       </div>
     </div>
 
-    <div class="footer">
-      <div class="brand">VSL 360</div>
-      <p>Curated Travel Experiences</p>
-      <ul class="cta-list">
-        <li>When you are ready, we would be delighted to design your next Sri Lankan chapter.</li>
-        <li>Share your preferred dates, and we will craft another journey around your travel style.</li>
-        <li>Let us know the moments you value most, and we will shape the itinerary around them.</li>
-      </ul>
+    <div class="daily-content">
+      <div class="daily-title">Daily Itinerary</div>
+
+      <div class="day-hero">
+        <div class="day-place-image">
+          <div class="day-tag">DAY</div>
+          <div class="day-index">{{this.dayNumber}}</div>
+          <div class="place-label">{{#if this.itinerary.destinationName}}{{this.itinerary.destinationName}}{{else}}Destination Image Placeholder{{/if}}</div>
+        </div>
+        <div class="day-summary">
+          <h3>{{#if this.itinerary.destinationName}}{{this.itinerary.destinationName}}{{else}}Sri Lanka Journey Highlights{{/if}}</h3>
+          <p class="lead">{{#if this.transport.description}}{{this.transport.description}}{{else}}Your day is curated around memorable experiences and smooth transitions.{{/if}}</p>
+          {{#if this.itinerary.activities.length}}
+          <ul>
+            {{#each this.itinerary.activities}}
+            <li>{{this.title}}</li>
+            {{/each}}
+          </ul>
+          {{/if}}
+          {{#if this.hotel}}
+          <p style="margin-top: 6px;">Stay at {{this.hotel.hotelName}}</p>
+          {{/if}}
+        </div>
+      </div>
+
+      <table class="activity-table">
+        <tbody>
+          {{#if this.itinerary.activities.length}}
+            {{#each this.itinerary.activities}}
+            <tr>
+              <td class="activity-name">{{this.title}}<br>({{this.duration}})</td>
+              <td class="activity-desc">{{this.description}}</td>
+            </tr>
+            {{/each}}
+          {{else}}
+            <tr>
+              <td class="activity-name">No activities selected</td>
+              <td class="activity-desc">Use the Itinerary Plan tab to select morning, afternoon, and evening activities for this day.</td>
+            </tr>
+          {{/if}}
+        </tbody>
+      </table>
+
+      {{#if this.itinerary.notes}}
+      <div class="planner-notes">
+        <strong>Planner Notes:</strong> {{this.itinerary.notes}}
+      </div>
+      {{/if}}
     </div>
   </div>
+  {{/each}}
 </body>
 </html>
