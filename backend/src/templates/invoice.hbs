@@ -343,6 +343,7 @@
         </tbody>
       </table>
 
+      {{#if showPolicyBreakdown}}
       <div class="breakdown-box">
         <div class="breakdown-title">Passenger Policy Cost Breakdown</div>
         <table class="breakdown-table">
@@ -380,6 +381,7 @@
           </tbody>
         </table>
       </div>
+      {{/if}}
 
       <!-- Tour Inclusions -->
       {{#if tourInclusionsList.length}}

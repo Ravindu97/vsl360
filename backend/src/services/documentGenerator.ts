@@ -138,6 +138,11 @@ const computeInvoiceCostBreakdown = (booking: any): InvoiceCostBreakdown => {
   };
 };
 
+const isPolicyBasedInvoiceTotal = (invoiceTotal: number, computedTotal: number): boolean => {
+  // Compare at cent precision to avoid floating-point rounding noise.
+  return Math.abs(Math.round(invoiceTotal * 100) - Math.round(computedTotal * 100)) <= 1;
+};
+
 export class DocumentGeneratorService {
   private templatesDir: string;
   private outputDir: string;
@@ -429,6 +434,10 @@ export class DocumentGeneratorService {
 
     const layout = this.pickInvoiceLayout(booking.invoice);
     const costBreakdown = computeInvoiceCostBreakdown(booking);
+    const showPolicyBreakdown = isPolicyBasedInvoiceTotal(
+      Number(booking.invoice.totalAmount),
+      costBreakdown.computedTotal
+    );
 
     const template = this.loadTemplate('invoice');
     const tourInclusionsList = booking.invoice.tourInclusions
@@ -445,6 +454,7 @@ export class DocumentGeneratorService {
       currencyCode: booking.client.preferredCurrency ?? 'USD',
       paxCount: booking.paxList.length + 1, // +1 for main guest
       costBreakdown,
+      showPolicyBreakdown,
       tourInclusionsList,
     });
 
