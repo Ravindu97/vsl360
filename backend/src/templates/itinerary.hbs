@@ -334,6 +334,72 @@
     body.compact .day-place-image .day-index { font-size: 48px; }
     body.compact .day-place-image .day-tag { right: 56px; font-size: 21px; }
     body.compact .activity-table td.activity-name { width: 170px; font-size: 14px; }
+
+    .closing-page {
+      border: 1px solid #dde2ea;
+      border-radius: 10px;
+      background: #ffffff;
+      overflow: hidden;
+      margin-top: 8mm;
+      page-break-inside: avoid;
+      display: flex;
+      flex-direction: column;
+    }
+    .closing-top-image {
+      height: 160px;
+      background-size: cover;
+      background-position: center center;
+      position: relative;
+    }
+    .closing-badge {
+      width: 230px;
+      height: 108px;
+      border-radius: 0 0 130px 130px;
+      background: rgba(248, 249, 251, 0.95);
+      border: 1px solid rgba(209, 177, 120, 0.45);
+      border-top: 0;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .closing-badge img { max-width: 148px; max-height: 84px; object-fit: contain; }
+    .closing-body {
+      flex: 1;
+      padding: 28px 40px 20px;
+    }
+    .closing-body h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1f2933;
+      margin-bottom: 20px;
+    }
+    .closing-body p {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #2f3644;
+      margin-bottom: 14px;
+      text-align: justify;
+    }
+    .closing-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 40px;
+      font-size: 12px;
+      color: #5f6875;
+    }
+    .closing-divider hr { flex: 1; border: none; border-top: 1px solid #c5cad3; }
+    .closing-bottom-image {
+      height: 100px;
+      background-size: cover;
+      background-position: center bottom;
+    }
+    body.compact .closing-top-image { height: 140px; }
+    body.compact .closing-badge { width: 200px; height: 94px; }
+    body.compact .closing-body { padding: 20px 32px 14px; }
+    body.compact .closing-body h2 { font-size: 20px; }
+    body.compact .closing-body p { font-size: 12px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
@@ -498,5 +564,29 @@
     </div>
   </div>
   {{/each}}
+
+  <div class="closing-page">
+    <div class="closing-top-image" style="background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');">
+      <div class="closing-badge">
+        {{#if brandLogoImage}}
+        <img src="{{brandLogoImage}}" alt="VSL 360">
+        {{else}}
+        <div class="logo">VSL <span>360</span></div>
+        {{/if}}
+      </div>
+    </div>
+    <div class="closing-body">
+      <h2>We look forward to hosting you again.</h2>
+      <p>On behalf of VSL360, we sincerely thank you for choosing us for your memorable {{booking.numberOfDays}}-day journey through Sri Lanka. We are truly honoured to have been a part of your travel experience, and we hope that every moment left you with beautiful memories.</p>
+      <p>It was our pleasure to showcase the rich culture, stunning landscapes, and warm hospitality of Sri Lanka. We are committed to providing travellers like you with authentic, well-curated, and seamless experiences, and your trust in us means everything.</p>
+      <p>We wish you safe travels onward and hope to welcome you back to Sri Lanka again someday. Until then, may your heart remain full of the sights, sounds, and spirit of this beautiful island.</p>
+    </div>
+    <div class="closing-divider">
+      <hr>
+      Thank you for traveling with VSL360.
+      <hr>
+    </div>
+    <div class="closing-bottom-image" style="background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');"></div>
+  </div>
 </body>
 </html>

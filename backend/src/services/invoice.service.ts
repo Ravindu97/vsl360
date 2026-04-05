@@ -17,9 +17,15 @@ export class InvoiceService {
     const existing = await prisma.invoice.findUnique({ where: { bookingId } });
     if (existing) throw new Error('Invoice already exists for this booking');
 
+    const booking = await prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { bookingId: true },
+    });
+    if (!booking) throw new Error('Booking not found');
+
     this.validateFinancials(data.totalAmount, data.advancePaid, data.balanceAmount);
 
-    const invoiceNumber = await generateInvoiceNumber();
+    const invoiceNumber = await generateInvoiceNumber(booking.bookingId);
 
     return prisma.invoice.create({
       data: {
