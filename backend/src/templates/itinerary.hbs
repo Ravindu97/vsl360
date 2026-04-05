@@ -340,10 +340,12 @@
       border-radius: 10px;
       background: #ffffff;
       overflow: hidden;
-      margin-top: 8mm;
+      margin-top: 0;
       page-break-inside: avoid;
+      page-break-before: always;
       display: flex;
       flex-direction: column;
+      min-height: calc(297mm - 32mm);
     }
     .closing-top-image {
       height: 160px;
@@ -365,8 +367,7 @@
     }
     .closing-badge img { max-width: 148px; max-height: 84px; object-fit: contain; }
     .closing-body {
-      flex: 1;
-      padding: 28px 40px 20px;
+      padding: 28px 40px 8px;
     }
     .closing-body h2 {
       font-size: 22px;
@@ -385,11 +386,15 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 16px 40px;
+      padding: 12px 40px 8px;
       font-size: 12px;
       color: #5f6875;
     }
     .closing-divider hr { flex: 1; border: none; border-top: 1px solid #c5cad3; }
+    .closing-spacer {
+      flex: 1;
+      min-height: 34px;
+    }
     .closing-bottom-image {
       height: 100px;
       background-size: cover;
@@ -397,9 +402,11 @@
     }
     body.compact .closing-top-image { height: 140px; }
     body.compact .closing-badge { width: 200px; height: 94px; }
-    body.compact .closing-body { padding: 20px 32px 14px; }
+    body.compact .closing-body { padding: 20px 32px 6px; }
     body.compact .closing-body h2 { font-size: 20px; }
     body.compact .closing-body p { font-size: 12px; }
+    body.compact .closing-divider { padding: 10px 32px 6px; }
+    body.compact .closing-spacer { min-height: 24px; }
   </style>
 </head>
 <body class="{{layoutMode}}">
@@ -565,7 +572,7 @@
   </div>
   {{/each}}
 
-  <div class="closing-page">
+  <div class="page closing-page">
     <div class="closing-top-image" style="background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');">
       <div class="closing-badge">
         {{#if brandLogoImage}}
@@ -586,6 +593,7 @@
       Thank you for traveling with VSL360.
       <hr>
     </div>
+    <div class="closing-spacer"></div>
     <div class="closing-bottom-image" style="background-image: url('{{#if coverTemplateImage}}{{coverTemplateImage}}{{else}}{{themeImage}}{{/if}}');"></div>
   </div>
 </body>
