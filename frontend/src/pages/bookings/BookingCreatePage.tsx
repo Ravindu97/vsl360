@@ -12,6 +12,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from '@/utils/sessionDraft';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { CurrencyCode } from '@/types';
 
 const createBookingSchema = z.object({
   numberOfDays: z.coerce.number().min(1),
@@ -26,6 +28,7 @@ const createBookingSchema = z.object({
     name: z.string().min(1, 'Client name is required'),
     citizenship: z.string().min(1, 'Required'),
     languagePreference: z.string().min(1, 'Required'),
+    preferredCurrency: z.nativeEnum(CurrencyCode),
     email: z.string().email('Invalid email'),
     contactNumber: z.string().min(1, 'Required'),
   }),
@@ -48,6 +51,7 @@ const defaultFormValues: CreateBookingForm = {
     name: '',
     citizenship: '',
     languagePreference: 'English',
+    preferredCurrency: CurrencyCode.USD,
     email: '',
     contactNumber: '',
   },
@@ -175,6 +179,23 @@ export function BookingCreatePage() {
               <Label>Language Preference *</Label>
               <Input {...register('client.languagePreference')} />
               {errors.client?.languagePreference && <p className="text-xs text-destructive">{errors.client.languagePreference.message}</p>}
+            </div>
+            <div className="space-y-2">
+              <Label>Preferred Currency *</Label>
+              <Select
+                value={watch('client.preferredCurrency')}
+                onValueChange={(value) => setValue('client.preferredCurrency', value as CurrencyCode, { shouldDirty: true, shouldValidate: true })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={CurrencyCode.EUR}>Euro (EUR)</SelectItem>
+                  <SelectItem value={CurrencyCode.USD}>US Dollar (USD)</SelectItem>
+                  <SelectItem value={CurrencyCode.INR}>Indian Rupee (INR)</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.client?.preferredCurrency && <p className="text-xs text-destructive">{errors.client.preferredCurrency.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Email *</Label>

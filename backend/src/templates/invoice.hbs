@@ -335,10 +335,10 @@
             <td>{{formatDate booking.arrivalDate}}</td>
             <td>{{formatDate booking.departureDate}}</td>
             <td>{{paxCount}}</td>
-            <td>{{formatCurrency invoice.costPerPerson}}</td>
-            <td>{{formatCurrency invoice.totalAmount}}</td>
-            <td>{{formatCurrency invoice.advancePaid}}</td>
-            <td class="balance">{{formatCurrency invoice.balanceAmount}}</td>
+            <td>{{formatCurrency invoice.costPerPerson currencyCode}}</td>
+            <td>{{formatCurrency invoice.totalAmount currencyCode}}</td>
+            <td>{{formatCurrency invoice.advancePaid currencyCode}}</td>
+            <td class="balance">{{formatCurrency invoice.balanceAmount currencyCode}}</td>
           </tr>
         </tbody>
       </table>
@@ -358,24 +358,24 @@
             <tr>
               <td>Adults ({{costBreakdown.adults}})</td>
               <td>100% rate</td>
-              <td>{{costBreakdown.adults}} x {{formatCurrency costBreakdown.adultRate}}</td>
-              <td>{{formatCurrency costBreakdown.adultSubtotal}}</td>
+              <td>{{costBreakdown.adults}} x {{formatCurrency costBreakdown.adultRate currencyCode}}</td>
+              <td>{{formatCurrency costBreakdown.adultSubtotal currencyCode}}</td>
             </tr>
             <tr>
               <td>Children ({{costBreakdown.children}})</td>
               <td>50% rate</td>
-              <td>{{costBreakdown.children}} x {{formatCurrency costBreakdown.childRate}}</td>
-              <td>{{formatCurrency costBreakdown.childSubtotal}}</td>
+              <td>{{costBreakdown.children}} x {{formatCurrency costBreakdown.childRate currencyCode}}</td>
+              <td>{{formatCurrency costBreakdown.childSubtotal currencyCode}}</td>
             </tr>
             <tr>
               <td>Infants ({{costBreakdown.infants}})</td>
               <td>Free</td>
-              <td>{{costBreakdown.infants}} x {{formatCurrency costBreakdown.infantRate}}</td>
-              <td>{{formatCurrency costBreakdown.infantSubtotal}}</td>
+              <td>{{costBreakdown.infants}} x {{formatCurrency costBreakdown.infantRate currencyCode}}</td>
+              <td>{{formatCurrency costBreakdown.infantSubtotal currencyCode}}</td>
             </tr>
             <tr>
               <td colspan="3">Computed Total (Adults + Children + Infants)</td>
-              <td>{{formatCurrency costBreakdown.computedTotal}}</td>
+              <td>{{formatCurrency costBreakdown.computedTotal currencyCode}}</td>
             </tr>
           </tbody>
         </table>
@@ -394,7 +394,7 @@
       <!-- Payment Terms -->
       <div class="payment-terms">
         <div class="payment-terms-title">Payment Terms</div>
-        <div class="payment-terms-text">{{#if invoice.paymentInstructions}}{{invoice.paymentInstructions}}{{else}}The total amount must be settled in either U.S. Dollars (USD), UPI Global transfer or credit or debit card payment to the company bank account upon arrival at Katunayake Airport Colombo on the day of your arrival.{{/if}}</div>
+        <div class="payment-terms-text">{{#if invoice.paymentInstructions}}{{invoice.paymentInstructions}}{{else}}The total amount must be settled in {{currencyCode}}, UPI Global transfer, or credit/debit card payment to the company bank account upon arrival at Katunayake Airport Colombo on the day of your arrival.{{/if}}</div>
       </div>
 
       <div class="computer-generated-note">

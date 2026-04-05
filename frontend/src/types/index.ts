@@ -35,6 +35,12 @@ export enum DocumentType {
   TRAVEL_CONFIRMATION = 'TRAVEL_CONFIRMATION',
 }
 
+export enum CurrencyCode {
+  EUR = 'EUR',
+  USD = 'USD',
+  INR = 'INR',
+}
+
 export interface User {
   id: string;
   email: string;
@@ -50,6 +56,7 @@ export interface Client {
   name: string;
   citizenship: string;
   languagePreference: string;
+  preferredCurrency: CurrencyCode;
   email: string;
   contactNumber: string;
   passportCopy?: string;

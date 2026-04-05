@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { PaxType } from '@/types';
+import { CurrencyCode, PaxType } from '@/types';
 import type { Booking, Invoice } from '@/types';
 
 interface Props {
@@ -122,6 +122,7 @@ export function InvoiceTab({ booking }: Props) {
   });
 
   const invoice: Invoice | null = data?.data ?? booking.invoice ?? null;
+  const currencyCode = booking.client?.preferredCurrency ?? CurrencyCode.USD;
 
   const [inclusions, setInclusions] = useState<string[]>(
     () => (booking.invoice?.tourInclusions ?? '').split('\n').filter(Boolean)
@@ -213,7 +214,7 @@ export function InvoiceTab({ booking }: Props) {
   const handleSave = (data: InvoiceForm) => {
     if (hasManualMismatch) {
       const proceed = window.confirm(
-        `Manual total differs from policy by ${formatCurrency(totalDiff)}. Do you want to save anyway?`
+        `Manual total differs from policy by ${formatCurrency(totalDiff, currencyCode)}. Do you want to save anyway?`
       );
       if (!proceed) return;
     }
@@ -276,28 +277,28 @@ export function InvoiceTab({ booking }: Props) {
                       <td className="px-2 py-1">Adults</td>
                       <td className="px-2 py-1">{policy.adults}</td>
                       <td className="px-2 py-1">100%</td>
-                      <td className="px-2 py-1">{formatCurrency(policy.adultRate)}</td>
-                      <td className="px-2 py-1 text-right">{formatCurrency(policy.adultSubtotal)}</td>
+                      <td className="px-2 py-1">{formatCurrency(policy.adultRate, currencyCode)}</td>
+                      <td className="px-2 py-1 text-right">{formatCurrency(policy.adultSubtotal, currencyCode)}</td>
                     </tr>
                     <tr className="border-b/60">
                       <td className="px-2 py-1">Children</td>
                       <td className="px-2 py-1">{policy.children}</td>
                       <td className="px-2 py-1">50%</td>
-                      <td className="px-2 py-1">{formatCurrency(policy.childRate)}</td>
-                      <td className="px-2 py-1 text-right">{formatCurrency(policy.childSubtotal)}</td>
+                      <td className="px-2 py-1">{formatCurrency(policy.childRate, currencyCode)}</td>
+                      <td className="px-2 py-1 text-right">{formatCurrency(policy.childSubtotal, currencyCode)}</td>
                     </tr>
                     <tr>
                       <td className="px-2 py-1">Infants</td>
                       <td className="px-2 py-1">{policy.infants}</td>
                       <td className="px-2 py-1">Free</td>
-                      <td className="px-2 py-1">{formatCurrency(policy.infantRate)}</td>
-                      <td className="px-2 py-1 text-right">{formatCurrency(policy.infantSubtotal)}</td>
+                      <td className="px-2 py-1">{formatCurrency(policy.infantRate, currencyCode)}</td>
+                      <td className="px-2 py-1 text-right">{formatCurrency(policy.infantSubtotal, currencyCode)}</td>
                     </tr>
                   </tbody>
                 </table>
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold">Computed total: {formatCurrency(policy.computedTotal)}</p>
+                <p className="font-semibold">Computed total: {formatCurrency(policy.computedTotal, currencyCode)}</p>
                 {!autoPolicyMode && (
                   <Button
                     type="button"
@@ -311,17 +312,17 @@ export function InvoiceTab({ booking }: Props) {
               </div>
               {hasManualMismatch && (
                 <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800">
-                  Warning: manual total is different from policy by {formatCurrency(totalDiff)}.
+                  Warning: manual total is different from policy by {formatCurrency(totalDiff, currencyCode)}.
                 </div>
               )}
             </div>
             <div className="space-y-2">
-              <Label>Cost Per Person (USD) *</Label>
+              <Label>Cost Per Person ({currencyCode}) *</Label>
               <Input type="number" step="0.01" {...form.register('costPerPerson')} />
               {errors.costPerPerson && <p className="text-xs text-red-600">{errors.costPerPerson.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Total Amount (USD) *</Label>
+              <Label>Total Amount ({currencyCode}) *</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -333,18 +334,18 @@ export function InvoiceTab({ booking }: Props) {
                 <p className="text-xs text-muted-foreground">Auto: Adult full + Child 50% + Infant free</p>
               ) : (
                 <p className={`text-xs ${Math.abs(totalDiff) < 0.01 ? 'text-emerald-700' : 'text-amber-700'}`}>
-                  Manual mode: {Math.abs(totalDiff) < 0.01 ? 'matches policy total' : `difference from policy is ${formatCurrency(totalDiff)}`}
+                  Manual mode: {Math.abs(totalDiff) < 0.01 ? 'matches policy total' : `difference from policy is ${formatCurrency(totalDiff, currencyCode)}`}
                 </p>
               )}
               {errors.totalAmount && <p className="text-xs text-red-600">{errors.totalAmount.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Advance Paid (USD) *</Label>
+              <Label>Advance Paid ({currencyCode}) *</Label>
               <Input type="number" step="0.01" {...form.register('advancePaid')} />
               {errors.advancePaid && <p className="text-xs text-red-600">{errors.advancePaid.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Balance Amount (USD) *</Label>
+              <Label>Balance Amount ({currencyCode}) *</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -428,10 +429,10 @@ export function InvoiceTab({ booking }: Props) {
             <div className="grid gap-3 text-sm sm:grid-cols-2">
               <Info label="Invoice Number" value={invoice.invoiceNumber} />
               <Info label="Date" value={formatDate(invoice.invoiceDate)} />
-              <Info label="Cost Per Person" value={formatCurrency(invoice.costPerPerson)} />
-              <Info label="Total Amount" value={formatCurrency(invoice.totalAmount)} />
-              <Info label="Advance Paid" value={formatCurrency(invoice.advancePaid)} />
-              <Info label="Balance" value={formatCurrency(invoice.balanceAmount)} />
+              <Info label={`Cost Per Person (${currencyCode})`} value={formatCurrency(invoice.costPerPerson, currencyCode)} />
+              <Info label={`Total Amount (${currencyCode})`} value={formatCurrency(invoice.totalAmount, currencyCode)} />
+              <Info label={`Advance Paid (${currencyCode})`} value={formatCurrency(invoice.advancePaid, currencyCode)} />
+              <Info label={`Balance (${currencyCode})`} value={formatCurrency(invoice.balanceAmount, currencyCode)} />
             </div>
             {(() => {
               const readonlyPolicy = computePolicyBreakdown(booking, Number(invoice.costPerPerson));
@@ -452,28 +453,28 @@ export function InvoiceTab({ booking }: Props) {
                         <tr className="border-b/60">
                           <td className="px-2 py-1">Adults</td>
                           <td className="px-2 py-1">{readonlyPolicy.adults}</td>
-                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.adultRate)}</td>
-                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.adultSubtotal)}</td>
+                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.adultRate, currencyCode)}</td>
+                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.adultSubtotal, currencyCode)}</td>
                         </tr>
                         <tr className="border-b/60">
                           <td className="px-2 py-1">Children</td>
                           <td className="px-2 py-1">{readonlyPolicy.children}</td>
-                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.childRate)}</td>
-                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.childSubtotal)}</td>
+                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.childRate, currencyCode)}</td>
+                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.childSubtotal, currencyCode)}</td>
                         </tr>
                         <tr>
                           <td className="px-2 py-1">Infants</td>
                           <td className="px-2 py-1">{readonlyPolicy.infants}</td>
-                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.infantRate)}</td>
-                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.infantSubtotal)}</td>
+                          <td className="px-2 py-1">{formatCurrency(readonlyPolicy.infantRate, currencyCode)}</td>
+                          <td className="px-2 py-1 text-right">{formatCurrency(readonlyPolicy.infantSubtotal, currencyCode)}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                  <p className="mt-2 font-semibold">Computed Total: {formatCurrency(readonlyPolicy.computedTotal)}</p>
+                  <p className="mt-2 font-semibold">Computed Total: {formatCurrency(readonlyPolicy.computedTotal, currencyCode)}</p>
                   {Math.abs(Number(invoice.totalAmount) - readonlyPolicy.computedTotal) >= 0.01 && (
                     <p className="mt-1 text-xs text-amber-700">
-                      Saved invoice total differs from policy by {formatCurrency(Number(invoice.totalAmount) - readonlyPolicy.computedTotal)}.
+                      Saved invoice total differs from policy by {formatCurrency(Number(invoice.totalAmount) - readonlyPolicy.computedTotal, currencyCode)}.
                     </p>
                   )}
                 </div>

@@ -45,6 +45,12 @@ enum DocumentType {
   TRAVEL_CONFIRMATION
 }
 
+enum CurrencyCode {
+  EUR
+  USD
+  INR
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -99,6 +105,7 @@ model Client {
   name               String
   citizenship        String
   languagePreference String   @default("English")
+  preferredCurrency  CurrencyCode @default(USD)
   email              String
   contactNumber      String
   passportCopy       String?

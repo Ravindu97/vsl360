@@ -13,9 +13,11 @@ Handlebars.registerHelper('formatDate', (date: Date | string) => {
   const d = new Date(date);
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 });
-Handlebars.registerHelper('formatCurrency', (amount: number | string) => {
+Handlebars.registerHelper('formatCurrency', (amount: number | string, currency?: string) => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+  const currencyCode = typeof currency === 'string' ? currency : 'USD';
+  const locale = currencyCode === 'EUR' ? 'de-DE' : currencyCode === 'INR' ? 'en-IN' : 'en-US';
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode }).format(num);
 });
 Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper('titleCase', (value: unknown) => {
@@ -429,6 +431,7 @@ export class DocumentGeneratorService {
       booking,
       client: booking.client,
       invoice: booking.invoice,
+      currencyCode: booking.client.preferredCurrency ?? 'USD',
       paxCount: booking.paxList.length + 1, // +1 for main guest
       costBreakdown,
       tourInclusionsList,

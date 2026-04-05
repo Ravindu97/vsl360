@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/shared/EmptyState';
 import type { Booking, Pax } from '@/types';
-import { PaxType } from '@/types';
+import { CurrencyCode, PaxType } from '@/types';
 
 interface Props {
   booking: Booking;
@@ -23,6 +23,7 @@ const clientSchema = z.object({
   name: z.string().min(1),
   citizenship: z.string().min(1),
   languagePreference: z.string().min(1),
+  preferredCurrency: z.nativeEnum(CurrencyCode),
   email: z.string().email(),
   contactNumber: z.string().min(1),
 });
@@ -56,6 +57,7 @@ export function ClientPaxTab({ booking }: Props) {
       name: booking.client?.name ?? '',
       citizenship: booking.client?.citizenship ?? '',
       languagePreference: booking.client?.languagePreference ?? 'English',
+      preferredCurrency: booking.client?.preferredCurrency ?? CurrencyCode.USD,
       email: booking.client?.email ?? '',
       contactNumber: booking.client?.contactNumber ?? '',
     },
@@ -131,6 +133,22 @@ export function ClientPaxTab({ booking }: Props) {
                 <Input {...clientForm.register('languagePreference')} />
               </div>
               <div className="space-y-2">
+                <Label>Preferred Currency</Label>
+                <Select
+                  value={clientForm.watch('preferredCurrency')}
+                  onValueChange={(value) => clientForm.setValue('preferredCurrency', value as CurrencyCode, { shouldDirty: true, shouldValidate: true })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={CurrencyCode.EUR}>Euro (EUR)</SelectItem>
+                    <SelectItem value={CurrencyCode.USD}>US Dollar (USD)</SelectItem>
+                    <SelectItem value={CurrencyCode.INR}>Indian Rupee (INR)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Email</Label>
                 <Input type="email" {...clientForm.register('email')} />
               </div>
@@ -152,6 +170,7 @@ export function ClientPaxTab({ booking }: Props) {
               <Info label="Name" value={booking.client?.name} />
               <Info label="Citizenship" value={booking.client?.citizenship} />
               <Info label="Language Preference" value={booking.client?.languagePreference} />
+              <Info label="Preferred Currency" value={booking.client?.preferredCurrency} />
               <Info label="Email" value={booking.client?.email} />
               <Info label="Contact" value={booking.client?.contactNumber} />
             </div>

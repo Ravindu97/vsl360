@@ -56,6 +56,7 @@ export class BookingService {
             name: data.client.name,
             citizenship: data.client.citizenship,
             languagePreference: data.client.languagePreference ?? 'English',
+            preferredCurrency: data.client.preferredCurrency ?? 'USD',
             email: data.client.email,
             contactNumber: data.client.contactNumber,
           },
