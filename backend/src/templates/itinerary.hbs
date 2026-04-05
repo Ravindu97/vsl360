@@ -189,9 +189,10 @@
       page-break-inside: avoid;
     }
     .daily-top-image {
-      height: 120px;
+      height: 132px;
       background-size: cover;
-      background-position: center center;
+      background-position: center top;
+      background-repeat: no-repeat;
       position: relative;
       border-bottom: 1px solid #cdd3db;
     }
@@ -510,10 +511,10 @@
 
   {{#each days}}
   <div class="page">
-    <div class="daily-top-image" style="background-image: url('{{#if ../coverTemplateImage}}{{../coverTemplateImage}}{{else}}{{../themeImage}}{{/if}}');">
+    <div class="daily-top-image" style="background-image: url('{{#if @root.coverTemplateImage}}{{@root.coverTemplateImage}}{{else}}{{@root.themeImage}}{{/if}}');">
       <div class="daily-logo-badge">
-        {{#if ../brandLogoImage}}
-        <img src="{{../brandLogoImage}}" alt="VSL 360">
+        {{#if @root.brandLogoImage}}
+        <img src="{{@root.brandLogoImage}}" alt="VSL 360">
         {{else}}
         <div class="logo">VSL <span>360</span></div>
         {{/if}}
