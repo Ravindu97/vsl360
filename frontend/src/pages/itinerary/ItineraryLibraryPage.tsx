@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { itineraryApi } from '@/api/endpoints.api';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { PaginationControls } from '@/components/shared/PaginationControls';
+import { Pencil, Power, PowerOff, Trash2 } from 'lucide-react';
 import type { ItineraryActivity, ItineraryCategory, ItineraryDestination } from '@/types';
 
 const categoryOptions: ItineraryCategory[] = [
@@ -23,20 +25,43 @@ const categoryOptions: ItineraryCategory[] = [
 
 const PAGE_SIZE = 10;
 
+type ImportCatalogPayload = {
+  destinations: Array<{ id: string; name: string; slug: string; isActive?: boolean; sortOrder: number }>;
+  activities: Array<{
+    id: string;
+    destinationId: string;
+    title: string;
+    description: string;
+    category: string;
+    isSeasonal?: boolean;
+    sortOrder: number;
+    sourceRow?: number | null;
+  }>;
+};
+
 export function ItineraryLibraryPage() {
   const queryClient = useQueryClient();
 
   const [destinationSearch, setDestinationSearch] = useState('');
-  const [activitySearch, setActivitySearch] = useState('');
-  const [selectedDestinationId, setSelectedDestinationId] = useState<string>('');
-  const [destinationEditingId, setDestinationEditingId] = useState<string>('');
-  const [activityEditingId, setActivityEditingId] = useState<string>('');
   const [destinationPage, setDestinationPage] = useState(1);
+  const [destinationEditingId, setDestinationEditingId] = useState('');
+  const [selectedDestinationId, setSelectedDestinationId] = useState('');
+
+  const [activitySearch, setActivitySearch] = useState('');
+  const [activityCategory, setActivityCategory] = useState<string>('ALL');
   const [activityPage, setActivityPage] = useState(1);
+  const [activityEditingId, setActivityEditingId] = useState('');
+
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [importJson, setImportJson] = useState('');
+  const [importError, setImportError] = useState('');
 
-  const [destinationForm, setDestinationForm] = useState({ name: '', slug: '', isActive: true });
+  const [destinationForm, setDestinationForm] = useState({
+    name: '',
+    slug: '',
+    isActive: true,
+  });
+
   const [activityForm, setActivityForm] = useState({
     title: '',
     description: '',
@@ -46,7 +71,11 @@ export function ItineraryLibraryPage() {
 
   const { data: destinationData } = useQuery({
     queryKey: ['itinerary-destinations', destinationSearch, destinationPage],
-    queryFn: () => itineraryApi.listDestinations({ search: destinationSearch, page: destinationPage, pageSize: PAGE_SIZE }),
+    queryFn: () => itineraryApi.listDestinations({
+      search: destinationSearch,
+      page: destinationPage,
+      pageSize: PAGE_SIZE,
+    }),
   });
 
   const destinations: ItineraryDestination[] = destinationData?.data?.items ?? [];
@@ -58,10 +87,11 @@ export function ItineraryLibraryPage() {
   );
 
   const { data: activityData } = useQuery({
-    queryKey: ['itinerary-activities', selectedDestinationId, activitySearch, activityPage],
+    queryKey: ['itinerary-activities', selectedDestinationId, activitySearch, activityCategory, activityPage],
     queryFn: () => itineraryApi.listActivities({
       destinationId: selectedDestinationId || undefined,
       search: activitySearch,
+      category: activityCategory !== 'ALL' ? activityCategory : undefined,
       page: activityPage,
       pageSize: PAGE_SIZE,
     }),
@@ -97,11 +127,17 @@ export function ItineraryLibraryPage() {
   const removeDestination = useMutation({
     mutationFn: (destinationId: string) => itineraryApi.deleteDestination(destinationId),
     onSuccess: (_, destinationId) => {
-      if (selectedDestinationId === destinationId) {
-        setSelectedDestinationId('');
-      }
+      if (selectedDestinationId === destinationId) setSelectedDestinationId('');
       queryClient.invalidateQueries({ queryKey: ['itinerary-destinations'] });
       queryClient.invalidateQueries({ queryKey: ['itinerary-activities'] });
+    },
+  });
+
+  const toggleDestinationStatus = useMutation({
+    mutationFn: ({ destinationId, isActive }: { destinationId: string; isActive: boolean }) =>
+      itineraryApi.updateDestination(destinationId, { isActive }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['itinerary-destinations'] });
     },
   });
 
@@ -156,24 +192,13 @@ export function ItineraryLibraryPage() {
   });
 
   const importCatalog = useMutation({
-    mutationFn: (payload: {
-      replaceAll?: boolean;
-      destinations: Array<{ id: string; name: string; slug: string; isActive?: boolean; sortOrder: number }>;
-      activities: Array<{
-        id: string;
-        destinationId: string;
-        title: string;
-        description: string;
-        category: string;
-        isSeasonal?: boolean;
-        sortOrder: number;
-        sourceRow?: number | null;
-      }>;
-    }) => itineraryApi.importCatalog(payload),
+    mutationFn: (payload: ImportCatalogPayload) =>
+      itineraryApi.importCatalog({ replaceAll: true, ...payload }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['itinerary-destinations'] });
       queryClient.invalidateQueries({ queryKey: ['itinerary-activities'] });
       setImportJson('');
+      setImportError('');
       setShowImportPanel(false);
       setDestinationPage(1);
       setActivityPage(1);
@@ -181,38 +206,54 @@ export function ItineraryLibraryPage() {
   });
 
   const onImportJson = () => {
-    const parsed = JSON.parse(importJson) as {
-      destinations: Array<{ id: string; name: string; slug: string; isActive?: boolean; sortOrder: number }>;
-      activities: Array<{
-        id: string;
-        destinationId: string;
-        title: string;
-        description: string;
-        category: string;
-        isSeasonal?: boolean;
-        sortOrder: number;
-        sourceRow?: number | null;
-      }>;
-    };
+    setImportError('');
 
-    importCatalog.mutate({
-      replaceAll: true,
-      destinations: parsed.destinations,
-      activities: parsed.activities,
-    });
+    let parsed: ImportCatalogPayload;
+    try {
+      parsed = JSON.parse(importJson);
+    } catch {
+      setImportError('Invalid JSON format. Please paste a valid catalog export.');
+      return;
+    }
+
+    if (!Array.isArray(parsed.destinations) || !Array.isArray(parsed.activities)) {
+      setImportError('JSON must include destinations[] and activities[] arrays.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'This will replace the current itinerary catalog. Do you want to continue?'
+    );
+    if (!confirmed) return;
+
+    importCatalog.mutate(parsed);
   };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Itinerary Library</h1>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" onClick={() => exportCatalog.mutate()} disabled={exportCatalog.isPending}>
-          {exportCatalog.isPending ? 'Exporting...' : 'Export Catalog JSON'}
-        </Button>
-        <Button variant="outline" onClick={() => setShowImportPanel((prev) => !prev)}>
-          {showImportPanel ? 'Hide Import' : 'Bulk Import JSON'}
-        </Button>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold">Itinerary Library</h1>
+        <p className="text-sm text-muted-foreground">
+          Manage destination master data and reusable activity content for itinerary generation.
+        </p>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary">Destinations: {destinationPagination?.total ?? 0}</Badge>
+            <Badge variant="secondary">Activities: {activityPagination?.total ?? 0}</Badge>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => exportCatalog.mutate()} disabled={exportCatalog.isPending}>
+              {exportCatalog.isPending ? 'Exporting...' : 'Export Catalog JSON'}
+            </Button>
+            <Button variant="outline" onClick={() => setShowImportPanel((prev) => !prev)}>
+              {showImportPanel ? 'Hide Import' : 'Bulk Import JSON'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {showImportPanel && (
         <Card>
@@ -220,28 +261,32 @@ export function ItineraryLibraryPage() {
             <CardTitle>Bulk Import (Replace Existing Catalog)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Paste exported catalog JSON. Import runs with replaceAll=true.
-            </p>
+            <p className="text-sm text-muted-foreground">Paste exported catalog JSON to replace all current data.</p>
+            <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Warning: This operation removes existing destinations and activities before importing.
+            </div>
             <Textarea
               rows={8}
               value={importJson}
               onChange={(event) => setImportJson(event.target.value)}
               placeholder="Paste JSON from Export Catalog"
             />
+            {importError && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                {importError}
+              </div>
+            )}
             <div className="flex gap-2">
               <Button onClick={onImportJson} disabled={!importJson.trim() || importCatalog.isPending}>
                 {importCatalog.isPending ? 'Importing...' : 'Import and Replace'}
               </Button>
-              <Button variant="outline" onClick={() => setImportJson('')}>
-                Clear
-              </Button>
+              <Button variant="outline" onClick={() => setImportJson('')}>Clear</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[1fr,1.25fr]">
         <Card>
           <CardHeader>
             <CardTitle>Destinations</CardTitle>
@@ -256,7 +301,8 @@ export function ItineraryLibraryPage() {
               }}
             />
 
-            <div className="grid gap-2 rounded border p-3">
+            <div className="grid gap-2 rounded-lg border bg-muted/20 p-3">
+              <p className="text-xs font-medium text-muted-foreground">Create or Edit Destination</p>
               <Label>Name</Label>
               <Input
                 value={destinationForm.name}
@@ -273,7 +319,7 @@ export function ItineraryLibraryPage() {
                     ?
                   </span>
                   <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 hidden w-72 -translate-x-1/2 rounded-md border bg-background p-2 text-xs font-normal leading-relaxed text-foreground shadow-md group-hover:block">
-                    Slug is used as a stable, URL-friendly identifier for filtering, linking, and API calls. It should stay lowercase with hyphens only.
+                    Slug is used as a stable, URL-friendly identifier for filtering, linking, and API calls. Keep it lowercase with hyphens only.
                     Examples: kandy, nuwara-eliya, arugam-bay.
                   </span>
                 </span>
@@ -314,57 +360,78 @@ export function ItineraryLibraryPage() {
               </div>
             </div>
 
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {destinations.map((destination) => (
-                  <TableRow
-                    key={destination.id}
-                    className={selectedDestinationId === destination.id ? 'bg-muted/50' : ''}
+            <div className="rounded-md border">
+              {destinations.map((destination) => (
+                <div
+                  key={destination.id}
+                  className={`flex items-center justify-between gap-2 border-b p-3 last:border-b-0 ${
+                    selectedDestinationId === destination.id ? 'bg-primary/5' : 'bg-background'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    className="flex-1 text-left"
+                    onClick={() => {
+                      setSelectedDestinationId(destination.id);
+                      setActivityPage(1);
+                    }}
                   >
-                    <TableCell
-                      className="cursor-pointer font-medium"
+                    <p className="font-medium">{destination.name}</p>
+                    <p className="text-xs text-muted-foreground">/{destination.slug}</p>
+                  </button>
+                  <div className="flex items-center gap-1">
+                    <Badge variant={destination.isActive ? 'secondary' : 'outline'}>
+                      {destination.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0"
+                      title={destination.isActive ? 'Deactivate destination' : 'Activate destination'}
+                      aria-label={destination.isActive ? 'Deactivate destination' : 'Activate destination'}
+                      onClick={() =>
+                        toggleDestinationStatus.mutate({
+                          destinationId: destination.id,
+                          isActive: !destination.isActive,
+                        })
+                      }
+                    >
+                      {destination.isActive ? (
+                        <PowerOff className="h-4 w-4" />
+                      ) : (
+                        <Power className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 w-8 p-0"
+                      title="Edit destination"
                       onClick={() => {
-                        setSelectedDestinationId(destination.id);
-                        setActivityPage(1);
+                        setDestinationEditingId(destination.id);
+                        setDestinationForm({
+                          name: destination.name,
+                          slug: destination.slug,
+                          isActive: destination.isActive,
+                        });
                       }}
                     >
-                      {destination.name}
-                    </TableCell>
-                    <TableCell>{destination.isActive ? 'Active' : 'Inactive'}</TableCell>
-                    <TableCell className="text-right space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setDestinationEditingId(destination.id);
-                          setDestinationForm({
-                            name: destination.name,
-                            slug: destination.slug,
-                            isActive: destination.isActive,
-                          });
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => removeDestination.mutate(destination.id)}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-8 w-8 p-0"
+                      title="Delete destination"
+                      onClick={() => removeDestination.mutate(destination.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
             <PaginationControls
               page={destinationPagination?.page ?? 1}
               totalPages={destinationPagination?.totalPages ?? 1}
@@ -378,26 +445,54 @@ export function ItineraryLibraryPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>
-              Activities {activeDestination ? `- ${activeDestination.name}` : ''}
-            </CardTitle>
+          <CardHeader className="space-y-2">
+            <CardTitle>Activities</CardTitle>
+            {activeDestination ? (
+              <div className="flex items-center justify-between">
+                <Badge variant="secondary">Selected: {activeDestination.name}</Badge>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedDestinationId('')}>Clear selection</Button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Select a destination from the left panel to manage activities.</p>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             {!selectedDestinationId ? (
-              <p className="text-sm text-muted-foreground">Select a destination to manage activities.</p>
+              <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Choose a destination to load and edit activities.
+              </div>
             ) : (
               <>
-                <Input
-                  placeholder="Search activities"
-                  value={activitySearch}
-                  onChange={(event) => {
-                    setActivitySearch(event.target.value);
-                    setActivityPage(1);
-                  }}
-                />
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <Input
+                    placeholder="Search activities"
+                    value={activitySearch}
+                    onChange={(event) => {
+                      setActivitySearch(event.target.value);
+                      setActivityPage(1);
+                    }}
+                  />
+                  <Select
+                    value={activityCategory}
+                    onValueChange={(value) => {
+                      setActivityCategory(value);
+                      setActivityPage(1);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All Categories</SelectItem>
+                      {categoryOptions.map((category) => (
+                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <div className="grid gap-2 rounded border p-3">
+                <div className="grid gap-2 rounded-lg border bg-muted/20 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Create or Edit Activity</p>
                   <Label>Title</Label>
                   <Input
                     value={activityForm.title}
@@ -461,6 +556,7 @@ export function ItineraryLibraryPage() {
                     <TableRow>
                       <TableHead>Title</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Description</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -469,10 +565,14 @@ export function ItineraryLibraryPage() {
                       <TableRow key={activity.id}>
                         <TableCell className="font-medium">{activity.title}</TableCell>
                         <TableCell>{activity.category}{activity.isSeasonal ? ' (Seasonal)' : ''}</TableCell>
-                        <TableCell className="text-right space-x-2">
+                        <TableCell className="max-w-[320px] truncate text-muted-foreground">{activity.description}</TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
                           <Button
                             size="sm"
                             variant="outline"
+                            className="h-8 w-8 p-0"
+                            title="Edit activity"
                             onClick={() => {
                               setActivityEditingId(activity.id);
                               setActivityForm({
@@ -483,20 +583,24 @@ export function ItineraryLibraryPage() {
                               });
                             }}
                           >
-                            Edit
+                            <Pencil className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
+                            className="h-8 w-8 p-0"
+                            title="Delete activity"
                             onClick={() => removeActivity.mutate(activity.id)}
                           >
-                            Delete
+                            <Trash2 className="h-4 w-4" />
                           </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
+
                 <PaginationControls
                   page={activityPagination?.page ?? 1}
                   totalPages={activityPagination?.totalPages ?? 1}
