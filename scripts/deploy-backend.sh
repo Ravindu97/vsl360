@@ -78,16 +78,8 @@ ls -la dist/index.js
 export NODE_ENV="${SAVED_NODE_ENV:-production}"
 
 echo "===== MIGRATE ====="
-DB_URL="${DATABASE_URL:-}"
-DB_URL_ALT="$(echo "$DB_URL" | sed 's/@localhost:/@127.0.0.1:/')"
-
-if DATABASE_URL="$DB_URL" npm_run exec -- prisma migrate deploy; then
-  echo "Migration done"
-elif [ "$DB_URL_ALT" != "$DB_URL" ] && DATABASE_URL="$DB_URL_ALT" npm_run exec -- prisma migrate deploy; then
-  echo "Migration done (127.0.0.1 fallback)"
-else
-  echo "FATAL: Migration failed"; exit 1
-fi
+npm_run exec -- prisma migrate deploy
+echo "Migration done"
 
 if [ "$RUN_SEED" = "seed" ]; then
   echo "===== SEED ====="
