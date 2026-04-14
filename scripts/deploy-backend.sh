@@ -52,6 +52,11 @@ fi
 
 echo "===== INSTALL ====="
 cd "$APP_ROOT"
+
+# NODE_ENV=production makes npm skip devDeps; override for install steps
+SAVED_NODE_ENV="${NODE_ENV:-}"
+export NODE_ENV=development
+
 npm_run install --ignore-scripts --no-audit --no-fund
 echo "Install done (postinstall scripts skipped)"
 
@@ -68,6 +73,9 @@ echo "Prisma client generated (engine downloaded)"
 echo "===== BUILD ====="
 npm_run run build
 ls -la dist/index.js
+
+# Restore NODE_ENV for runtime
+export NODE_ENV="${SAVED_NODE_ENV:-production}"
 
 echo "===== MIGRATE ====="
 DB_URL="${DATABASE_URL:-}"
