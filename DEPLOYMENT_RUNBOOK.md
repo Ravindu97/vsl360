@@ -467,8 +467,9 @@ The workflow uses SSH to connect to the server, pull the chosen branch on the se
 ### Required GitHub repository secrets
 
 - `CPANEL_HOST`: `91.204.209.39`
-- `CPANEL_SSH_USER`: `adminvisitsrilan`
-- `CPANEL_SSH_PASSWORD`: store in GitHub Secrets
+- `CPANEL_USER`: `adminvisitsrilan`
+- `CPANEL_SSH_KEY`: private SSH key for the deployment user
+- `CPANEL_SSH_PASSPHRASE`: passphrase for that private key, if the key is encrypted
 - `CPANEL_SSH_PORT`: `22`
 
 ### What the workflow can deploy
