@@ -17,4 +17,8 @@ export const env = {
   JWT_REFRESH_SECRET: getRequiredEnv('JWT_REFRESH_SECRET'),
   UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  CORS_ORIGINS: (process.env.CORS_ORIGINS || process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
 };
