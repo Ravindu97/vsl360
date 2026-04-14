@@ -50,6 +50,10 @@ else
   echo "WARNING: $ENV_FILE not found"
 fi
 
+# Force correct DB socket format regardless of env file
+export DATABASE_URL="postgresql://adminvisitsrilan_admin:1UT%5EW4OY5%7DP%7B%7D198@%2Ftmp/adminvisitsrilan_vsl360"
+export SHADOW_DATABASE_URL="postgresql://adminvisitsrilan_admin:1UT%5EW4OY5%7DP%7B%7D198@%2Ftmp/adminvisitsrilan_vsl360_shadow"
+
 echo "===== INSTALL ====="
 cd "$APP_ROOT"
 
