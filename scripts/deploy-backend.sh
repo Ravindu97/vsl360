@@ -82,6 +82,12 @@ echo "===== BUILD ====="
 npm_run run build
 ls -la dist/index.js
 
+# Copy non-TS assets that tsc doesn't handle
+echo "===== COPY TEMPLATES ====="
+mkdir -p dist/templates
+cp -r src/templates/*.hbs dist/templates/
+echo "Copied $(ls dist/templates/*.hbs | wc -l) template(s) to dist/templates/"
+
 # Restore NODE_ENV for runtime
 export NODE_ENV="${SAVED_NODE_ENV:-production}"
 
