@@ -88,7 +88,25 @@ npm run build
 
 echo "==> Prisma generate + migrate"
 npx prisma generate
-npx prisma migrate deploy
+
+retry_migrate() {
+  local max_attempts=5
+  local attempt=1
+
+  until npx prisma migrate deploy; do
+    if [[ "$attempt" -ge "$max_attempts" ]]; then
+      echo "ERROR: Prisma migrate deploy failed after ${max_attempts} attempts"
+      return 1
+    fi
+
+    local sleep_seconds=$((attempt * 10))
+    echo "Prisma migrate deploy failed (attempt ${attempt}/${max_attempts}); retrying in ${sleep_seconds}s..."
+    attempt=$((attempt + 1))
+    sleep "$sleep_seconds"
+  done
+}
+
+retry_migrate
 
 if [[ "$RUN_SEED" == "seed" ]]; then
   echo "==> Running seed"
