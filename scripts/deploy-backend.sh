@@ -122,7 +122,8 @@ git pull origin "$BRANCH"
 mkdir -p "$APP_ROOT/uploads/documents"
 
 echo "==> Syncing backend files to app root"
-find "$APP_ROOT" -mindepth 1 -maxdepth 1 ! -name uploads -exec rm -rf {} +
+# Preserve uploads during sync; node_modules handled separately in install step
+find "$APP_ROOT" -mindepth 1 -maxdepth 1 ! -name uploads ! -name node_modules -exec rm -rf {} +
 
 (
   cd "$REPO_ROOT/backend"
@@ -157,9 +158,30 @@ fi
 
 cd "$APP_ROOT"
 
-echo "==> Installing dependencies"
-rm -rf node_modules
-retry_cmd 3 8 npm_cmd install --omit=dev --no-audit --no-fund
+echo "==> Clean installing dependencies"
+# Backup node_modules so we can restore if install fails (keeps app running)
+if [[ -d node_modules ]]; then
+  mv node_modules node_modules_backup
+fi
+
+if retry_cmd 3 8 npm_cmd ci --omit=dev --no-audit --no-fund; then
+  echo "    Clean install succeeded"
+  rm -rf node_modules_backup
+else
+  echo "WARNING: npm ci failed, falling back to npm install"
+  rm -rf node_modules
+  if retry_cmd 3 8 npm_cmd install --omit=dev --no-audit --no-fund; then
+    echo "    npm install succeeded"
+    rm -rf node_modules_backup
+  else
+    echo "ERROR: npm install also failed; restoring previous node_modules"
+    rm -rf node_modules
+    if [[ -d node_modules_backup ]]; then
+      mv node_modules_backup node_modules
+    fi
+    exit 1
+  fi
+fi
 
 echo "==> Installing minimal build toolchain"
 retry_cmd 3 8 npm_cmd install --include=dev --no-save --no-audit --no-fund \
