@@ -12,7 +12,30 @@ ENV_FILE_FALLBACK="/home/adminvisitsrilan/vsl360-backend/.env.production"
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
 echo "==> Using Node: $(node -v)"
-echo "==> Using npm:  $(npm -v)"
+NPM_VERSION="$(npm -v 2>/dev/null || true)"
+if [[ -z "$NPM_VERSION" ]]; then
+  echo "==> Using npm: unavailable (will retry npm commands)"
+else
+  echo "==> Using npm:  $NPM_VERSION"
+fi
+
+retry_cmd() {
+  local max_attempts="$1"
+  local sleep_seconds="$2"
+  shift 2
+
+  local attempt=1
+  until "$@"; do
+    if [[ "$attempt" -ge "$max_attempts" ]]; then
+      echo "ERROR: Command failed after ${max_attempts} attempts: $*"
+      return 1
+    fi
+
+    echo "Command failed (attempt ${attempt}/${max_attempts}); retrying in ${sleep_seconds}s: $*"
+    attempt=$((attempt + 1))
+    sleep "$sleep_seconds"
+  done
+}
 
 if [[ ! -d "$REPO_ROOT/.git" ]]; then
   echo "ERROR: Repo not found at $REPO_ROOT"
@@ -69,10 +92,10 @@ cd "$APP_ROOT"
 
 echo "==> Installing dependencies"
 rm -rf node_modules
-npm install --omit=dev
+retry_cmd 3 8 npm install --omit=dev --no-audit --no-fund --loglevel=warn
 
 echo "==> Installing minimal build toolchain"
-npm install --include=dev --no-save \
+retry_cmd 3 8 npm install --include=dev --no-save --no-audit --no-fund --loglevel=warn \
   typescript \
   prisma \
   @types/node \
@@ -84,7 +107,7 @@ npm install --include=dev --no-save \
   @types/multer
 
 echo "==> Building"
-npm run build
+retry_cmd 2 5 npm run build
 
 echo "==> Prisma generate + migrate"
 npx prisma generate
