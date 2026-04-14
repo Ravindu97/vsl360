@@ -125,7 +125,7 @@ If deployment fails:
 ```bash
 ssh adminvisitsrilan@91.204.209.39
 cd /home/adminvisitsrilan/vsl360-backend
-cp -r dist.bak dist 2>/dev/null && npm ci && sudo systemctl restart vsl360
+cp -r dist.bak dist 2>/dev/null && PUPPETEER_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --omit=dev --no-audit --no-fund && sudo systemctl restart vsl360
 ```
 
 For full setup details, see [`.github/DEPLOYMENT_SECRETS.md`](.github/DEPLOYMENT_SECRETS.md)
@@ -186,7 +186,7 @@ source "$ENV_FILE"
 set +a
 
 cd "$APP_ROOT"
-npm install
+PUPPETEER_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --omit=dev --no-audit --no-fund --prefer-offline
 npm run build
 npx prisma generate
 npx prisma migrate deploy
