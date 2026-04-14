@@ -1,268 +1,170 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
-# ============================================================================
+# ==========================================================================
 # VSL360 Backend Deploy Script
-# Usage: deploy-backend.sh [branch] [seed]
-# ============================================================================
+# Usage: bash deploy-backend.sh [branch] [seed]
+# ==========================================================================
+
+set -e
 
 BRANCH="${1:-make-ready-for-depployment}"
 RUN_SEED="${2:-no-seed}"
 
 REPO_ROOT="/home/adminvisitsrilan/repositories/vsl360"
 APP_ROOT="/home/adminvisitsrilan/vsl360-backend"
-ENV_FILE_PRIMARY="/home/adminvisitsrilan/.config/vsl360/backend.env"
+ENV_FILE="/home/adminvisitsrilan/.config/vsl360/backend.env"
 ENV_FILE_FALLBACK="/home/adminvisitsrilan/vsl360-backend/.env.production"
 
-# --- Logging helpers --------------------------------------------------------
-step()  { echo ""; echo "=== STEP: $* ==="; }
-info()  { echo "    [INFO]  $*"; }
-warn()  { echo "    [WARN]  $*"; }
-fail()  { echo "    [ERROR] $*"; exit 1; }
-
-# --- Trap: print context on any unexpected failure --------------------------
-trap 'echo ""; echo "!!! DEPLOY FAILED at line $LINENO (exit code $?) !!!"; echo "!!! Last command: $BASH_COMMAND !!!"' ERR
-
-# ============================================================================
-# 1. Resolve Node.js & npm
-# ============================================================================
-step "Resolving Node.js and npm"
+# --------------------------------------------------------------------------
+# 1. Setup Node.js and npm
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 1. SETUP NODE & NPM ====="
 
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
-NODE_BIN="$(command -v node || true)"
-if [[ -z "$NODE_BIN" ]]; then
-  fail "node not found in PATH"
+NODE_BIN="$(command -v node 2>/dev/null || true)"
+if [ -z "$NODE_BIN" ]; then
+  echo "FATAL: node not found in PATH"
+  echo "PATH=$PATH"
+  exit 1
 fi
-info "Node binary: $NODE_BIN"
-info "Node version: $(node -v)"
+echo "Node: $NODE_BIN ($(node -v))"
 
-# Check if native npm works (the binary may core-dump on broken servers)
-# We must disable set -e for this probe since the crash returns non-zero
-NPM_NATIVE_OK=false
-if command -v npm &>/dev/null; then
-  set +e
-  npm -v >/dev/null 2>&1
-  npm_exit=$?
-  set -e
-  if [[ "$npm_exit" -eq 0 ]]; then
-    NPM_NATIVE_OK=true
-    info "Native npm works: $(npm -v)"
-  else
-    warn "Native npm binary crashed (exit $npm_exit) — will use node-direct fallback"
+# Always use node to invoke npm-cli.js directly.
+# The native npm binary on this cPanel server is broken (core dumps).
+NPM_CLI=""
+for p in \
+  "/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js" \
+  "/opt/alt/alt-nodejs20/root/usr/lib64/node_modules/npm/bin/npm-cli.js" \
+  "$(dirname "$(dirname "$NODE_BIN")")/lib/node_modules/npm/bin/npm-cli.js"
+do
+  if [ -f "$p" ]; then
+    NPM_CLI="$p"
+    break
   fi
-else
-  warn "npm binary not found in PATH"
-fi
+done
 
-# If native npm is broken, find npm-cli.js and invoke via node
-NPM_CLI_JS=""
-NPX_CLI_JS=""
-if [[ "$NPM_NATIVE_OK" == "false" ]]; then
-  NODE_PREFIX="$(dirname "$(dirname "$NODE_BIN")")"
-
-  for candidate in \
-    "$NODE_PREFIX/lib/node_modules/npm/bin/npm-cli.js" \
-    "$NODE_PREFIX/lib64/node_modules/npm/bin/npm-cli.js" \
-    "/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js" \
-    "/opt/alt/alt-nodejs20/root/usr/lib64/node_modules/npm/bin/npm-cli.js"
-  do
-    if [[ -f "$candidate" ]]; then
-      NPM_CLI_JS="$candidate"
-      break
-    fi
-  done
-
-  # Last resort: ask node to resolve it
-  if [[ -z "$NPM_CLI_JS" ]]; then
-    set +e
-    NPM_CLI_JS="$(node -e 'try{console.log(require.resolve("npm/bin/npm-cli"))}catch(e){process.exit(1)}' 2>/dev/null)"
-    set -e
-  fi
-
-  if [[ -z "$NPM_CLI_JS" || ! -f "$NPM_CLI_JS" ]]; then
-    warn "Could not auto-discover npm-cli.js. Searching filesystem..."
-    find /opt/alt -name 'npm-cli.js' -type f 2>/dev/null | head -5 || true
-    fail "npm-cli.js not found — cannot proceed without a working npm"
-  fi
-
-  info "Using npm-cli.js: $NPM_CLI_JS"
-
-  # Find npx entry point
-  NPM_DIR="$(dirname "$NPM_CLI_JS")"
-  for npx_candidate in "$NPM_DIR/npx-cli-entry.js" "$NPM_DIR/npx-cli.cjs"; do
-    if [[ -f "$npx_candidate" ]]; then
-      NPX_CLI_JS="$npx_candidate"
-      break
-    fi
-  done
-  [[ -n "$NPX_CLI_JS" ]] && info "Using npx entry: $NPX_CLI_JS" || info "npx entry not found; will use 'npm exec' fallback"
-
-  # Verify the fallback actually works
-  set +e
-  node "$NPM_CLI_JS" -v >/dev/null 2>&1
-  verify_exit=$?
-  set -e
-  if [[ "$verify_exit" -ne 0 ]]; then
-    fail "node $NPM_CLI_JS -v also failed (exit $verify_exit) — npm is completely broken on this server"
-  fi
-  info "npm (via node) version: $(node "$NPM_CLI_JS" -v)"
+if [ -z "$NPM_CLI" ]; then
+  echo "npm-cli.js not at known paths, searching filesystem..."
+  NPM_CLI="$(find /opt/alt -name 'npm-cli.js' -type f 2>/dev/null | head -1)"
 fi
 
-# Wrapper functions
-npm_cmd() {
-  if [[ "$NPM_NATIVE_OK" == "true" ]]; then
-    npm "$@"
-  else
-    node "$NPM_CLI_JS" "$@"
-  fi
-}
-
-npx_cmd() {
-  if [[ "$NPM_NATIVE_OK" == "true" ]]; then
-    npx "$@"
-  elif [[ -n "$NPX_CLI_JS" ]]; then
-    node "$NPX_CLI_JS" "$@"
-  else
-    node "$NPM_CLI_JS" exec -- "$@"
-  fi
-}
-
-retry_cmd() {
-  local max_attempts="$1"
-  local sleep_seconds="$2"
-  shift 2
-  local attempt=1
-
-  until "$@"; do
-    if [[ "$attempt" -ge "$max_attempts" ]]; then
-      warn "Command failed after ${max_attempts} attempts: $*"
-      return 1
-    fi
-    info "Attempt ${attempt}/${max_attempts} failed; retrying in ${sleep_seconds}s..."
-    attempt=$((attempt + 1))
-    sleep "$sleep_seconds"
-  done
-}
-
-# ============================================================================
-# 2. Update source from Git
-# ============================================================================
-step "Updating source from Git"
-
-if [[ ! -d "$REPO_ROOT/.git" ]]; then
-  fail "Repo not found at $REPO_ROOT"
+if [ -z "$NPM_CLI" ] || [ ! -f "$NPM_CLI" ]; then
+  echo "FATAL: Cannot find npm-cli.js"
+  echo "Searched: /opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js"
+  echo "Also ran: find /opt/alt -name npm-cli.js"
+  exit 1
 fi
+
+echo "npm-cli.js: $NPM_CLI"
+echo "npm version: $(node "$NPM_CLI" -v)"
+
+# --------------------------------------------------------------------------
+# 2. Pull latest code
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 2. PULL LATEST CODE ====="
 
 cd "$REPO_ROOT"
-if [[ -n "$(git status --porcelain)" ]]; then
-  info "Stashing local changes"
-  git stash push --include-untracked -m "backend-deploy-auto-stash-$(date +%Y%m%d-%H%M%S)" >/dev/null || true
-fi
-
+git stash push --include-untracked -m "backend-deploy-$(date +%s)" 2>/dev/null || true
 git fetch origin
-git checkout "$BRANCH"
+git checkout "$BRANCH" 2>/dev/null || true
 git pull origin "$BRANCH"
-info "HEAD is now $(git rev-parse --short HEAD)"
+echo "HEAD: $(git rev-parse --short HEAD)"
 
-# ============================================================================
-# 3. Sync files to app root
-# ============================================================================
-step "Syncing backend files to $APP_ROOT"
+# --------------------------------------------------------------------------
+# 3. Sync backend files to app root
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 3. SYNC FILES ====="
 
 mkdir -p "$APP_ROOT/uploads/documents"
 
-# Remove everything except uploads and node_modules (which is handled in install step)
-find "$APP_ROOT" -mindepth 1 -maxdepth 1 ! -name uploads ! -name node_modules ! -name node_modules_backup -exec rm -rf {} +
+# Remove everything except uploads and node_modules
+find "$APP_ROOT" -mindepth 1 -maxdepth 1 \
+  ! -name uploads \
+  ! -name node_modules \
+  ! -name node_modules_backup \
+  -exec rm -rf {} +
 
-(
-  cd "$REPO_ROOT/backend"
-  tar -cf - \
-    --exclude=node_modules \
-    --exclude=.git \
-    --exclude=.env \
-    --exclude=.env.production \
-    --exclude=uploads \
-    .
-) | (
-  cd "$APP_ROOT"
-  tar -xf -
-)
-info "Files synced"
+# Copy backend source (excluding things we don't want)
+tar -cf - \
+  -C "$REPO_ROOT/backend" \
+  --exclude=node_modules \
+  --exclude=.git \
+  --exclude=.env \
+  --exclude=.env.production \
+  --exclude=uploads \
+  . | tar -xf - -C "$APP_ROOT"
 
-# ============================================================================
+echo "Files synced to $APP_ROOT"
+
+# --------------------------------------------------------------------------
 # 4. Load environment
-# ============================================================================
-step "Loading environment"
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 4. LOAD ENVIRONMENT ====="
 
-ENV_FILE=""
-if [[ -f "$ENV_FILE_PRIMARY" ]]; then
-  ENV_FILE="$ENV_FILE_PRIMARY"
-elif [[ -f "$ENV_FILE_FALLBACK" ]]; then
-  ENV_FILE="$ENV_FILE_FALLBACK"
+ACTIVE_ENV=""
+if [ -f "$ENV_FILE" ]; then
+  ACTIVE_ENV="$ENV_FILE"
+elif [ -f "$ENV_FILE_FALLBACK" ]; then
+  ACTIVE_ENV="$ENV_FILE_FALLBACK"
 fi
 
-if [[ -n "$ENV_FILE" ]]; then
-  info "Sourcing $ENV_FILE"
+if [ -n "$ACTIVE_ENV" ]; then
+  echo "Sourcing: $ACTIVE_ENV"
   set -a
-  # shellcheck disable=SC1090
-  source "$ENV_FILE"
+  . "$ACTIVE_ENV"
   set +a
 else
-  warn "No env file found — Prisma steps may fail"
+  echo "WARNING: No env file found, Prisma may fail"
 fi
 
-# ============================================================================
-# 5. Install dependencies (clean install with safe rollback)
-# ============================================================================
-step "Installing production dependencies"
+# --------------------------------------------------------------------------
+# 5. Clean install dependencies
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 5. INSTALL DEPENDENCIES ====="
 
 cd "$APP_ROOT"
 
-# Backup existing node_modules so we can restore if install fails
-if [[ -d node_modules ]]; then
-  info "Backing up existing node_modules"
+# Backup existing node_modules (restore on failure so the app stays up)
+if [ -d node_modules ]; then
+  echo "Backing up existing node_modules..."
   rm -rf node_modules_backup
   mv node_modules node_modules_backup
 fi
 
-install_ok=false
-
-# Try 1: npm ci (deterministic clean install from lockfile)
-info "Attempting npm ci..."
-if retry_cmd 3 8 npm_cmd ci --omit=dev --no-audit --no-fund; then
-  info "npm ci succeeded"
-  install_ok=true
-else
-  warn "npm ci failed — falling back to npm install"
-  rm -rf node_modules
-
-  # Try 2: npm install
-  info "Attempting npm install..."
-  if retry_cmd 3 8 npm_cmd install --omit=dev --no-audit --no-fund; then
-    info "npm install succeeded"
-    install_ok=true
-  fi
-fi
-
-if [[ "$install_ok" == "true" ]]; then
+echo "Running: npm ci --omit=dev"
+if node "$NPM_CLI" ci --omit=dev --no-audit --no-fund 2>&1; then
+  echo "npm ci succeeded"
   rm -rf node_modules_backup
 else
-  warn "All install attempts failed — restoring previous node_modules"
+  echo "npm ci failed, trying npm install..."
   rm -rf node_modules
-  if [[ -d node_modules_backup ]]; then
-    mv node_modules_backup node_modules
-    warn "Restored backup. App may still run with old deps."
+  if node "$NPM_CLI" install --omit=dev --no-audit --no-fund 2>&1; then
+    echo "npm install succeeded"
+    rm -rf node_modules_backup
+  else
+    echo "FATAL: npm install failed"
+    rm -rf node_modules
+    if [ -d node_modules_backup ]; then
+      echo "Restoring previous node_modules..."
+      mv node_modules_backup node_modules
+    fi
+    exit 1
   fi
-  fail "Could not install dependencies"
 fi
 
-# ============================================================================
-# 6. Install build toolchain & build
-# ============================================================================
-step "Installing build toolchain"
+# --------------------------------------------------------------------------
+# 6. Install build tools & compile
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 6. BUILD ====="
 
-retry_cmd 3 8 npm_cmd install --include=dev --no-save --no-audit --no-fund \
+echo "Installing build toolchain..."
+node "$NPM_CLI" install --include=dev --no-save --no-audit --no-fund \
   typescript \
   prisma \
   @types/node \
@@ -271,89 +173,85 @@ retry_cmd 3 8 npm_cmd install --include=dev --no-save --no-audit --no-fund \
   @types/cookie-parser \
   @types/bcrypt \
   @types/jsonwebtoken \
-  @types/multer
+  @types/multer 2>&1
 
-step "Compiling TypeScript"
+echo "Compiling TypeScript..."
+node "$NPM_CLI" run build 2>&1
+echo "Build output:"
+ls -la dist/index.js 2>/dev/null || echo "WARNING: dist/index.js not found!"
 
-retry_cmd 2 5 npm_cmd run build
-info "Build output: $(ls -1 dist/ | head -5) ..."
-
-# ============================================================================
+# --------------------------------------------------------------------------
 # 7. Prisma generate + migrate
-# ============================================================================
-step "Running Prisma generate"
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 7. DATABASE ====="
 
-npx_cmd prisma generate
+echo "Running prisma generate..."
+node "$NPM_CLI" exec -- prisma generate 2>&1
 
-step "Checking database connectivity"
-
-DB_URL_PRIMARY="${DATABASE_URL:-}"
-DB_URL_FALLBACK="$DB_URL_PRIMARY"
-if [[ "$DB_URL_PRIMARY" == *"@localhost:"* ]]; then
-  DB_URL_FALLBACK="${DB_URL_PRIMARY/@localhost:/@127.0.0.1:}"
+# Determine the active database URL
+DB_URL="${DATABASE_URL:-}"
+if echo "$DB_URL" | grep -q '@localhost:'; then
+  DB_URL_FALLBACK="$(echo "$DB_URL" | sed 's/@localhost:/@127.0.0.1:/')"
+else
+  DB_URL_FALLBACK="$DB_URL"
 fi
 
-db_ready_check() {
-  local db_url="$1"
-  local max_attempts=6
-  local attempt=1
+echo "Running prisma migrate deploy..."
+attempt=1
+max_attempts=5
+migrate_done=false
+while [ "$attempt" -le "$max_attempts" ]; do
+  if DATABASE_URL="$DB_URL" node "$NPM_CLI" exec -- prisma migrate deploy 2>&1; then
+    echo "Migration succeeded"
+    migrate_done=true
+    break
+  fi
 
-  until psql "$db_url" -c "select 1;" >/dev/null 2>&1; do
-    if [[ "$attempt" -ge "$max_attempts" ]]; then
-      return 1
+  # Try fallback URL on first failure
+  if [ "$attempt" -eq 1 ] && [ "$DB_URL_FALLBACK" != "$DB_URL" ]; then
+    echo "Trying 127.0.0.1 instead of localhost..."
+    if DATABASE_URL="$DB_URL_FALLBACK" node "$NPM_CLI" exec -- prisma migrate deploy 2>&1; then
+      echo "Migration succeeded with 127.0.0.1"
+      migrate_done=true
+      break
     fi
-    local sleep_seconds=$((attempt * 5))
-    info "DB not ready (attempt ${attempt}/${max_attempts}); retrying in ${sleep_seconds}s..."
-    attempt=$((attempt + 1))
-    sleep "$sleep_seconds"
-  done
-  return 0
-}
-
-ACTIVE_DATABASE_URL="$DB_URL_PRIMARY"
-if ! db_ready_check "$ACTIVE_DATABASE_URL"; then
-  if [[ "$DB_URL_FALLBACK" != "$DB_URL_PRIMARY" ]] && db_ready_check "$DB_URL_FALLBACK"; then
-    info "Using 127.0.0.1 fallback (localhost was unreachable)"
-    ACTIVE_DATABASE_URL="$DB_URL_FALLBACK"
-  else
-    fail "Database unreachable on both localhost and 127.0.0.1"
   fi
-fi
 
-step "Running Prisma migrations"
-
-migrate_attempt=1
-migrate_max=5
-until DATABASE_URL="$ACTIVE_DATABASE_URL" npx_cmd prisma migrate deploy; do
-  if [[ "$migrate_attempt" -ge "$migrate_max" ]]; then
-    fail "Prisma migrate deploy failed after ${migrate_max} attempts"
+  if [ "$attempt" -ge "$max_attempts" ]; then
+    echo "FATAL: Migration failed after $max_attempts attempts"
+    exit 1
   fi
-  sleep_seconds=$((migrate_attempt * 10))
-  info "Migration failed (attempt ${migrate_attempt}/${migrate_max}); retrying in ${sleep_seconds}s..."
-  migrate_attempt=$((migrate_attempt + 1))
-  sleep "$sleep_seconds"
+
+  sleep_time=$((attempt * 10))
+  echo "Migration attempt $attempt/$max_attempts failed, retrying in ${sleep_time}s..."
+  attempt=$((attempt + 1))
+  sleep "$sleep_time"
 done
 
-# ============================================================================
+# --------------------------------------------------------------------------
 # 8. Optional seed
-# ============================================================================
-if [[ "$RUN_SEED" == "seed" ]]; then
-  step "Running database seed"
-  npm_cmd run db:seed
+# --------------------------------------------------------------------------
+if [ "$RUN_SEED" = "seed" ]; then
+  echo ""
+  echo "===== 8. SEED DATABASE ====="
+  node "$NPM_CLI" run db:seed 2>&1
 fi
 
-# ============================================================================
-# 9. Restart app
-# ============================================================================
-step "Restarting application"
+# --------------------------------------------------------------------------
+# 9. Restart application
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 9. RESTART APP ====="
 
 mkdir -p "$APP_ROOT/tmp"
 touch "$APP_ROOT/tmp/restart.txt"
+echo "Touched restart.txt"
 
 echo ""
-echo "============================================"
-echo "  DEPLOY COMPLETED SUCCESSFULLY"
+echo "========================================"
+echo "  BACKEND DEPLOY COMPLETE"
 echo "  Branch: $BRANCH"
 echo "  Commit: $(cd "$REPO_ROOT" && git rev-parse --short HEAD)"
 echo "  Time:   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-echo "============================================"
+echo "========================================"

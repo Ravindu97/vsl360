@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
-# ============================================================================
+# ==========================================================================
 # VSL360 Frontend Deploy Script
-# Usage: deploy-frontend.sh [branch]
-# ============================================================================
+# Usage: bash deploy-frontend.sh [branch]
+# ==========================================================================
+
+set -e
 
 BRANCH="${1:-make-ready-for-depployment}"
 
@@ -12,109 +12,87 @@ REPO_ROOT="/home/adminvisitsrilan/repositories/vsl360"
 FRONTEND_ROOT="$REPO_ROOT/frontend"
 PUBLIC_ROOT="/home/adminvisitsrilan/public_html"
 
-# --- Logging helpers --------------------------------------------------------
-step()  { echo ""; echo "=== STEP: $* ==="; }
-info()  { echo "    [INFO]  $*"; }
-warn()  { echo "    [WARN]  $*"; }
-fail()  { echo "    [ERROR] $*"; exit 1; }
-
-trap 'echo ""; echo "!!! DEPLOY FAILED at line $LINENO (exit code $?) !!!"; echo "!!! Last command: $BASH_COMMAND !!!"' ERR
-
-# ============================================================================
-# 1. Resolve Node.js & npm
-# ============================================================================
-step "Resolving Node.js and npm"
+# --------------------------------------------------------------------------
+# 1. Setup Node.js and npm
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 1. SETUP NODE & NPM ====="
 
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
-NODE_BIN="$(command -v node || true)"
-[[ -z "$NODE_BIN" ]] && fail "node not found in PATH"
-info "Node: $(node -v)"
+NODE_BIN="$(command -v node 2>/dev/null || true)"
+if [ -z "$NODE_BIN" ]; then
+  echo "FATAL: node not found in PATH"
+  exit 1
+fi
+echo "Node: $NODE_BIN ($(node -v))"
 
-NPM_NATIVE_OK=false
-if command -v npm &>/dev/null; then
-  set +e
-  npm -v >/dev/null 2>&1
-  npm_exit=$?
-  set -e
-  if [[ "$npm_exit" -eq 0 ]]; then
-    NPM_NATIVE_OK=true
-    info "npm: $(npm -v)"
-  else
-    warn "Native npm binary crashed (exit $npm_exit)"
+# Always use node to invoke npm-cli.js directly.
+NPM_CLI=""
+for p in \
+  "/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js" \
+  "/opt/alt/alt-nodejs20/root/usr/lib64/node_modules/npm/bin/npm-cli.js" \
+  "$(dirname "$(dirname "$NODE_BIN")")/lib/node_modules/npm/bin/npm-cli.js"
+do
+  if [ -f "$p" ]; then
+    NPM_CLI="$p"
+    break
   fi
+done
+
+if [ -z "$NPM_CLI" ]; then
+  NPM_CLI="$(find /opt/alt -name 'npm-cli.js' -type f 2>/dev/null | head -1)"
 fi
 
-NPM_CLI_JS=""
-if [[ "$NPM_NATIVE_OK" == "false" ]]; then
-  NODE_PREFIX="$(dirname "$(dirname "$NODE_BIN")")"
-  for candidate in \
-    "$NODE_PREFIX/lib/node_modules/npm/bin/npm-cli.js" \
-    "$NODE_PREFIX/lib64/node_modules/npm/bin/npm-cli.js" \
-    "/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js" \
-    "/opt/alt/alt-nodejs20/root/usr/lib64/node_modules/npm/bin/npm-cli.js"
-  do
-    if [[ -f "$candidate" ]]; then
-      NPM_CLI_JS="$candidate"
-      break
-    fi
-  done
-
-  if [[ -z "$NPM_CLI_JS" || ! -f "$NPM_CLI_JS" ]]; then
-    find /opt/alt -name 'npm-cli.js' -type f 2>/dev/null | head -5 || true
-    fail "npm-cli.js not found"
-  fi
-
-  set +e
-  node "$NPM_CLI_JS" -v >/dev/null 2>&1
-  verify_exit=$?
-  set -e
-  [[ "$verify_exit" -ne 0 ]] && fail "node $NPM_CLI_JS also failed"
-  info "npm (via node): $(node "$NPM_CLI_JS" -v)"
+if [ -z "$NPM_CLI" ] || [ ! -f "$NPM_CLI" ]; then
+  echo "FATAL: Cannot find npm-cli.js"
+  exit 1
 fi
 
-npm_cmd() {
-  if [[ "$NPM_NATIVE_OK" == "true" ]]; then
-    npm "$@"
-  else
-    node "$NPM_CLI_JS" "$@"
-  fi
-}
+echo "npm-cli.js: $NPM_CLI"
+echo "npm version: $(node "$NPM_CLI" -v)"
 
-# ============================================================================
-# 2. Update source from Git
-# ============================================================================
-step "Updating source from Git"
-
-[[ ! -d "$REPO_ROOT/.git" ]] && fail "Repo not found at $REPO_ROOT"
+# --------------------------------------------------------------------------
+# 2. Pull latest code
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 2. PULL LATEST CODE ====="
 
 cd "$REPO_ROOT"
-if [[ -n "$(git status --porcelain)" ]]; then
-  info "Stashing local changes"
-  git stash push --include-untracked -m "frontend-deploy-auto-stash-$(date +%Y%m%d-%H%M%S)" >/dev/null || true
-fi
+git stash push --include-untracked -m "frontend-deploy-$(date +%s)" 2>/dev/null || true
 git fetch origin
-git checkout "$BRANCH"
+git checkout "$BRANCH" 2>/dev/null || true
 git pull origin "$BRANCH"
-info "HEAD is now $(git rev-parse --short HEAD)"
+echo "HEAD: $(git rev-parse --short HEAD)"
 
-# ============================================================================
+# --------------------------------------------------------------------------
 # 3. Install & Build
-# ============================================================================
-step "Installing dependencies"
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 3. INSTALL DEPENDENCIES ====="
 
 cd "$FRONTEND_ROOT"
-npm_cmd ci --no-audit --no-fund || npm_cmd install --no-audit --no-fund
 
-step "Building frontend"
+echo "Running: npm ci"
+if node "$NPM_CLI" ci --no-audit --no-fund 2>&1; then
+  echo "npm ci succeeded"
+else
+  echo "npm ci failed, trying npm install..."
+  node "$NPM_CLI" install --no-audit --no-fund 2>&1
+fi
 
-npm_cmd run build
-info "Build output: $(ls dist/ | head -5) ..."
+echo ""
+echo "===== 4. BUILD ====="
 
-# ============================================================================
+node "$NPM_CLI" run build 2>&1
+echo "Build output:"
+ls dist/ | head -10
+
+# --------------------------------------------------------------------------
 # 4. Deploy to public_html
-# ============================================================================
-step "Syncing dist to $PUBLIC_ROOT"
+# --------------------------------------------------------------------------
+echo ""
+echo "===== 5. DEPLOY TO PUBLIC_HTML ====="
 
 find "$PUBLIC_ROOT" -mindepth 1 -maxdepth 1 \
   ! -name '.well-known' \
@@ -124,9 +102,9 @@ find "$PUBLIC_ROOT" -mindepth 1 -maxdepth 1 \
 cp -R dist/. "$PUBLIC_ROOT/"
 
 echo ""
-echo "============================================"
-echo "  FRONTEND DEPLOY COMPLETED SUCCESSFULLY"
+echo "========================================"
+echo "  FRONTEND DEPLOY COMPLETE"
 echo "  Branch: $BRANCH"
 echo "  Commit: $(cd "$REPO_ROOT" && git rev-parse --short HEAD)"
 echo "  Time:   $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-echo "============================================"
+echo "========================================"
