@@ -78,6 +78,9 @@ echo "===== PRISMA GENERATE ====="
 npm_run exec -- prisma generate
 echo "Prisma client generated (engine downloaded)"
 
+echo "===== PUPPETEER BROWSER ====="
+npm_run exec -- puppeteer browsers install chrome 2>&1 || echo "Puppeteer browser install warning"
+
 echo "===== BUILD ====="
 npm_run run build
 ls -la dist/index.js
