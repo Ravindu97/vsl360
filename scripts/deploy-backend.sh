@@ -11,12 +11,46 @@ ENV_FILE_FALLBACK="/home/adminvisitsrilan/vsl360-backend/.env.production"
 
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
+# --- npm wrapper: bypass broken npm binary by invoking via node directly ---
+NPM_CLI_JS="/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js"
+NPX_CLI_JS="/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npx-cli-entry.js"
+
+# Detect once whether the native npm binary works
+NPM_NATIVE_OK=false
+if command -v npm &>/dev/null && npm -v &>/dev/null; then
+  NPM_NATIVE_OK=true
+fi
+
+npm_cmd() {
+  if [[ "$NPM_NATIVE_OK" == "true" ]]; then
+    npm "$@"
+  elif [[ -f "$NPM_CLI_JS" ]]; then
+    node "$NPM_CLI_JS" "$@"
+  else
+    echo "ERROR: npm is broken and npm-cli.js not found at $NPM_CLI_JS"
+    return 1
+  fi
+}
+
+npx_cmd() {
+  if [[ "$NPM_NATIVE_OK" == "true" ]]; then
+    npx "$@"
+  elif [[ -f "$NPX_CLI_JS" ]]; then
+    node "$NPX_CLI_JS" "$@"
+  elif [[ -f "$NPM_CLI_JS" ]]; then
+    node "$NPM_CLI_JS" exec -- "$@"
+  else
+    echo "ERROR: npx is broken and cli entry not found"
+    return 1
+  fi
+}
+
 echo "==> Using Node: $(node -v)"
-NPM_VERSION="$(npm -v 2>/dev/null || true)"
+NPM_VERSION="$(npm_cmd -v 2>/dev/null || true)"
 if [[ -z "$NPM_VERSION" ]]; then
-  echo "==> Using npm: unavailable (will retry npm commands)"
+  echo "==> Using npm: unavailable"
 else
-  echo "==> Using npm:  $NPM_VERSION"
+  echo "==> Using npm: $NPM_VERSION"
 fi
 
 retry_cmd() {
@@ -92,10 +126,10 @@ cd "$APP_ROOT"
 
 echo "==> Installing dependencies"
 rm -rf node_modules
-retry_cmd 3 8 npm install --omit=dev --no-audit --no-fund --loglevel=warn
+retry_cmd 3 8 npm_cmd install --omit=dev --no-audit --no-fund --loglevel=warn
 
 echo "==> Installing minimal build toolchain"
-retry_cmd 3 8 npm install --include=dev --no-save --no-audit --no-fund --loglevel=warn \
+retry_cmd 3 8 npm_cmd install --include=dev --no-save --no-audit --no-fund --loglevel=warn \
   typescript \
   prisma \
   @types/node \
@@ -107,10 +141,10 @@ retry_cmd 3 8 npm install --include=dev --no-save --no-audit --no-fund --logleve
   @types/multer
 
 echo "==> Building"
-retry_cmd 2 5 npm run build
+retry_cmd 2 5 npm_cmd run build
 
 echo "==> Prisma generate + migrate"
-npx prisma generate
+npx_cmd prisma generate
 
 DB_URL_PRIMARY="${DATABASE_URL:-}"
 DB_URL_FALLBACK="$DB_URL_PRIMARY"
@@ -152,7 +186,7 @@ retry_migrate() {
   local max_attempts=5
   local attempt=1
 
-  until DATABASE_URL="$ACTIVE_DATABASE_URL" npx prisma migrate deploy; do
+  until DATABASE_URL="$ACTIVE_DATABASE_URL" npx_cmd prisma migrate deploy; do
     if [[ "$attempt" -ge "$max_attempts" ]]; then
       echo "ERROR: Prisma migrate deploy failed after ${max_attempts} attempts"
       return 1
@@ -169,7 +203,7 @@ retry_migrate
 
 if [[ "$RUN_SEED" == "seed" ]]; then
   echo "==> Running seed"
-  npm run db:seed
+  npm_cmd run db:seed
 fi
 
 mkdir -p "$APP_ROOT/tmp"

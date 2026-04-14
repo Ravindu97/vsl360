@@ -9,8 +9,33 @@ PUBLIC_ROOT="/home/adminvisitsrilan/public_html"
 
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
+# --- npm wrapper: bypass broken npm binary by invoking via node directly ---
+NPM_CLI_JS="/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js"
+
+# Detect once whether the native npm binary works
+NPM_NATIVE_OK=false
+if command -v npm &>/dev/null && npm -v &>/dev/null; then
+  NPM_NATIVE_OK=true
+fi
+
+npm_cmd() {
+  if [[ "$NPM_NATIVE_OK" == "true" ]]; then
+    npm "$@"
+  elif [[ -f "$NPM_CLI_JS" ]]; then
+    node "$NPM_CLI_JS" "$@"
+  else
+    echo "ERROR: npm is broken and npm-cli.js not found at $NPM_CLI_JS"
+    return 1
+  fi
+}
+
 echo "==> Using Node: $(node -v)"
-echo "==> Using npm:  $(npm -v)"
+NPM_VERSION="$(npm_cmd -v 2>/dev/null || true)"
+if [[ -z "$NPM_VERSION" ]]; then
+  echo "==> Using npm: unavailable"
+else
+  echo "==> Using npm: $NPM_VERSION"
+fi
 
 if [[ ! -d "$REPO_ROOT/.git" ]]; then
   echo "ERROR: Repo not found at $REPO_ROOT"
@@ -30,10 +55,10 @@ git pull origin "$BRANCH"
 cd "$FRONTEND_ROOT"
 
 echo "==> Installing dependencies"
-npm install
+npm_cmd install
 
 echo "==> Building frontend"
-npm run build
+npm_cmd run build
 
 echo "==> Syncing dist to public_html"
 find "$PUBLIC_ROOT" -mindepth 1 -maxdepth 1 \
