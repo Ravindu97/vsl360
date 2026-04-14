@@ -11,7 +11,6 @@ import type {
   PaginatedResponse,
   ItineraryActivity,
   ItineraryDestination,
-  PaginatedResponse,
 } from '@/types';
 
 // Client (Main Guest)

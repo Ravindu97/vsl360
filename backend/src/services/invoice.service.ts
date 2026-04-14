@@ -50,9 +50,9 @@ export class InvoiceService {
     const existing = await prisma.invoice.findUnique({ where: { bookingId } });
     if (!existing) throw new Error('Invoice not found');
 
-    const totalAmount = data.totalAmount ?? existing.totalAmount;
-    const advancePaid = data.advancePaid ?? existing.advancePaid;
-    const balanceAmount = data.balanceAmount ?? existing.balanceAmount;
+    const totalAmount = Number(data.totalAmount ?? existing.totalAmount);
+    const advancePaid = Number(data.advancePaid ?? existing.advancePaid);
+    const balanceAmount = Number(data.balanceAmount ?? existing.balanceAmount);
 
     this.validateFinancials(totalAmount, advancePaid, balanceAmount);
 

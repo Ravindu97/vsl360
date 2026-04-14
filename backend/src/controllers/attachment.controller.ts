@@ -6,14 +6,16 @@ import { fileStorageService } from '../services/fileStorage';
 
 export class AttachmentController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const attachments = await prisma.attachment.findMany({
-      where: { bookingId: req.params.id },
+      where: { bookingId },
       orderBy: { createdAt: 'desc' },
     });
     res.json(attachments);
   }
 
   async upload(req: AuthRequest, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     if (!req.file) {
       res.status(400).json({ error: 'No file uploaded' });
       return;
@@ -21,7 +23,7 @@ export class AttachmentController {
 
     const attachment = await prisma.attachment.create({
       data: {
-        bookingId: req.params.id,
+        bookingId,
         fileName: req.file.originalname,
         fileType: req.body.fileType || 'other',
         filePath: req.file.path,
@@ -34,8 +36,9 @@ export class AttachmentController {
   }
 
   async download(req: Request, res: Response): Promise<void> {
+    const attachmentId = String(req.params.attachId);
     const attachment = await prisma.attachment.findUnique({
-      where: { id: req.params.attachId },
+      where: { id: attachmentId },
     });
 
     if (!attachment) {
@@ -48,8 +51,9 @@ export class AttachmentController {
 
   async delete(req: Request, res: Response): Promise<void> {
     try {
+      const attachmentId = String(req.params.attachId);
       const attachment = await prisma.attachment.findUnique({
-        where: { id: req.params.attachId },
+        where: { id: attachmentId },
       });
 
       if (!attachment) {
@@ -58,7 +62,7 @@ export class AttachmentController {
       }
 
       fileStorageService.deleteFile(path.basename(attachment.filePath));
-      await prisma.attachment.delete({ where: { id: req.params.attachId } });
+      await prisma.attachment.delete({ where: { id: attachmentId } });
       res.json({ message: 'Attachment deleted' });
     } catch (error: any) {
       res.status(400).json({ error: error.message });

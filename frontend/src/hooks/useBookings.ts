@@ -4,7 +4,7 @@ import { bookingsApi } from '@/api/bookings.api';
 export function useBookings(status?: string) {
   return useQuery({
     queryKey: ['bookings', status],
-    queryFn: () => bookingsApi.list(status).then((res) => res.data),
+    queryFn: () => bookingsApi.list(status ? { status } : {}).then((res) => res.data),
   });
 }
 

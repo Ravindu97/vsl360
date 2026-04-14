@@ -23,12 +23,36 @@ import itineraryRoutes from './routes/itinerary.routes';
 
 const app = express();
 
+const defaultAllowedOrigins = [
+  'https://admin.visitsrilanka360.com',
+  'https://www.admin.visitsrilanka360.com',
+];
+
+const allowedOrigins = Array.from(
+  new Set([...defaultAllowedOrigins, ...env.CORS_ORIGINS])
+);
+
+const corsOptions: cors.CorsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    // Allow server-to-server requests or CLI tools without an Origin header.
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    logger.warn(`Blocked CORS origin: ${origin}`);
+    return callback(new Error('Not allowed by CORS'));
+  },
+};
+
 // Security middleware
 app.use(helmet());
-app.use(cors({
-  origin: env.CORS_ORIGIN,
-  credentials: true,
-}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,

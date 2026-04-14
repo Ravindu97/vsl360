@@ -1121,6 +1121,26 @@ VITE_API_URL=http://localhost:3000/api
 | **AWS (ECS + RDS)** | Scalable, managed database |
 | **Vercel (frontend) + Railway (backend)** | Separate frontend/backend hosting |
 
+### Current Production Deployment Approach
+
+The current production environment uses cPanel shared hosting, so deployment should be based on a Git repository clone on the server rather than local release artifacts.
+
+- The repository is cloned on the server at `/home/adminvisitsrilan/repositories/vsl360`
+- Backend runtime files are synced into `/home/adminvisitsrilan/vsl360-backend`
+- Frontend is built on the server and copied into `/home/adminvisitsrilan/public_html`
+- Environment files must remain outside the destructive sync paths when possible
+- Native Node modules such as `bcrypt` must be installed on the Linux server, not copied from macOS builds
+
+### Recommended Production Automation
+
+Use GitHub Actions to SSH into the server and run version-controlled deploy scripts stored in the repository.
+
+- Backend deploy script: `scripts/deploy-backend.sh`
+- Frontend deploy script: `scripts/deploy-frontend.sh`
+- Workflow entry point: `.github/workflows/deploy.yml`
+
+This keeps deployment logic in source control, avoids drift between manual and automated deploys, and removes the need to upload tarballs from a local machine.
+
 ### Docker Setup
 
 ```dockerfile

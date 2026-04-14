@@ -575,7 +575,7 @@ export class DocumentGeneratorService {
     bookingId: string,
     generatedBy: string,
     planDaysInput?: ItineraryPlanDayInput[]
-  ): Promise<string> {
+  ): Promise<{ filePath: string; docId: string }> {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {

@@ -35,5 +35,19 @@ export const updateStatusSchema = z.object({
   notes: z.string().optional(),
 });
 
+export const saveItineraryPlanSchema = z.object({
+  days: z.array(
+    z.object({
+      dayNumber: z.number().int().positive(),
+      dateLabel: z.string().optional(),
+      destinationId: z.string().optional(),
+      morningActivityId: z.string().optional(),
+      afternoonActivityId: z.string().optional(),
+      eveningActivityId: z.string().optional(),
+      notes: z.string().optional(),
+    })
+  ),
+});
+
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 export type UpdateBookingInput = z.infer<typeof updateBookingSchema>;

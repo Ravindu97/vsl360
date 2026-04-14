@@ -3,8 +3,9 @@ import prisma from '../config/database';
 
 export class ClientController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const client = await prisma.client.findUnique({
-      where: { bookingId: req.params.id },
+      where: { bookingId },
     });
     if (!client) {
       res.status(404).json({ error: 'Client not found' });
@@ -15,8 +16,9 @@ export class ClientController {
 
   async update(req: Request, res: Response): Promise<void> {
     try {
+      const bookingId = String(req.params.id);
       const client = await prisma.client.update({
-        where: { bookingId: req.params.id },
+        where: { bookingId },
         data: req.body,
       });
       res.json(client);

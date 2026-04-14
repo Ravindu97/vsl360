@@ -1,0 +1,72 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Deployment target
+        required: true
+        default: both
+        type: choice
+        options:
+          - backend
+          - frontend
+          - both
+      branch:
+        description: Git branch to deploy
+        required: true
+        default: make-ready-for-depployment
+        type: string
+      run_seed:
+        description: Run backend seed after deploy
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          passphrase: ${{ secrets.CPANEL_SSH_PASSPHRASE }}
+          port: ${{ secrets.CPANEL_SSH_PORT }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+
+            BRANCH="${{ github.event.inputs.branch }}"
+            TARGET="${{ github.event.inputs.target }}"
+            RUN_SEED="${{ github.event.inputs.run_seed }}"
+            REPO_ROOT="/home/adminvisitsrilan/repositories/vsl360"
+
+            if [[ ! -d "$REPO_ROOT/.git" ]]; then
+              echo "ERROR: Repo not found at $REPO_ROOT"
+              exit 1
+            fi
+
+            cd "$REPO_ROOT"
+            git fetch origin
+            git checkout "$BRANCH"
+            git pull origin "$BRANCH"
+
+            chmod +x scripts/deploy-backend.sh scripts/deploy-frontend.sh
+
+            if [[ "$TARGET" == "backend" || "$TARGET" == "both" ]]; then
+              if [[ "$RUN_SEED" == "true" ]]; then
+                scripts/deploy-backend.sh "$BRANCH" seed
+              else
+                scripts/deploy-backend.sh "$BRANCH"
+              fi
+            fi
+
+            if [[ "$TARGET" == "frontend" || "$TARGET" == "both" ]]; then
+              scripts/deploy-frontend.sh "$BRANCH"
+            fi

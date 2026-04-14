@@ -4,7 +4,8 @@ import { AuthRequest } from '../types';
 
 export class InvoiceController {
   async findByBookingId(req: AuthRequest, res: Response): Promise<void> {
-    const invoice = await invoiceService.findByBookingId(req.params.id);
+    const bookingId = String(req.params.id);
+    const invoice = await invoiceService.findByBookingId(bookingId);
     if (!invoice) {
       res.status(404).json({ error: 'Invoice not found' });
       return;
@@ -14,7 +15,8 @@ export class InvoiceController {
 
   async create(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const invoice = await invoiceService.create(req.params.id, req.body);
+      const bookingId = String(req.params.id);
+      const invoice = await invoiceService.create(bookingId, req.body);
       res.status(201).json(invoice);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -23,7 +25,8 @@ export class InvoiceController {
 
   async update(req: AuthRequest, res: Response): Promise<void> {
     try {
-      const invoice = await invoiceService.update(req.params.id, req.body);
+      const bookingId = String(req.params.id);
+      const invoice = await invoiceService.update(bookingId, req.body);
       res.json(invoice);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
