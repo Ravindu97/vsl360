@@ -34,102 +34,6 @@ CORS_ORIGIN=https://admin.visitsrilanka360.com
 UPLOAD_DIR=/home/adminvisitsrilan/vsl360-backend/uploads
 ```
 
-## Template Assets Build Fix
-
-**Issue:** Backend build was not copying `.hbs` template files to `dist/` folder, causing runtime errors:
-```
-ENOENT: no such file or directory, open '.../dist/templates/invoice.hbs'
-```
-
-**Solution:** Updated `backend/package.json` build script to automatically copy template files after TypeScript compilation:
-
-```json
-{
-  "scripts": {
-    "build": "tsc && node scripts/copy-assets.js"
-  }
-}
-```
-
-The `scripts/copy-assets.js` file handles cross-platform copying of all files in `src/templates/` to `dist/templates/`.
-
-**Local verification:**
-```bash
-cd backend
-npm run build
-ls -la dist/templates/  # Should show: invoice.hbs, itinerary.hbs, etc.
-```
-
-## GitHub Actions Automated Deployment
-
-Automated deployment workflow is configured in `.github/workflows/deploy.yml`.
-
-### Quick Setup
-
-1. **Create SSH key pair** (if you don't have one):
-   ```bash
-   ssh-keygen -t rsa -b 4096 -f ~/.ssh/cpanel_deploy_key -N ""
-   cat ~/.ssh/cpanel_deploy_key
-   ```
-
-2. **Add SSH public key to cPanel server**:
-   ```bash
-   ssh adminvisitsrilan@91.204.209.39
-   mkdir -p ~/.ssh
-   cat >> ~/.ssh/authorized_keys << 'EOF'
-   [paste content from ~/.ssh/cpanel_deploy_key.pub]
-   EOF
-   chmod 600 ~/.ssh/authorized_keys
-   ```
-
-3. **Configure GitHub repository secrets** (Settings → Secrets and variables → Actions):
-   - `CPANEL_HOST`: `91.204.209.39`
-   - `CPANEL_USER`: `adminvisitsrilan`
-   - `CPANEL_SSH_KEY`: [entire content of `~/.ssh/cpanel_deploy_key`]
-   - `CPANEL_SSH_PASSPHRASE`: (leave empty if no passphrase)
-
-### Automatic Deployments
-
-- **Push to `main` branch** → Auto-deploys frontend + backend to production
-- **Manual trigger** → Go to Actions tab → "Deploy VSL360" → Run workflow (select environment)
-
-### Deployment Steps (Automated)
-
-The workflow automatically:
-1. Builds frontend (TypeScript + Vite)
-2. Builds backend (TypeScript + copy templates + Prisma generate)
-3. Creates `tar.gz` artifacts
-4. Uploads artifacts to cPanel via SCP
-5. Extracts and builds on server
-6. Runs Prisma migrations
-7. Restarts backend service
-8. Verifies health endpoints
-
-### Manual Deployment Fallback
-
-If GitHub Actions is unavailable, use the manual script approach:
-
-```bash
-ssh adminvisitsrilan@91.204.209.39
-/home/adminvisitsrilan/deploy-vsl360-backend.sh
-```
-
-### Rollback via GitHub
-
-If deployment fails:
-1. Go to **Actions** → review failed workflow
-2. Revert commit: `git revert <commit_id> && git push origin main`
-3. Workflow will auto-deploy the reverted code
-
-**Manual rollback** (if needed):
-```bash
-ssh adminvisitsrilan@91.204.209.39
-cd /home/adminvisitsrilan/vsl360-backend
-cp -r dist.bak dist 2>/dev/null && PUPPETEER_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --omit=dev --no-audit --no-fund && sudo systemctl restart vsl360
-```
-
-For full setup details, see [`.github/DEPLOYMENT_SECRETS.md`](.github/DEPLOYMENT_SECRETS.md)
-
 ## Server-side backend deploy script
 
 Recommended location:
@@ -186,7 +90,7 @@ source "$ENV_FILE"
 set +a
 
 cd "$APP_ROOT"
-PUPPETEER_SKIP_DOWNLOAD=true PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true npm ci --omit=dev --no-audit --no-fund --prefer-offline
+npm install
 npm run build
 npx prisma generate
 npx prisma migrate deploy
