@@ -9,20 +9,22 @@ const inferPaxType = (age: number): 'INFANT' | 'CHILD' | 'ADULT' => {
 
 export class PaxController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const paxList = await prisma.pax.findMany({
-      where: { bookingId: req.params.id },
+      where: { bookingId },
       orderBy: { createdAt: 'asc' },
     });
     res.json(paxList);
   }
 
   async create(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const age = Number(req.body.age);
     const type = inferPaxType(age);
 
     const pax = await prisma.pax.create({
       data: {
-        bookingId: req.params.id,
+        bookingId,
         ...req.body,
         age,
         type,
@@ -45,8 +47,9 @@ export class PaxController {
         dataToUpdate.type = inferPaxType(age);
       }
 
+      const paxId = String(req.params.paxId);
       const pax = await prisma.pax.update({
-        where: { id: req.params.paxId },
+        where: { id: paxId },
         data: dataToUpdate,
       });
       res.json(pax);
@@ -61,7 +64,8 @@ export class PaxController {
 
   async delete(req: Request, res: Response): Promise<void> {
     try {
-      await prisma.pax.delete({ where: { id: req.params.paxId } });
+      const paxId = String(req.params.paxId);
+      await prisma.pax.delete({ where: { id: paxId } });
       res.json({ message: 'Passenger removed' });
     } catch (error: any) {
       if (error.code === 'P2025') {

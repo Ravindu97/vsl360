@@ -34,6 +34,18 @@ const BOOKING_STATUS: Record<BookingStatusValue, BookingStatusValue> = {
   CANCELLED: 'CANCELLED',
 };
 
+type ItineraryPlanDay = {
+  dayNumber: number;
+  dateLabel?: string;
+  destinationId?: string;
+  morningActivityId?: string;
+  afternoonActivityId?: string;
+  eveningActivityId?: string;
+  notes?: string;
+};
+
+const itineraryPlanStore = new Map<string, { days: ItineraryPlanDay[]; updatedAt: string }>();
+
 export class BookingService {
   async create(data: CreateBookingInput, salesOwnerId: string) {
     const bookingId = await generateBookingId();
@@ -310,6 +322,35 @@ export class BookingService {
 
   async delete(id: string) {
     return prisma.booking.delete({ where: { id } });
+  }
+
+  async getItineraryPlan(id: string) {
+    const booking = await prisma.booking.findUnique({ where: { id }, select: { id: true } });
+    if (!booking) throw new Error('Booking not found');
+
+    const stored = itineraryPlanStore.get(id);
+    return stored ?? { days: [], updatedAt: undefined };
+  }
+
+  async saveItineraryPlan(
+    id: string,
+    payload: { days?: ItineraryPlanDay[] },
+    _userId: string,
+  ) {
+    const booking = await prisma.booking.findUnique({ where: { id }, select: { id: true, numberOfDays: true } });
+    if (!booking) throw new Error('Booking not found');
+
+    const days = Array.isArray(payload?.days)
+      ? payload.days
+          .filter((day) => Number.isInteger(day.dayNumber))
+          .map((day) => ({ ...day, dayNumber: Number(day.dayNumber) }))
+          .filter((day) => day.dayNumber >= 1 && day.dayNumber <= booking.numberOfDays)
+      : [];
+
+    const updatedAt = new Date().toISOString();
+    const value = { days, updatedAt };
+    itineraryPlanStore.set(id, value);
+    return value;
   }
 }
 

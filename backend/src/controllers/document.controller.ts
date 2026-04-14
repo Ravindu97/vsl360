@@ -8,7 +8,7 @@ export class DocumentController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
     const page = Math.max(1, Number(req.query.page ?? 1));
     const pageSize = Math.max(1, Math.min(Number(req.query.pageSize ?? 5), 100));
-    const where = { bookingId: req.params.id };
+    const where = { bookingId: String(req.params.id) };
 
     const [items, total] = await Promise.all([
       prisma.generatedDocument.findMany({
@@ -91,8 +91,9 @@ export class DocumentController {
   }
 
   async download(req: Request, res: Response): Promise<void> {
+    const docId = String(req.params.docId);
     const doc = await prisma.generatedDocument.findUnique({
-      where: { id: req.params.docId },
+      where: { id: docId },
     });
 
     if (!doc) {

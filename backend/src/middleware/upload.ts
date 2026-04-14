@@ -1,6 +1,5 @@
 import multer from 'multer';
 import path from 'path';
-import { v4 as uuidv4 } from 'crypto';
 import { env } from '../config/env';
 import { randomUUID } from 'crypto';
 

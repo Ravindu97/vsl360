@@ -3,8 +3,9 @@ import prisma from '../config/database';
 
 export class TransportController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const transport = await prisma.transportPlan.findUnique({
-      where: { bookingId: req.params.id },
+      where: { bookingId },
       include: { dayPlans: { orderBy: { dayNumber: 'asc' } } },
     });
     if (!transport) {
@@ -16,9 +17,10 @@ export class TransportController {
 
   async create(req: Request, res: Response): Promise<void> {
     try {
+      const bookingId = String(req.params.id);
       const transport = await prisma.transportPlan.create({
         data: {
-          bookingId: req.params.id,
+          bookingId,
           ...req.body,
         },
         include: { dayPlans: true },
@@ -35,8 +37,9 @@ export class TransportController {
 
   async update(req: Request, res: Response): Promise<void> {
     try {
+      const bookingId = String(req.params.id);
       const transport = await prisma.transportPlan.update({
-        where: { bookingId: req.params.id },
+        where: { bookingId },
         data: req.body,
         include: { dayPlans: { orderBy: { dayNumber: 'asc' } } },
       });
@@ -51,8 +54,9 @@ export class TransportController {
   }
 
   async createDayPlan(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const transport = await prisma.transportPlan.findUnique({
-      where: { bookingId: req.params.id },
+      where: { bookingId },
     });
     if (!transport) {
       res.status(404).json({ error: 'Transport plan not found' });
@@ -70,8 +74,9 @@ export class TransportController {
 
   async updateDayPlan(req: Request, res: Response): Promise<void> {
     try {
+      const dayId = String(req.params.dayId);
       const dayPlan = await prisma.transportDayPlan.update({
-        where: { id: req.params.dayId },
+        where: { id: dayId },
         data: req.body,
       });
       res.json(dayPlan);
@@ -86,7 +91,8 @@ export class TransportController {
 
   async deleteDayPlan(req: Request, res: Response): Promise<void> {
     try {
-      await prisma.transportDayPlan.delete({ where: { id: req.params.dayId } });
+      const dayId = String(req.params.dayId);
+      await prisma.transportDayPlan.delete({ where: { id: dayId } });
       res.json({ message: 'Day plan removed' });
     } catch (error: any) {
       if (error.code === 'P2025') {

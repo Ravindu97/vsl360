@@ -27,8 +27,9 @@ export class UserController {
   }
 
   async findById(req: Request, res: Response): Promise<void> {
+    const userId = String(req.params.id);
     const user = await prisma.user.findUnique({
-      where: { id: req.params.id },
+      where: { id: userId },
       select: { id: true, email: true, name: true, role: true, isActive: true, createdAt: true },
     });
     if (!user) {
@@ -60,7 +61,7 @@ export class UserController {
 
   async update(req: Request, res: Response): Promise<void> {
     try {
-      const { id } = req.params;
+      const id = String(req.params.id);
       const data: any = { ...req.body };
 
       if (data.password) {
@@ -85,8 +86,9 @@ export class UserController {
 
   async delete(req: Request, res: Response): Promise<void> {
     try {
+      const userId = String(req.params.id);
       await prisma.user.update({
-        where: { id: req.params.id },
+        where: { id: userId },
         data: { isActive: false },
       });
       res.json({ message: 'User deactivated' });

@@ -3,17 +3,19 @@ import prisma from '../config/database';
 
 export class HotelController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const hotels = await prisma.hotelBooking.findMany({
-      where: { bookingId: req.params.id },
+      where: { bookingId },
       orderBy: { nightNumber: 'asc' },
     });
     res.json(hotels);
   }
 
   async create(req: Request, res: Response): Promise<void> {
+    const bookingId = String(req.params.id);
     const hotel = await prisma.hotelBooking.create({
       data: {
-        bookingId: req.params.id,
+        bookingId,
         ...req.body,
       },
     });
@@ -22,8 +24,9 @@ export class HotelController {
 
   async update(req: Request, res: Response): Promise<void> {
     try {
+      const hotelId = String(req.params.hotelId);
       const hotel = await prisma.hotelBooking.update({
-        where: { id: req.params.hotelId },
+        where: { id: hotelId },
         data: req.body,
       });
       res.json(hotel);
@@ -38,8 +41,9 @@ export class HotelController {
 
   async confirm(req: Request, res: Response): Promise<void> {
     try {
+      const hotelId = String(req.params.hotelId);
       const hotel = await prisma.hotelBooking.update({
-        where: { id: req.params.hotelId },
+        where: { id: hotelId },
         data: { confirmationStatus: 'CONFIRMED' },
       });
       res.json(hotel);
@@ -54,7 +58,8 @@ export class HotelController {
 
   async delete(req: Request, res: Response): Promise<void> {
     try {
-      await prisma.hotelBooking.delete({ where: { id: req.params.hotelId } });
+      const hotelId = String(req.params.hotelId);
+      await prisma.hotelBooking.delete({ where: { id: hotelId } });
       res.json({ message: 'Hotel booking removed' });
     } catch (error: any) {
       if (error.code === 'P2025') {
