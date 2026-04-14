@@ -72,7 +72,7 @@ rm -rf node_modules
 npm install --omit=dev
 
 echo "==> Installing minimal build toolchain"
-npm install --no-save \
+npm install --include=dev --no-save \
   typescript \
   prisma \
   @types/node \
