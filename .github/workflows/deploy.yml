@@ -55,6 +55,6 @@ jobs:
             git pull origin "$BRANCH"
             echo ">> Repo at $(git rev-parse --short HEAD)"
             chmod +x scripts/deploy-backend.sh scripts/deploy-frontend.sh
-            if [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ]; then echo ">> Backend deploy starting"; if [ "$RUN_SEED" = "true" ]; then bash -x scripts/deploy-backend.sh "$BRANCH" seed; else bash -x scripts/deploy-backend.sh "$BRANCH"; fi; echo ">> Backend deploy finished"; fi
-            if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "both" ]; then echo ">> Frontend deploy starting"; bash -x scripts/deploy-frontend.sh "$BRANCH"; echo ">> Frontend deploy finished"; fi
+            if [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ]; then echo ">> Backend deploy starting"; if [ "$RUN_SEED" = "true" ]; then bash scripts/deploy-backend.sh "$BRANCH" seed; else bash scripts/deploy-backend.sh "$BRANCH"; fi; echo ">> Backend deploy finished"; fi
+            if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "both" ]; then echo ">> Frontend deploy starting"; bash scripts/deploy-frontend.sh "$BRANCH"; echo ">> Frontend deploy finished"; fi
             echo ">> ALL DONE"
