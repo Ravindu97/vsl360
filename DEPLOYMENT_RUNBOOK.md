@@ -138,11 +138,47 @@ npm install --include=dev --no-save \
 npm run build
 npx prisma generate
 
+DB_URL_PRIMARY="${DATABASE_URL:-}"
+DB_URL_FALLBACK="$DB_URL_PRIMARY"
+if [[ "$DB_URL_PRIMARY" == *"@localhost:"* ]]; then
+  DB_URL_FALLBACK="${DB_URL_PRIMARY/@localhost:/@127.0.0.1:}"
+fi
+
+db_ready_check() {
+  local db_url="$1"
+  local max_attempts=6
+  local attempt=1
+
+  until psql "$db_url" -c "select 1;" >/dev/null 2>&1; do
+    if [[ "$attempt" -ge "$max_attempts" ]]; then
+      return 1
+    fi
+
+    local sleep_seconds=$((attempt * 5))
+    echo "Database is not ready yet (attempt ${attempt}/${max_attempts}); retrying in ${sleep_seconds}s..."
+    attempt=$((attempt + 1))
+    sleep "$sleep_seconds"
+  done
+
+  return 0
+}
+
+ACTIVE_DATABASE_URL="$DB_URL_PRIMARY"
+if ! db_ready_check "$ACTIVE_DATABASE_URL"; then
+  if [[ "$DB_URL_FALLBACK" != "$DB_URL_PRIMARY" ]] && db_ready_check "$DB_URL_FALLBACK"; then
+    echo "Primary DB URL with localhost is unreachable in this session; using 127.0.0.1 fallback"
+    ACTIVE_DATABASE_URL="$DB_URL_FALLBACK"
+  else
+    echo "ERROR: Database readiness check failed for primary and fallback URLs"
+    exit 1
+  fi
+fi
+
 retry_migrate() {
   local max_attempts=5
   local attempt=1
 
-  until npx prisma migrate deploy; do
+  until DATABASE_URL="$ACTIVE_DATABASE_URL" npx prisma migrate deploy; do
     if [[ "$attempt" -ge "$max_attempts" ]]; then
       echo "ERROR: Prisma migrate deploy failed after ${max_attempts} attempts"
       return 1
