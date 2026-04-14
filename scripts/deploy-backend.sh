@@ -50,6 +50,14 @@ else
   echo "WARNING: $ENV_FILE not found"
 fi
 
+# Convert ?host=/tmp socket param to %2Ftmp encoded host (Prisma compat)
+if [ -S "/tmp/.s.PGSQL.5432" ]; then
+  DATABASE_URL="$(echo "$DATABASE_URL" | sed 's|[?&]host=/tmp||' | sed 's|@localhost[^/]*|@%2Ftmp|')"
+  SHADOW_DATABASE_URL="$(echo "$SHADOW_DATABASE_URL" | sed 's|[?&]host=/tmp||' | sed 's|@localhost[^/]*|@%2Ftmp|')"
+  export DATABASE_URL SHADOW_DATABASE_URL
+  echo "DB via Unix socket (/tmp)"
+fi
+
 echo "===== INSTALL ====="
 cd "$APP_ROOT"
 
