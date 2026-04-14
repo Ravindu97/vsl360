@@ -38,35 +38,23 @@ jobs:
           key: ${{ secrets.CPANEL_SSH_KEY }}
           passphrase: ${{ secrets.CPANEL_SSH_PASSPHRASE }}
           port: ${{ secrets.CPANEL_SSH_PORT }}
-          script_stop: true
+          script_stop: false
           script: |
-            set -euo pipefail
-
+            set -e
+            export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
             BRANCH="${{ github.event.inputs.branch }}"
             TARGET="${{ github.event.inputs.target }}"
             RUN_SEED="${{ github.event.inputs.run_seed }}"
             REPO_ROOT="/home/adminvisitsrilan/repositories/vsl360"
-
-            if [[ ! -d "$REPO_ROOT/.git" ]]; then
-              echo "ERROR: Repo not found at $REPO_ROOT"
-              exit 1
-            fi
-
+            echo ">> Deploy starting: target=$TARGET branch=$BRANCH seed=$RUN_SEED"
+            if [ ! -d "$REPO_ROOT/.git" ]; then echo "ERROR: Repo not found"; exit 1; fi
             cd "$REPO_ROOT"
+            git stash push --include-untracked -m "gha-$(date +%s)" 2>/dev/null || true
             git fetch origin
-            git checkout "$BRANCH"
+            git checkout "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH" "origin/$BRANCH"
             git pull origin "$BRANCH"
-
+            echo ">> Repo at $(git rev-parse --short HEAD)"
             chmod +x scripts/deploy-backend.sh scripts/deploy-frontend.sh
-
-            if [[ "$TARGET" == "backend" || "$TARGET" == "both" ]]; then
-              if [[ "$RUN_SEED" == "true" ]]; then
-                scripts/deploy-backend.sh "$BRANCH" seed
-              else
-                scripts/deploy-backend.sh "$BRANCH"
-              fi
-            fi
-
-            if [[ "$TARGET" == "frontend" || "$TARGET" == "both" ]]; then
-              scripts/deploy-frontend.sh "$BRANCH"
-            fi
+            if [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ]; then echo ">> Backend deploy starting"; if [ "$RUN_SEED" = "true" ]; then bash scripts/deploy-backend.sh "$BRANCH" seed; else bash scripts/deploy-backend.sh "$BRANCH"; fi; echo ">> Backend deploy finished"; fi
+            if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "both" ]; then echo ">> Frontend deploy starting"; bash scripts/deploy-frontend.sh "$BRANCH"; echo ">> Frontend deploy finished"; fi
+            echo ">> ALL DONE"

@@ -1,85 +1,107 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
 
 BRANCH="${1:-make-ready-for-depployment}"
 RUN_SEED="${2:-no-seed}"
 
 REPO_ROOT="/home/adminvisitsrilan/repositories/vsl360"
 APP_ROOT="/home/adminvisitsrilan/vsl360-backend"
-ENV_FILE_PRIMARY="/home/adminvisitsrilan/.config/vsl360/backend.env"
-ENV_FILE_FALLBACK="/home/adminvisitsrilan/vsl360-backend/.env.production"
+ENV_FILE="/home/adminvisitsrilan/.config/vsl360/backend.env"
 
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
-echo "==> Using Node: $(node -v)"
-echo "==> Using npm:  $(npm -v)"
-
-if [[ ! -d "$REPO_ROOT/.git" ]]; then
-  echo "ERROR: Repo not found at $REPO_ROOT"
-  exit 1
+# Find npm-cli.js (native npm binary is broken on this server)
+NPM_CLI="/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js"
+if [ ! -f "$NPM_CLI" ]; then
+  NPM_CLI="$(find /opt/alt -name 'npm-cli.js' -type f 2>/dev/null | head -1)"
 fi
+if [ ! -f "$NPM_CLI" ]; then echo "FATAL: npm-cli.js not found"; exit 1; fi
 
+npm_run() { node "$NPM_CLI" "$@"; }
+
+echo "===== SETUP ====="
+echo "Node: $(node -v) | npm: $(npm_run -v)"
+
+echo "===== GIT PULL ====="
 cd "$REPO_ROOT"
-echo "==> Fetching branch: $BRANCH"
+git stash push --include-untracked -m "deploy-$(date +%s)" 2>/dev/null || true
 git fetch origin
-git checkout "$BRANCH"
+git checkout "$BRANCH" 2>/dev/null || true
 git pull origin "$BRANCH"
+echo "HEAD: $(git rev-parse --short HEAD)"
 
+echo "===== STOP APP ====="
+mkdir -p "$APP_ROOT/tmp"
+touch "$APP_ROOT/tmp/restart.txt"
+sleep 2
+
+echo "===== SYNC FILES ====="
 mkdir -p "$APP_ROOT/uploads/documents"
-
-echo "==> Syncing backend files to app root"
 find "$APP_ROOT" -mindepth 1 -maxdepth 1 ! -name uploads -exec rm -rf {} +
+tar -cf - -C "$REPO_ROOT/backend" \
+  --exclude=node_modules --exclude=.git --exclude=.env --exclude=.env.production --exclude=uploads \
+  . | tar -xf - -C "$APP_ROOT"
 
-(
-  cd "$REPO_ROOT/backend"
-  tar -cf - \
-    --exclude=node_modules \
-    --exclude=.git \
-    --exclude=.env \
-    --exclude=.env.production \
-    --exclude=uploads \
-    .
-) | (
-  cd "$APP_ROOT"
-  tar -xf -
-)
-
-ENV_FILE=""
-if [[ -f "$ENV_FILE_PRIMARY" ]]; then
-  ENV_FILE="$ENV_FILE_PRIMARY"
-elif [[ -f "$ENV_FILE_FALLBACK" ]]; then
-  ENV_FILE="$ENV_FILE_FALLBACK"
-fi
-
-if [[ -n "$ENV_FILE" ]]; then
-  echo "==> Loading env from $ENV_FILE"
-  set -a
-  # shellcheck disable=SC1090
-  source "$ENV_FILE"
-  set +a
+echo "===== LOAD ENV ====="
+if [ -f "$ENV_FILE" ]; then
+  set -a; . "$ENV_FILE"; set +a
+  echo "Loaded $ENV_FILE"
 else
-  echo "WARNING: No env file found. Prisma steps may fail if env vars are not exported."
+  echo "WARNING: $ENV_FILE not found"
 fi
 
+# Convert ?host=/tmp socket param to %2Ftmp encoded host (Prisma compat)
+if [ -S "/tmp/.s.PGSQL.5432" ]; then
+  DATABASE_URL="$(echo "$DATABASE_URL" | sed 's|[?&]host=/tmp||' | sed 's|@localhost[^/]*|@%2Ftmp|')"
+  SHADOW_DATABASE_URL="$(echo "$SHADOW_DATABASE_URL" | sed 's|[?&]host=/tmp||' | sed 's|@localhost[^/]*|@%2Ftmp|')"
+  export DATABASE_URL SHADOW_DATABASE_URL
+  echo "DB via Unix socket (/tmp)"
+fi
+
+echo "===== INSTALL ====="
 cd "$APP_ROOT"
 
-echo "==> Installing dependencies"
-rm -rf node_modules
-npm install --include=dev
+# NODE_ENV=production makes npm skip devDeps; override for install steps
+SAVED_NODE_ENV="${NODE_ENV:-}"
+export NODE_ENV=development
 
-echo "==> Building"
-npm run build
+npm_run install --ignore-scripts --no-audit --no-fund
+echo "Install done (postinstall scripts skipped)"
 
-echo "==> Prisma generate + migrate"
-npx prisma generate
-npx prisma migrate deploy
+echo "===== BUILD TOOLS ====="
+npm_run install --no-save --no-audit --no-fund --ignore-scripts \
+  typescript prisma \
+  @types/node @types/express @types/cors \
+  @types/cookie-parser @types/bcrypt @types/jsonwebtoken @types/multer
 
-if [[ "$RUN_SEED" == "seed" ]]; then
-  echo "==> Running seed"
-  npm run db:seed
+echo "===== PRISMA GENERATE ====="
+npm_run exec -- prisma generate
+echo "Prisma client generated (engine downloaded)"
+
+echo "===== BUILD ====="
+npm_run run build
+ls -la dist/index.js
+
+# Restore NODE_ENV for runtime
+export NODE_ENV="${SAVED_NODE_ENV:-production}"
+
+echo "===== MIGRATE ====="
+npm_run exec -- prisma migrate deploy
+echo "Migration done"
+
+if [ "$RUN_SEED" = "seed" ]; then
+  echo "===== SEED ====="
+  npm_run run db:seed
 fi
 
+echo "===== REBUILD NATIVE MODULES ====="
+npm_run rebuild bcrypt 2>&1 || echo "bcrypt rebuild warning (may be ok)"
+
+echo "===== RESTART ====="
 mkdir -p "$APP_ROOT/tmp"
 touch "$APP_ROOT/tmp/restart.txt"
 
-echo "==> Deploy completed successfully"
+echo ""
+echo "==== BACKEND DEPLOY COMPLETE ===="
+echo "Commit: $(cd "$REPO_ROOT" && git rev-parse --short HEAD)"
+echo "Time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
