@@ -19,6 +19,10 @@ fi
 
 cd "$REPO_ROOT"
 echo "==> Fetching branch: $BRANCH"
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "==> Repository has local changes; stashing before deploy"
+  git stash push --include-untracked -m "frontend-deploy-auto-stash-$(date +%Y%m%d-%H%M%S)" >/dev/null || true
+fi
 git fetch origin
 git checkout "$BRANCH"
 git pull origin "$BRANCH"
