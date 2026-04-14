@@ -50,10 +50,6 @@ else
   echo "WARNING: $ENV_FILE not found"
 fi
 
-# Force correct DB socket format regardless of env file
-export DATABASE_URL="postgresql://adminvisitsrilan_admin:1UT%5EW4OY5%7DP%7B%7D198@%2Ftmp/adminvisitsrilan_vsl360"
-export SHADOW_DATABASE_URL="postgresql://adminvisitsrilan_admin:1UT%5EW4OY5%7DP%7B%7D198@%2Ftmp/adminvisitsrilan_vsl360_shadow"
-
 echo "===== INSTALL ====="
 cd "$APP_ROOT"
 
@@ -89,15 +85,6 @@ echo "Copied $(ls dist/templates/*.hbs | wc -l) template(s) to dist/templates/"
 
 # Restore NODE_ENV for runtime
 export NODE_ENV="${SAVED_NODE_ENV:-production}"
-
-echo "===== MIGRATE ====="
-npm_run exec -- prisma migrate deploy
-echo "Migration done"
-
-if [ "$RUN_SEED" = "seed" ]; then
-  echo "===== SEED ====="
-  npm_run run db:seed
-fi
 
 echo "===== REBUILD NATIVE MODULES ====="
 npm_run rebuild bcrypt 2>&1 || echo "bcrypt rebuild warning (may be ok)"
