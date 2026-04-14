@@ -124,7 +124,17 @@ fi
 
 cd "$APP_ROOT"
 rm -rf node_modules
-npm install --include=dev
+npm install --omit=dev
+npm install --no-save \
+  typescript \
+  prisma \
+  @types/node \
+  @types/express \
+  @types/cors \
+  @types/cookie-parser \
+  @types/bcrypt \
+  @types/jsonwebtoken \
+  @types/multer
 npm run build
 npx prisma generate
 npx prisma migrate deploy

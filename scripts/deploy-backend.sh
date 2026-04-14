@@ -65,7 +65,19 @@ cd "$APP_ROOT"
 
 echo "==> Installing dependencies"
 rm -rf node_modules
-npm install --include=dev
+npm install --omit=dev
+
+echo "==> Installing minimal build toolchain"
+npm install --no-save \
+  typescript \
+  prisma \
+  @types/node \
+  @types/express \
+  @types/cors \
+  @types/cookie-parser \
+  @types/bcrypt \
+  @types/jsonwebtoken \
+  @types/multer
 
 echo "==> Building"
 npm run build
