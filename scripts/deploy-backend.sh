@@ -50,14 +50,6 @@ else
   echo "WARNING: $ENV_FILE not found"
 fi
 
-# Convert ?host=/tmp socket param to %2Ftmp encoded host (Prisma compat)
-if [ -S "/tmp/.s.PGSQL.5432" ]; then
-  DATABASE_URL="$(echo "$DATABASE_URL" | sed 's|[?&]host=/tmp||' | sed 's|@localhost[^/]*|@%2Ftmp|')"
-  SHADOW_DATABASE_URL="$(echo "$SHADOW_DATABASE_URL" | sed 's|[?&]host=/tmp||' | sed 's|@localhost[^/]*|@%2Ftmp|')"
-  export DATABASE_URL SHADOW_DATABASE_URL
-  echo "DB via Unix socket (/tmp)"
-fi
-
 echo "===== INSTALL ====="
 cd "$APP_ROOT"
 
@@ -78,21 +70,21 @@ echo "===== PRISMA GENERATE ====="
 npm_run exec -- prisma generate
 echo "Prisma client generated (engine downloaded)"
 
+echo "===== PUPPETEER BROWSER ====="
+npm_run exec -- puppeteer browsers install chrome 2>&1 || echo "Puppeteer browser install warning"
+
 echo "===== BUILD ====="
 npm_run run build
 ls -la dist/index.js
 
+# Copy non-TS assets that tsc doesn't handle
+echo "===== COPY TEMPLATES ====="
+mkdir -p dist/templates
+cp -r src/templates/*.hbs dist/templates/
+echo "Copied $(ls dist/templates/*.hbs | wc -l) template(s) to dist/templates/"
+
 # Restore NODE_ENV for runtime
 export NODE_ENV="${SAVED_NODE_ENV:-production}"
-
-echo "===== MIGRATE ====="
-npm_run exec -- prisma migrate deploy
-echo "Migration done"
-
-if [ "$RUN_SEED" = "seed" ]; then
-  echo "===== SEED ====="
-  npm_run run db:seed
-fi
 
 echo "===== REBUILD NATIVE MODULES ====="
 npm_run rebuild bcrypt 2>&1 || echo "bcrypt rebuild warning (may be ok)"

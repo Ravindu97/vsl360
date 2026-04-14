@@ -3,6 +3,14 @@ import path from 'path';
 import prisma from '../config/database';
 import { AuthRequest } from '../types';
 import { documentGeneratorService } from '../services/documentGenerator';
+import logger from '../utils/logger';
+
+function docError(res: Response, action: string, error: unknown): void {
+  const msg = error instanceof Error ? error.message : String(error);
+  const stack = error instanceof Error ? error.stack : undefined;
+  logger.error(`Document generation failed [${action}]: ${msg}`, { stack });
+  res.status(400).json({ error: msg || 'Unknown document generation error' });
+}
 
 export class DocumentController {
   async findByBookingId(req: Request, res: Response): Promise<void> {
@@ -36,8 +44,8 @@ export class DocumentController {
         req.user!.userId
       );
       res.json({ message: 'Invoice generated', filePath });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      docError(res, 'invoice', error);
     }
   }
 
@@ -48,8 +56,8 @@ export class DocumentController {
         req.user!.userId
       );
       res.json({ message: 'Transport document generated', filePath });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      docError(res, 'transport', error);
     }
   }
 
@@ -60,8 +68,8 @@ export class DocumentController {
         req.user!.userId
       );
       res.json({ message: 'Reservation document generated', filePath });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      docError(res, 'reservation', error);
     }
   }
 
@@ -73,8 +81,8 @@ export class DocumentController {
         req.body?.planDays
       );
       res.json({ message: 'Itinerary generated', filePath, docId });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      docError(res, 'itinerary', error);
     }
   }
 
@@ -85,8 +93,8 @@ export class DocumentController {
         req.user!.userId
       );
       res.json({ message: 'Travel confirmation generated', filePath });
-    } catch (error: any) {
-      res.status(400).json({ error: error.message });
+    } catch (error: unknown) {
+      docError(res, 'travelConfirmation', error);
     }
   }
 
