@@ -12,46 +12,79 @@ ENV_FILE_FALLBACK="/home/adminvisitsrilan/vsl360-backend/.env.production"
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
 # --- npm wrapper: bypass broken npm binary by invoking via node directly ---
-NPM_CLI_JS="/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js"
-NPX_CLI_JS="/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npx-cli-entry.js"
-
-# Detect once whether the native npm binary works
+# Detect once whether the native npm binary works (suppress core dump noise)
 NPM_NATIVE_OK=false
-if command -v npm &>/dev/null && npm -v &>/dev/null; then
+if command -v npm &>/dev/null && npm -v >/dev/null 2>&1; then
   NPM_NATIVE_OK=true
+fi
+
+# Auto-discover npm-cli.js relative to the node binary
+NPM_CLI_JS=""
+NPX_CLI_JS=""
+if [[ "$NPM_NATIVE_OK" == "false" ]]; then
+  NODE_BIN="$(command -v node)"
+  NODE_PREFIX="$(dirname "$(dirname "$NODE_BIN")")"
+
+  # Try standard location relative to node binary
+  for candidate in \
+    "$NODE_PREFIX/lib/node_modules/npm/bin/npm-cli.js" \
+    "$NODE_PREFIX/lib64/node_modules/npm/bin/npm-cli.js" \
+    "/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js" \
+    "$(node -e 'try{console.log(require.resolve("npm/bin/npm-cli"))}catch(e){}' 2>/dev/null)"
+  do
+    if [[ -n "$candidate" && -f "$candidate" ]]; then
+      NPM_CLI_JS="$candidate"
+      break
+    fi
+  done
+
+  # Discover npx entry
+  if [[ -n "$NPM_CLI_JS" ]]; then
+    NPM_DIR="$(dirname "$NPM_CLI_JS")"
+    for npx_candidate in \
+      "$NPM_DIR/npx-cli-entry.js" \
+      "$NPM_DIR/npx-cli.cjs"
+    do
+      if [[ -f "$npx_candidate" ]]; then
+        NPX_CLI_JS="$npx_candidate"
+        break
+      fi
+    done
+  fi
+
+  echo "==> npm binary is broken; using node-direct mode"
+  echo "    NPM_CLI_JS=$NPM_CLI_JS"
+  echo "    NPX_CLI_JS=$NPX_CLI_JS"
+
+  if [[ -z "$NPM_CLI_JS" ]]; then
+    echo "ERROR: Could not find npm-cli.js anywhere. Searched:"
+    echo "  NODE_BIN=$NODE_BIN"
+    echo "  NODE_PREFIX=$NODE_PREFIX"
+    find /opt/alt -name 'npm-cli.js' -type f 2>/dev/null | head -5 || true
+    exit 1
+  fi
 fi
 
 npm_cmd() {
   if [[ "$NPM_NATIVE_OK" == "true" ]]; then
     npm "$@"
-  elif [[ -f "$NPM_CLI_JS" ]]; then
-    node "$NPM_CLI_JS" "$@"
   else
-    echo "ERROR: npm is broken and npm-cli.js not found at $NPM_CLI_JS"
-    return 1
+    node "$NPM_CLI_JS" "$@"
   fi
 }
 
 npx_cmd() {
   if [[ "$NPM_NATIVE_OK" == "true" ]]; then
     npx "$@"
-  elif [[ -f "$NPX_CLI_JS" ]]; then
+  elif [[ -n "$NPX_CLI_JS" ]]; then
     node "$NPX_CLI_JS" "$@"
-  elif [[ -f "$NPM_CLI_JS" ]]; then
-    node "$NPM_CLI_JS" exec -- "$@"
   else
-    echo "ERROR: npx is broken and cli entry not found"
-    return 1
+    node "$NPM_CLI_JS" exec -- "$@"
   fi
 }
 
 echo "==> Using Node: $(node -v)"
-NPM_VERSION="$(npm_cmd -v 2>/dev/null || true)"
-if [[ -z "$NPM_VERSION" ]]; then
-  echo "==> Using npm: unavailable"
-else
-  echo "==> Using npm: $NPM_VERSION"
-fi
+echo "==> Using npm:  $(npm_cmd -v)"
 
 retry_cmd() {
   local max_attempts="$1"
@@ -126,10 +159,10 @@ cd "$APP_ROOT"
 
 echo "==> Installing dependencies"
 rm -rf node_modules
-retry_cmd 3 8 npm_cmd install --omit=dev --no-audit --no-fund --loglevel=warn
+retry_cmd 3 8 npm_cmd install --omit=dev --no-audit --no-fund
 
 echo "==> Installing minimal build toolchain"
-retry_cmd 3 8 npm_cmd install --include=dev --no-save --no-audit --no-fund --loglevel=warn \
+retry_cmd 3 8 npm_cmd install --include=dev --no-save --no-audit --no-fund \
   typescript \
   prisma \
   @types/node \

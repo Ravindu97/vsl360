@@ -10,32 +10,48 @@ PUBLIC_ROOT="/home/adminvisitsrilan/public_html"
 export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
 
 # --- npm wrapper: bypass broken npm binary by invoking via node directly ---
-NPM_CLI_JS="/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js"
-
-# Detect once whether the native npm binary works
 NPM_NATIVE_OK=false
-if command -v npm &>/dev/null && npm -v &>/dev/null; then
+if command -v npm &>/dev/null && npm -v >/dev/null 2>&1; then
   NPM_NATIVE_OK=true
+fi
+
+NPM_CLI_JS=""
+if [[ "$NPM_NATIVE_OK" == "false" ]]; then
+  NODE_BIN="$(command -v node)"
+  NODE_PREFIX="$(dirname "$(dirname "$NODE_BIN")")"
+
+  for candidate in \
+    "$NODE_PREFIX/lib/node_modules/npm/bin/npm-cli.js" \
+    "$NODE_PREFIX/lib64/node_modules/npm/bin/npm-cli.js" \
+    "/opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js" \
+    "$(node -e 'try{console.log(require.resolve("npm/bin/npm-cli"))}catch(e){}' 2>/dev/null)"
+  do
+    if [[ -n "$candidate" && -f "$candidate" ]]; then
+      NPM_CLI_JS="$candidate"
+      break
+    fi
+  done
+
+  echo "==> npm binary is broken; using node-direct mode"
+  echo "    NPM_CLI_JS=$NPM_CLI_JS"
+
+  if [[ -z "$NPM_CLI_JS" ]]; then
+    echo "ERROR: Could not find npm-cli.js anywhere."
+    find /opt/alt -name 'npm-cli.js' -type f 2>/dev/null | head -5 || true
+    exit 1
+  fi
 fi
 
 npm_cmd() {
   if [[ "$NPM_NATIVE_OK" == "true" ]]; then
     npm "$@"
-  elif [[ -f "$NPM_CLI_JS" ]]; then
-    node "$NPM_CLI_JS" "$@"
   else
-    echo "ERROR: npm is broken and npm-cli.js not found at $NPM_CLI_JS"
-    return 1
+    node "$NPM_CLI_JS" "$@"
   fi
 }
 
 echo "==> Using Node: $(node -v)"
-NPM_VERSION="$(npm_cmd -v 2>/dev/null || true)"
-if [[ -z "$NPM_VERSION" ]]; then
-  echo "==> Using npm: unavailable"
-else
-  echo "==> Using npm: $NPM_VERSION"
-fi
+echo "==> Using npm:  $(npm_cmd -v)"
 
 if [[ ! -d "$REPO_ROOT/.git" ]]; then
   echo "ERROR: Repo not found at $REPO_ROOT"
