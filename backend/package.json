@@ -27,8 +27,7 @@
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "puppeteer": "^23.6.0",
-    "handlebars": "^4.7.8",
+    "pdfkit": "^0.17.2",
     "winston": "^3.17.0",
     "zod": "^3.23.8",
     "cookie-parser": "^1.4.7"
@@ -41,6 +40,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.9.0",
+    "@types/pdfkit": "^0.17.3",
     "prisma": "^5.22.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"

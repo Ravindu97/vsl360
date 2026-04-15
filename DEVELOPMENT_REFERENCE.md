@@ -81,7 +81,7 @@ VSL 360 is a **web-based internal management system** for a tour operations comp
 | **JWT (jsonwebtoken)** | Stateless authentication with role-based access |
 | **bcrypt** | Secure password hashing |
 | **Multer** | File uploads (passport copies, flight tickets) |
-| **Puppeteer / @react-pdf/renderer** | PDF document generation |
+| **pdfkit** | Node-only PDF document generation (cPanel-safe) |
 | **Zod** | Shared validation schemas (frontend + backend) |
 | **Helmet + CORS + express-rate-limit** | Security middleware |
 | **Winston** | Structured logging |
@@ -98,7 +98,7 @@ VSL 360 is a **web-based internal management system** for a tour operations comp
 - **Full TypeScript:** Shared types and validation schemas between frontend and backend reduce bugs
 - **React + Tailwind + shadcn/ui:** Rapid development of a clean, professional internal tool UI
 - **Express + Prisma + PostgreSQL:** Proven, scalable backend for CRUD-heavy applications with relational data
-- **Puppeteer for PDFs:** Can render rich HTML templates into professional PDF documents
+- **pdfkit for PDFs:** Generates documents without browser binaries, better for constrained hosting
 
 ### Alternative Considerations
 
@@ -818,7 +818,7 @@ Booking (1) ──────< StatusHistory (many)
 
 ### 9.1 Approach
 
-Use **Puppeteer** (headless Chrome) on the backend to render HTML templates into PDF documents. Each document type has its own HTML/CSS template.
+Use **pdfkit** on the backend to generate PDF documents directly in Node.js without headless browser dependencies.
 
 ### 9.2 Document Templates
 
@@ -951,12 +951,11 @@ Use **Puppeteer** (headless Chrome) on the backend to render HTML templates into
 // src/services/documentGenerator.ts
 
 // 1. Fetch all related booking data from DB
-// 2. Pass data to HTML template engine (Handlebars/EJS)
-// 3. Render HTML string
-// 4. Use Puppeteer to convert HTML → PDF
-// 5. Save PDF to file storage
-// 6. Create GeneratedDocument record in DB
-// 7. Return file path / download URL
+// 2. Build PDF sections with shared writer helpers
+// 3. Render PDF via pdfkit (no browser process)
+// 4. Save PDF to file storage
+// 5. Create GeneratedDocument record in DB
+// 6. Return file path / download URL
 ```
 
 ---

@@ -30,6 +30,9 @@ JWT_SECRET=<long_random_secret>
 JWT_REFRESH_SECRET=<long_random_secret>
 CORS_ORIGIN=https://admin.visitsrilanka360.com
 UPLOAD_DIR=/home/adminvisitsrilan/vsl360-backend/uploads
+PDF_RENDERER_TYPE=pdfkit
+PDF_MAX_CONCURRENT_JOBS=2
+PDF_CLEANUP_DAYS=90
 ```
 
 > **Note:** PostgreSQL on this cPanel server only accepts Unix socket connections. The `@%2Ftmp` in the URL is the URL-encoded form of `@/tmp` which tells the driver to use the socket file at `/tmp/.s.PGSQL.5432`. Do NOT use `@localhost:5432` — TCP connections are not available.
@@ -39,7 +42,7 @@ UPLOAD_DIR=/home/adminvisitsrilan/vsl360-backend/uploads
 This cPanel shared hosting has several constraints that the deploy scripts work around:
 
 - **npm binary is broken**: The native `/opt/alt/alt-nodejs20/root/usr/bin/npm` crashes with `Aborted (core dumped)`. Scripts use `node /opt/alt/alt-nodejs20/root/usr/lib/node_modules/npm/bin/npm-cli.js` directly.
-- **Process/resource limits**: CloudLinux enforces tight process limits. `@prisma/engines` postinstall crashes with SIGABRT. Scripts use `--ignore-scripts` on npm install and run `prisma generate` / `puppeteer browsers install chrome` separately.
+- **Process/resource limits**: CloudLinux enforces tight process limits. `@prisma/engines` postinstall crashes with SIGABRT. Scripts use `--ignore-scripts` on npm install and run `prisma generate` separately.
 - **NODE_ENV=production skips devDependencies**: The env file sets `NODE_ENV=production`, so the deploy script temporarily overrides to `NODE_ENV=development` during install/build, then restores it.
 - **No TCP for PostgreSQL**: Only Unix socket connections work (see above).
 
@@ -63,11 +66,9 @@ CI/CD is handled by GitHub Actions via SSH. The deploy scripts live in the repos
 5. npm install (with `--ignore-scripts`)
 6. Install build tools (typescript, prisma, @types/*)
 7. Prisma generate (downloads query engine)
-8. Puppeteer browser install (downloads Chrome for PDF generation)
-9. TypeScript build (`tsc`)
-10. Copy `.hbs` templates to `dist/templates/`
-11. Rebuild native modules (bcrypt)
-12. Restart app
+8. TypeScript build (`tsc`)
+9. Rebuild native modules (bcrypt)
+10. Restart app
 
 ### NOT automated (run manually via SSH):
 - `prisma migrate deploy` — run when schema/migrations change
@@ -99,8 +100,7 @@ if [ ! -f "$NPM_CLI" ]; then echo "FATAL: npm-cli.js not found"; exit 1; fi
 npm_run() { node "$NPM_CLI" "$@"; }
 
 # Setup → Git Pull → Stop → Sync → Load Env → Install → Build Tools →
-# Prisma Generate → Puppeteer Browser → Build → Copy Templates →
-# Rebuild Native → Restart
+# Prisma Generate → Build → Rebuild Native → Restart
 ```
 
 ### Frontend script
@@ -290,7 +290,7 @@ Create `/home/adminvisitsrilan/.config/vsl360/backend.env` with the production v
 - Do not commit production secrets to Git
 - Native npm binary is broken — always use `node npm-cli.js` wrapper
 - `--ignore-scripts` is required on npm install to avoid SIGABRT from @prisma/engines
-- `.hbs` template files must be copied to `dist/templates/` after `tsc` build
+- PDF generation uses `pdfkit` (Node-only); no Chrome/Puppeteer installation is required
 
 ## Frontend SPA rewrite rule
 

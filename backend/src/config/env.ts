@@ -21,4 +21,7 @@ export const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  PDF_RENDERER_TYPE: process.env.PDF_RENDERER_TYPE || 'pdfkit',
+  PDF_MAX_CONCURRENT_JOBS: parseInt(process.env.PDF_MAX_CONCURRENT_JOBS || '2', 10),
+  PDF_CLEANUP_DAYS: parseInt(process.env.PDF_CLEANUP_DAYS || '90', 10),
 };
