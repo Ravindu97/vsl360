@@ -226,15 +226,29 @@ export class DocumentGeneratorService {
   }
 
   private async renderPdf(html: string, filename: string, options?: PdfRenderOptions): Promise<string> {
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    const outputPath = path.join(this.outputDir, filename);
+    logger.info(`[renderPdf] Launching Puppeteer for ${filename}`);
+    logger.info(`[renderPdf] Output directory: ${this.outputDir}`);
+    logger.info(`[renderPdf] Output path: ${outputPath}`);
+    logger.info(`[renderPdf] HTML size: ${html.length} chars`);
+
+    let browser;
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      });
+      logger.info(`[renderPdf] Puppeteer browser launched successfully`);
+    } catch (launchErr) {
+      logger.error(`[renderPdf] Failed to launch Puppeteer browser: ${String(launchErr)}`);
+      throw launchErr;
+    }
 
     try {
       const page = await browser.newPage();
+      logger.info(`[renderPdf] New page created, setting content...`);
       await page.setContent(html, { waitUntil: 'networkidle0' });
-      const outputPath = path.join(this.outputDir, filename);
+      logger.info(`[renderPdf] Page content set, rendering PDF...`);
       await page.pdf({
         path: outputPath,
         format: 'A4',
@@ -243,15 +257,23 @@ export class DocumentGeneratorService {
         preferCSSPageSize: options?.preferCSSPageSize ?? true,
         printBackground: true,
       });
+      logger.info(`[renderPdf] PDF written successfully to ${outputPath}`);
       return outputPath;
     } finally {
       await browser.close();
+      logger.info(`[renderPdf] Browser closed`);
     }
   }
 
   private loadTemplate(templateName: string): HandlebarsTemplateDelegate {
     const templatePath = path.join(this.templatesDir, `${templateName}.hbs`);
+    logger.info(`[loadTemplate] Loading template: ${templatePath}`);
+    if (!fs.existsSync(templatePath)) {
+      logger.error(`[loadTemplate] Template file NOT FOUND: ${templatePath}`);
+      throw new Error(`Template file not found: ${templatePath}`);
+    }
     const templateSource = fs.readFileSync(templatePath, 'utf-8');
+    logger.info(`[loadTemplate] Template loaded (${templateSource.length} chars): ${templateName}.hbs`);
     return Handlebars.compile(templateSource);
   }
 
@@ -423,27 +445,39 @@ export class DocumentGeneratorService {
   }
 
   async generateInvoice(bookingId: string, generatedBy: string): Promise<string> {
+    logger.info(`[generateInvoice] START bookingId=${bookingId} generatedBy=${generatedBy}`);
+
+    logger.info(`[generateInvoice] Querying DB for booking...`);
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: { client: true, invoice: true, paxList: true },
     });
 
+    logger.info(`[generateInvoice] DB result: booking=${!!booking} client=${!!booking?.client} invoice=${!!booking?.invoice} paxCount=${booking?.paxList?.length ?? 0}`);
+
     if (!booking || !booking.invoice || !booking.client) {
+      logger.error(`[generateInvoice] Missing required data: booking=${!!booking} client=${!!booking?.client} invoice=${!!booking?.invoice}`);
       throw new Error('Booking, client, or invoice data not found');
     }
 
+    logger.info(`[generateInvoice] Booking ref=${booking.bookingId} client=${booking.client.firstName} ${booking.client.lastName}`);
+
     const layout = this.pickInvoiceLayout(booking.invoice);
+    logger.info(`[generateInvoice] Layout selected: ${layout.layoutMode}`);
+
     const costBreakdown = computeInvoiceCostBreakdown(booking);
     const showPolicyBreakdown = isPolicyBasedInvoiceTotal(
       Number(booking.invoice.totalAmount),
       costBreakdown.computedTotal
     );
+    logger.info(`[generateInvoice] Cost breakdown computed: total=${String(booking.invoice.totalAmount)} showBreakdown=${showPolicyBreakdown}`);
 
     const template = this.loadTemplate('invoice');
     const tourInclusionsList = booking.invoice.tourInclusions
       ? booking.invoice.tourInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean)
       : [];
 
+    logger.info(`[generateInvoice] Rendering template with ${tourInclusionsList.length} inclusion items...`);
     const html = template({
       themeImage: this.themeImage,
       brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
@@ -452,14 +486,17 @@ export class DocumentGeneratorService {
       client: booking.client,
       invoice: booking.invoice,
       currencyCode: booking.client.preferredCurrency ?? 'USD',
-      paxCount: booking.paxList.length + 1, // +1 for main guest
+      paxCount: booking.paxList.length + 1,
       costBreakdown,
       showPolicyBreakdown,
       tourInclusionsList,
     });
+    logger.info(`[generateInvoice] Template rendered, HTML size=${html.length} chars`);
 
     const filename = `invoice_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
+    logger.info(`[generateInvoice] Calling renderPdf with filename=${filename}`);
     const filePath = await this.renderPdf(html, filename, layout.pdf);
+    logger.info(`[generateInvoice] PDF rendered at ${filePath}`);
 
     await prisma.generatedDocument.create({
       data: {
@@ -470,11 +507,14 @@ export class DocumentGeneratorService {
       },
     });
 
-    logger.info(`Invoice generated for booking ${booking.bookingId}`);
+    logger.info(`[generateInvoice] DONE booking=${booking.bookingId} file=${filePath}`);
     return filePath;
   }
 
   async generateTransportDetails(bookingId: string, generatedBy: string): Promise<string> {
+    logger.info(`[generateTransportDetails] START bookingId=${bookingId} generatedBy=${generatedBy}`);
+
+    logger.info(`[generateTransportDetails] Querying DB for booking...`);
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -484,17 +524,23 @@ export class DocumentGeneratorService {
       },
     });
 
+    logger.info(`[generateTransportDetails] DB result: booking=${!!booking} client=${!!booking?.client} transportPlan=${!!booking?.transportPlan} dayPlans=${booking?.transportPlan?.dayPlans?.length ?? 0}`);
+
     if (!booking || !booking.transportPlan || !booking.client) {
+      logger.error(`[generateTransportDetails] Missing required data: booking=${!!booking} client=${!!booking?.client} transportPlan=${!!booking?.transportPlan}`);
       throw new Error('Booking, client, or transport data not found');
     }
 
     const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
     const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
     const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+    logger.info(`[generateTransportDetails] Guests: adults=${adults} children=${children} infants=${infants}`);
 
     const layout = this.pickTransportLayout(booking.transportPlan);
+    logger.info(`[generateTransportDetails] Layout selected: ${layout.layoutMode}`);
 
     const template = this.loadTemplate('transport');
+    logger.info(`[generateTransportDetails] Rendering template...`);
     const html = template({
       brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
       layoutMode: layout.layoutMode,
@@ -508,7 +554,9 @@ export class DocumentGeneratorService {
     });
 
     const filename = `transport_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
+    logger.info(`[generateTransportDetails] Template rendered, calling renderPdf filename=${filename}`);
     const filePath = await this.renderPdf(html, filename, layout.pdf);
+    logger.info(`[generateTransportDetails] PDF rendered at ${filePath}`);
 
     await prisma.generatedDocument.create({
       data: {
@@ -519,11 +567,14 @@ export class DocumentGeneratorService {
       },
     });
 
-    logger.info(`Transport document generated for booking ${booking.bookingId}`);
+    logger.info(`[generateTransportDetails] DONE booking=${booking.bookingId} file=${filePath}`);
     return filePath;
   }
 
   async generateHotelReservation(bookingId: string, generatedBy: string): Promise<string> {
+    logger.info(`[generateHotelReservation] START bookingId=${bookingId} generatedBy=${generatedBy}`);
+
+    logger.info(`[generateHotelReservation] Querying DB for booking...`);
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -533,16 +584,23 @@ export class DocumentGeneratorService {
       },
     });
 
+    logger.info(`[generateHotelReservation] DB result: booking=${!!booking} client=${!!booking?.client} hotelNights=${booking?.hotelPlan?.length ?? 0}`);
+
     if (!booking || !booking.client || booking.hotelPlan.length === 0) {
+      logger.error(`[generateHotelReservation] Missing required data: booking=${!!booking} client=${!!booking?.client} hotelNights=${booking?.hotelPlan?.length ?? 0}`);
       throw new Error('Booking, client, or hotel data not found');
     }
 
     const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
     const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
     const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+    logger.info(`[generateHotelReservation] Guests: adults=${adults} children=${children} infants=${infants}`);
+
     const layout = this.pickReservationLayout(booking);
+    logger.info(`[generateHotelReservation] Layout selected: ${layout.layoutMode}`);
 
     const template = this.loadTemplate('reservation');
+    logger.info(`[generateHotelReservation] Rendering template...`);
     const html = template({
       themeImage: this.themeImage,
       layoutMode: layout.layoutMode,
@@ -556,7 +614,9 @@ export class DocumentGeneratorService {
     });
 
     const filename = `reservation_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
+    logger.info(`[generateHotelReservation] Template rendered, calling renderPdf filename=${filename}`);
     const filePath = await this.renderPdf(html, filename, layout.pdf);
+    logger.info(`[generateHotelReservation] PDF rendered at ${filePath}`);
 
     await prisma.generatedDocument.create({
       data: {
@@ -567,7 +627,7 @@ export class DocumentGeneratorService {
       },
     });
 
-    logger.info(`Hotel reservation document generated for booking ${booking.bookingId}`);
+    logger.info(`[generateHotelReservation] DONE booking=${booking.bookingId} file=${filePath}`);
     return filePath;
   }
 
@@ -576,6 +636,9 @@ export class DocumentGeneratorService {
     generatedBy: string,
     planDaysInput?: ItineraryPlanDayInput[]
   ): Promise<{ filePath: string; docId: string }> {
+    logger.info(`[generateItinerary] START bookingId=${bookingId} generatedBy=${generatedBy} planDaysInput=${JSON.stringify(planDaysInput ?? [])}`);
+
+    logger.info(`[generateItinerary] Querying DB for booking...`);
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -586,7 +649,10 @@ export class DocumentGeneratorService {
       },
     });
 
+    logger.info(`[generateItinerary] DB result: booking=${!!booking} client=${!!booking?.client} hotelNights=${booking?.hotelPlan?.length ?? 0} transportPlan=${!!booking?.transportPlan} dayPlans=${booking?.transportPlan?.dayPlans?.length ?? 0}`);
+
     if (!booking || !booking.client) {
+      logger.error(`[generateItinerary] Missing required data: booking=${!!booking} client=${!!booking?.client}`);
       throw new Error('Booking or client data not found');
     }
 
@@ -703,10 +769,13 @@ export class DocumentGeneratorService {
     const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
     const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
     const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+    logger.info(`[generateItinerary] Guests: adults=${adults} children=${children} infants=${infants} days=${booking.numberOfDays} planDays=${planDays.length}`);
 
     const layout = this.pickItineraryLayout(booking);
+    logger.info(`[generateItinerary] Layout selected: ${layout.layoutMode}`);
 
     const template = this.loadTemplate('itinerary');
+    logger.info(`[generateItinerary] Rendering template...`);
     const html = template({
       themeImage: this.themeImage,
       coverTemplateImage: this.itineraryCoverImage,
@@ -726,7 +795,9 @@ export class DocumentGeneratorService {
     });
 
     const filename = `itinerary_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
+    logger.info(`[generateItinerary] Template rendered HTML size=${html.length} chars, calling renderPdf filename=${filename}`);
     const filePath = await this.renderPdf(html, filename, layout.pdf);
+    logger.info(`[generateItinerary] PDF rendered at ${filePath}`);
 
     const doc = await prisma.generatedDocument.create({
       data: {
@@ -737,7 +808,7 @@ export class DocumentGeneratorService {
       },
     });
 
-    logger.info(`Full itinerary generated for booking ${booking.bookingId}`);
+    logger.info(`[generateItinerary] DONE booking=${booking.bookingId} file=${filePath} docId=${doc.id}`);
     return { filePath, docId: doc.id };
   }
 
@@ -769,6 +840,9 @@ export class DocumentGeneratorService {
   }
 
   async generateTravelConfirmation(bookingId: string, generatedBy: string): Promise<string> {
+    logger.info(`[generateTravelConfirmation] START bookingId=${bookingId} generatedBy=${generatedBy}`);
+
+    logger.info(`[generateTravelConfirmation] Querying DB for booking...`);
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -779,13 +853,17 @@ export class DocumentGeneratorService {
       },
     });
 
+    logger.info(`[generateTravelConfirmation] DB result: booking=${!!booking} client=${!!booking?.client} hotelNights=${booking?.hotelPlan?.length ?? 0} transportPlan=${!!booking?.transportPlan}`);
+
     if (!booking || !booking.client || booking.hotelPlan.length === 0) {
+      logger.error(`[generateTravelConfirmation] Missing required data: booking=${!!booking} client=${!!booking?.client} hotelNights=${booking?.hotelPlan?.length ?? 0}`);
       throw new Error('Booking, client, or hotel data not found');
     }
 
     const adults = booking.paxList.filter((p: any) => p.type === 'ADULT').length + 1;
     const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
     const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+    logger.info(`[generateTravelConfirmation] Guests: adults=${adults} children=${children} infants=${infants}`);
 
     // Build day-by-day rows from hotel plan
     const arrivalDate = new Date(booking.arrivalDate);
@@ -802,8 +880,10 @@ export class DocumentGeneratorService {
     });
 
     const layout = this.pickTravelConfirmationLayout(booking);
+    logger.info(`[generateTravelConfirmation] Layout selected: ${layout.layoutMode}`);
 
     const template = this.loadTemplate('travelConfirmation');
+    logger.info(`[generateTravelConfirmation] Rendering template...`);
     const html = template({
       brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
       layoutMode: layout.layoutMode,
@@ -819,7 +899,9 @@ export class DocumentGeneratorService {
     });
 
     const filename = `travel_confirmation_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
+    logger.info(`[generateTravelConfirmation] Template rendered HTML size=${html.length} chars, calling renderPdf filename=${filename}`);
     const filePath = await this.renderPdf(html, filename, layout.pdf);
+    logger.info(`[generateTravelConfirmation] PDF rendered at ${filePath}`);
 
     await prisma.generatedDocument.create({
       data: {
@@ -830,7 +912,7 @@ export class DocumentGeneratorService {
       },
     });
 
-    logger.info(`Travel confirmation generated for booking ${booking.bookingId}`);
+    logger.info(`[generateTravelConfirmation] DONE booking=${booking.bookingId} file=${filePath}`);
     return filePath;
   }
 
