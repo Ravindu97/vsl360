@@ -1,13 +1,5 @@
 FROM node:20-slim AS build
 
-# Install Chromium and dependencies for Puppeteer PDF generation
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    chromium \
-    fonts-liberation \
-    fonts-noto-color-emoji \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
@@ -32,7 +24,7 @@ RUN npm run build
 RUN mkdir -p dist/templates && cp src/templates/*.hbs dist/templates/
 
 # Prune dev dependencies for production image
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 # ------- Production stage -------
 FROM node:20-slim
