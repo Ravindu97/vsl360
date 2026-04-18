@@ -191,7 +191,7 @@ Wait for DNS propagation before running Certbot.
 On your local machine:
 
 ```bash
-pg_dump -U postgres -d vsl360 --no-owner --no-acl > vsl360_dump.sql
+pg_dump -U ravindufernando -d vsl360 --no-owner --no-acl > vsl360_dump.sql
 scp vsl360_dump.sql deploy@89.167.27.46:/opt/vsl360/
 ```
 
