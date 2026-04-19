@@ -17,14 +17,6 @@ on:
         required: true
         default: make-ready-for-depployment
         type: string
-      run_seed:
-        description: Run backend seed after deploy
-        required: true
-        default: 'false'
-        type: choice
-        options:
-          - 'false'
-          - 'true'
 
 jobs:
   deploy:
@@ -33,28 +25,45 @@ jobs:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.CPANEL_HOST }}
-          username: ${{ secrets.CPANEL_USER }}
-          key: ${{ secrets.CPANEL_SSH_KEY }}
-          passphrase: ${{ secrets.CPANEL_SSH_PASSPHRASE }}
-          port: ${{ secrets.CPANEL_SSH_PORT }}
-          script_stop: false
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          command_timeout: 30m
           script: |
             set -e
-            export PATH="/opt/alt/alt-nodejs20/root/usr/bin:$PATH"
             BRANCH="${{ github.event.inputs.branch }}"
             TARGET="${{ github.event.inputs.target }}"
-            RUN_SEED="${{ github.event.inputs.run_seed }}"
-            REPO_ROOT="/home/adminvisitsrilan/repositories/vsl360"
-            echo ">> Deploy starting: target=$TARGET branch=$BRANCH seed=$RUN_SEED"
-            if [ ! -d "$REPO_ROOT/.git" ]; then echo "ERROR: Repo not found"; exit 1; fi
-            cd "$REPO_ROOT"
-            git stash push --include-untracked -m "gha-$(date +%s)" 2>/dev/null || true
+            APP_DIR="/opt/vsl360"
+
+            echo ">> Deploy starting: target=$TARGET branch=$BRANCH"
+
+            cd "$APP_DIR"
             git fetch origin
             git checkout "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH" "origin/$BRANCH"
             git pull origin "$BRANCH"
-            echo ">> Repo at $(git rev-parse --short HEAD)"
-            chmod +x scripts/deploy-backend.sh scripts/deploy-frontend.sh
-            if [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ]; then echo ">> Backend deploy starting"; if [ "$RUN_SEED" = "true" ]; then bash scripts/deploy-backend.sh "$BRANCH" seed; else bash scripts/deploy-backend.sh "$BRANCH"; fi; echo ">> Backend deploy finished"; fi
-            if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "both" ]; then echo ">> Frontend deploy starting"; bash scripts/deploy-frontend.sh "$BRANCH"; echo ">> Frontend deploy finished"; fi
-            echo ">> ALL DONE"
+            echo ">> Code at $(git rev-parse --short HEAD)"
+
+            if [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ]; then
+              echo ">> Building backend..."
+              docker compose build backend
+              docker compose up -d backend
+              echo ">> Backend deployed"
+            fi
+
+            if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "both" ]; then
+              echo ">> Building frontend..."
+              docker compose build frontend
+              docker compose up -d frontend
+              echo ">> Frontend deployed"
+            fi
+
+            # Health check
+            sleep 5
+            if curl -sf http://localhost:3000/api/health > /dev/null; then
+              echo ">> Health check passed"
+            else
+              echo ">> WARNING: Health check failed"
+            fi
+
+            echo ">> Deploy complete: $(git rev-parse --short HEAD) at $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

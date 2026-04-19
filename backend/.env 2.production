@@ -1,0 +1,7 @@
+NODE_ENV=production
+DATABASE_URL=postgresql://adminvisitsrilan_admin:1UT%5EW4OY5%7DP%7B%7D198@localhost:5432/adminvisitsrilan_vsl360
+SHADOW_DATABASE_URL=postgresql://adminvisitsrilan_admin:1UT%5EW4OY5%7DP%7B%7D198@localhost:5432/adminvisitsrilan_vsl360_shadow
+JWT_SECRET=a8f4c91e5b0d3a77c2f9e14bd68a3c5e91f2d4b7a0c8e6f3d1b5a9c7e2f4d6b8
+JWT_REFRESH_SECRET=f2b7d1c9a4e6f8b3c5d0a2e7f1b9c4d6a8e3f5c7b1d9a0e2f4c6b8d3e5a7f9c1
+CORS_ORIGIN=https://admin.visitsrilanka360.com
+UPLOAD_DIR=/home/adminvisitsrilan/vsl360-backend/uploads
