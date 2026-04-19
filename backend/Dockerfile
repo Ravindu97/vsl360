@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+# BuildKit cache mounts speed up rebuilds (npm + apt); first build is still slow (downloads).
 FROM node:20-slim AS build
 
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
@@ -7,15 +9,17 @@ WORKDIR /app
 
 # Install all dependencies (including devDeps for build)
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # Copy source and Prisma schema
 COPY prisma ./prisma/
 COPY tsconfig.json ./
 COPY src ./src/
 
-# Generate Prisma client
-RUN npx prisma generate
+# Generate Prisma client (downloads engines for each binaryTargets entry — one-time cost per cold build)
+RUN --mount=type=cache,target=/root/.npm \
+    npx prisma generate
 
 # Build TypeScript
 RUN npm run build
@@ -24,12 +28,15 @@ RUN npm run build
 RUN mkdir -p dist/templates && cp src/templates/*.hbs dist/templates/
 
 # Prune dev dependencies for production image
-RUN npm prune --omit=dev
+RUN --mount=type=cache,target=/root/.npm \
+    npm prune --omit=dev
 
 # ------- Production stage -------
 FROM node:20-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     chromium \
     fonts-liberation \
     fonts-noto-color-emoji \
