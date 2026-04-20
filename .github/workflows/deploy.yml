@@ -93,6 +93,17 @@ jobs:
             chmod 600 .env.production
             echo ">> Wrote .env.production from GitHub Environment Secrets"
 
+            # Non-secret sanity: which optional vars were provided (values not printed)
+            echo ">> Optional env summary (set / not set only):"
+            for _opt in UPLOAD_DIR PORT DOCUMENT_LOGO_PATH DOCUMENT_INVOICE_LOGO_PATH DOCUMENT_THEME_PATH DOCUMENT_LOGO_URL DOCUMENT_INVOICE_LOGO_URL; do
+              if [ -n "${!_opt:-}" ]; then
+                echo ">>   ${_opt}: set"
+              else
+                echo ">>   ${_opt}: not set"
+              fi
+            done
+            echo ">> Note: UPLOAD_DIR/PORT fall back to /app/uploads and 3000 when not set."
+
             if [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ]; then
               echo ">> Building backend..."
               docker compose --env-file .env.production build backend
