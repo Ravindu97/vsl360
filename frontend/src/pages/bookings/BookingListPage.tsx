@@ -81,16 +81,16 @@ export function BookingListPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <h1 className="text-2xl font-bold">Bookings</h1>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex min-w-0 w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:justify-end">
+          <div className="relative w-full min-w-0 sm:max-w-xs">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search ID, client..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-9 w-[240px]"
+              className="w-full pl-9"
             />
             {searchInput && (
               <button
@@ -106,7 +106,7 @@ export function BookingListPage() {
             setStatusFilter(value);
             setPage(1);
           }}>
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-full sm:w-[200px]">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -118,25 +118,27 @@ export function BookingListPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button
-            variant={showFilters ? 'secondary' : 'outline'}
-            size="icon"
-            onClick={() => setShowFilters(!showFilters)}
-            className="relative"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-            {activeFilterCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
-                {activeFilterCount}
-              </span>
-            )}
-          </Button>
-          {user && canCreateBooking(user.role) && (
-            <Button onClick={() => navigate('/bookings/new')}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Booking
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={showFilters ? 'secondary' : 'outline'}
+              size="icon"
+              onClick={() => setShowFilters(!showFilters)}
+              className="relative shrink-0"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              {activeFilterCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                  {activeFilterCount}
+                </span>
+              )}
             </Button>
-          )}
+            {user && canCreateBooking(user.role) && (
+              <Button className="shrink-0" onClick={() => navigate('/bookings/new')}>
+                <Plus className="mr-2 h-4 w-4" />
+                New Booking
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -202,6 +204,7 @@ export function BookingListPage() {
         />
       ) : (
         <div className="rounded-md border">
+          <div className="w-full overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -249,6 +252,7 @@ export function BookingListPage() {
               ))}
             </TableBody>
           </Table>
+          </div>
           <PaginationControls
             page={pagination?.page ?? 1}
             totalPages={pagination?.totalPages ?? 1}

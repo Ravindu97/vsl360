@@ -551,6 +551,7 @@ export function ItineraryLibraryPage() {
                   </div>
                 </div>
 
+                <div className="w-full overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -600,6 +601,7 @@ export function ItineraryLibraryPage() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
 
                 <PaginationControls
                   page={activityPagination?.page ?? 1}

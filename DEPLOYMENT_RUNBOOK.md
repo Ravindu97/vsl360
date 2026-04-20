@@ -21,6 +21,9 @@ Internet → Nginx (host, ports 80/443, SSL termination)
 Volumes:
   pgdata  → PostgreSQL data (persists across rebuilds)
   uploads → Backend file uploads (persists across rebuilds)
+
+Host bind mount:
+  ./assets → /app/assets (read-only) on backend — logos for PDF generation (`DOCUMENT_LOGO_PATH`, etc.)
 ```
 
 ## VPS initial setup
@@ -92,13 +95,13 @@ git checkout make-ready-for-depployment
 ### 7. Create production env file
 
 ```bash
-cp .env.production.example .env.production
 nano .env.production
 ```
 
-Fill in real values:
+Create `/opt/vsl360/.env.production` with at least the following (replace placeholders with real secrets):
 
 ```env
+COMPOSE_ENV_FILE=.env.production
 POSTGRES_USER=vsl360
 POSTGRES_PASSWORD=<generate-strong-password>
 POSTGRES_DB=vsl360
@@ -109,7 +112,11 @@ CORS_ORIGINS=https://admin.visitsrilanka360.com,https://www.admin.visitsrilanka3
 UPLOAD_DIR=/app/uploads
 PORT=3000
 VITE_API_URL=https://api.admin.visitsrilanka360.com/api
+# Optional — PDF branding (ensure assets exist under repo ./assets)
+# DOCUMENT_LOGO_PATH=/app/assets/logo.png
 ```
+
+**Compose note:** always pass `--env-file .env.production` to `docker compose` on the VPS so `${POSTGRES_PASSWORD}` and other variables interpolate correctly (matches [docker-compose.yml](docker-compose.yml)).
 
 Generate secrets:
 
@@ -201,16 +208,16 @@ On the VPS:
 cd /opt/vsl360
 
 # Start only the database container
-docker compose up -d db
+docker compose --env-file .env.production up -d db
 
 # Wait for it to be healthy
-docker compose exec db pg_isready -U vsl360
+docker compose --env-file .env.production exec db pg_isready -U vsl360
 
 # Import the dump
-docker compose exec -T db psql -U vsl360 -d vsl360 < vsl360_dump.sql
+docker compose --env-file .env.production exec -T db psql -U vsl360 -d vsl360 < vsl360_dump.sql
 
 # Verify
-docker compose exec db psql -U vsl360 -d vsl360 -c "SELECT count(*) FROM \"User\";"
+docker compose --env-file .env.production exec db psql -U vsl360 -d vsl360 -c "SELECT count(*) FROM \"User\";"
 ```
 
 ### Create empty database (fresh start)
@@ -219,67 +226,100 @@ If starting fresh instead of importing:
 
 ```bash
 cd /opt/vsl360
-docker compose up -d db
-docker compose up -d backend
-docker compose exec backend npx prisma migrate deploy
-docker compose exec backend npx tsx prisma/seed.ts
+docker compose --env-file .env.production up -d db
+docker compose --env-file .env.production up -d backend
+docker compose --env-file .env.production exec backend npx prisma migrate deploy
+docker compose --env-file .env.production exec backend npx tsx prisma/seed.ts
 ```
 
 ## Deploy
 
-### First deploy
+Use **`docker compose --env-file .env.production`** from `/opt/vsl360` so database credentials and build args resolve correctly.
+
+### First deploy (manual, env file on disk)
+
+After creating `.env.production` with your real secrets:
 
 ```bash
 cd /opt/vsl360
-docker compose up -d --build
+docker compose --env-file .env.production up -d --build
 ```
 
 ### Run migrations (after schema changes)
 
 ```bash
-docker compose exec backend npx prisma migrate deploy
+cd /opt/vsl360
+docker compose --env-file .env.production exec backend npx prisma migrate deploy
 ```
 
 ### Run seed (if needed)
 
 ```bash
-docker compose exec backend npx tsx prisma/seed.ts
+cd /opt/vsl360
+docker compose --env-file .env.production exec backend npx tsx prisma/seed.ts
 ```
 
 ## GitHub Actions CI/CD
 
-### Required GitHub secrets
+Workflow: [.github/workflows/deploy.yml](.github/workflows/deploy.yml) — **workflow_dispatch** only, GitHub **Environment** name: `production`.
 
-| Secret | Value |
-|--------|-------|
-| `VPS_HOST` | `89.167.27.46` |
-| `VPS_USER` | `deploy` |
-| `VPS_SSH_KEY` | Private SSH key for the deploy user |
+### Repository / environment secrets
 
-Remove old cPanel secrets (`CPANEL_*`) after migration is verified.
+**SSH (repo secrets — used by the workflow to reach the VPS):**
+
+| Secret | Description |
+|--------|-------------|
+| `VPS_HOST` | VPS IP or DNS (e.g. `89.167.27.46`) |
+| `VPS_USER` | SSH user (e.g. `deploy`) |
+| `VPS_SSH_KEY` | Private key (full PEM) for that user |
+
+**Application (Environment `production` — used to render `/opt/vsl360/.env.production` on the server):**
+
+| Secret | Required |
+|--------|----------|
+| `POSTGRES_USER` | Yes |
+| `POSTGRES_PASSWORD` | Yes |
+| `POSTGRES_DB` | Yes |
+| `JWT_SECRET` | Yes |
+| `JWT_REFRESH_SECRET` | Yes |
+| `CORS_ORIGIN` | Yes |
+| `CORS_ORIGINS` | Yes |
+| `VITE_API_URL` | Yes (baked into frontend image at build) |
+| `UPLOAD_DIR` | No (defaults to `/app/uploads` in workflow) |
+| `PORT` | No (defaults to `3000`) |
+| `DOCUMENT_LOGO_PATH` | No |
+| `DOCUMENT_INVOICE_LOGO_PATH` | No |
+| `DOCUMENT_THEME_PATH` | No |
+| `DOCUMENT_LOGO_URL` | No |
+| `DOCUMENT_INVOICE_LOGO_URL` | No |
+
+Remove any unused **legacy** repository secrets (e.g. old `CPANEL_*` names) so they are not confused with current VPS deploy.
 
 ### How to deploy
 
-1. Push code to `make-ready-for-depployment`
-2. Go to GitHub Actions → "Deploy Production"
-3. Click "Run workflow"
-4. Choose target: `backend`, `frontend`, or `both`
-5. Verify health check and UI after completion
+1. Ensure the branch you want exists on `origin`.
+2. GitHub → **Actions** → **Deploy Production** → **Run workflow**.
+3. Set **branch** and **target** (`backend`, `frontend`, or `both`).
+4. After completion, verify API health and the admin UI.
 
 ### What the workflow does
 
-1. SSH into VPS as `deploy` user
-2. `cd /opt/vsl360 && git pull`
-3. `docker compose build <target>`
-4. `docker compose up -d <target>`
-5. Health check: `curl http://localhost:3000/api/health`
+1. SSH to `VPS_HOST` as `VPS_USER`.
+2. `cd /opt/vsl360`, `git fetch`, checkout/pull the selected branch.
+3. Validate required environment secrets are present.
+4. Write `/opt/vsl360/.env.production` from those secrets (`chmod 600`).
+5. Print optional-variable **set / not set** lines (values are not logged).
+6. `docker compose --env-file .env.production build <target>` and `up -d <target>`.
+7. Health check: `curl -sf http://localhost:3000/api/health`.
+
+Manual deploys on the VPS can keep a long-lived `.env.production` file instead of relying on step 4–5; CI overwrites the file each run with the latest secrets.
 
 ## Docker services
 
 | Service | Image | Port | Volume |
 |---------|-------|------|--------|
 | `db` | `postgres:16-alpine` | 5432 (internal) | `pgdata` |
-| `backend` | Custom (Node 20 + Chromium) | 3000 | `uploads` |
+| `backend` | Custom (Node 20 + Chromium) | 3000 | `uploads`, `./assets` → `/app/assets` |
 | `frontend` | Custom (Nginx alpine) | 8080 | — |
 
 ## Common operations
@@ -288,59 +328,59 @@ Remove old cPanel secrets (`CPANEL_*`) after migration is verified.
 
 ```bash
 # All services
-docker compose logs -f
+docker compose --env-file .env.production logs -f
 
 # Specific service
-docker compose logs -f backend
-docker compose logs -f db
+docker compose --env-file .env.production logs -f backend
+docker compose --env-file .env.production logs -f db
 
 # Last 100 lines
-docker compose logs --tail 100 backend
+docker compose --env-file .env.production logs --tail 100 backend
 ```
 
 ### Restart a service
 
 ```bash
-docker compose restart backend
-docker compose restart frontend
+docker compose --env-file .env.production restart backend
+docker compose --env-file .env.production restart frontend
 ```
 
 ### Rebuild and restart
 
 ```bash
-docker compose up -d --build backend
-docker compose up -d --build frontend
+docker compose --env-file .env.production up -d --build backend
+docker compose --env-file .env.production up -d --build frontend
 ```
 
 ### Access database shell
 
 ```bash
-docker compose exec db psql -U vsl360 -d vsl360
+docker compose --env-file .env.production exec db psql -U vsl360 -d vsl360
 ```
 
 ### Backup database
 
 ```bash
-docker compose exec db pg_dump -U vsl360 vsl360 > backup_$(date +%F).sql
+docker compose --env-file .env.production exec db pg_dump -U vsl360 vsl360 > backup_$(date +%F).sql
 ```
 
 ### Restore database
 
 ```bash
-docker compose exec -T db psql -U vsl360 -d vsl360 < backup_2026-04-18.sql
+docker compose --env-file .env.production exec -T db psql -U vsl360 -d vsl360 < backup_2026-04-18.sql
 ```
 
 ### Check container status
 
 ```bash
-docker compose ps
+docker compose --env-file .env.production ps
 ```
 
 ### Stop everything
 
 ```bash
-docker compose down        # stop containers (data preserved in volumes)
-docker compose down -v     # stop AND delete volumes (DESTROYS DATA)
+docker compose --env-file .env.production down        # stop containers (data preserved in volumes)
+docker compose --env-file .env.production down -v     # stop AND delete volumes (DESTROYS DATA)
 ```
 
 ## Rollback
@@ -351,7 +391,7 @@ docker compose down -v     # stop AND delete volumes (DESTROYS DATA)
 cd /opt/vsl360
 git log --oneline -n 10
 git checkout <previous_commit>
-docker compose up -d --build backend   # or frontend, or both
+docker compose --env-file .env.production up -d --build backend   # or frontend, or both
 ```
 
 ### Database rollback
@@ -360,19 +400,20 @@ Database rollback is NOT automatic. Always backup before destructive migrations:
 
 ```bash
 # Backup before migration
-docker compose exec db pg_dump -U vsl360 vsl360 > pre_migration_backup.sql
+docker compose --env-file .env.production exec db pg_dump -U vsl360 vsl360 > pre_migration_backup.sql
 
 # Run migration
-docker compose exec backend npx prisma migrate deploy
+docker compose --env-file .env.production exec backend npx prisma migrate deploy
 
 # If something goes wrong, restore
-docker compose exec -T db psql -U vsl360 -d vsl360 < pre_migration_backup.sql
+docker compose --env-file .env.production exec -T db psql -U vsl360 -d vsl360 < pre_migration_backup.sql
 ```
 
 ## Environment variables reference
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
+| `COMPOSE_ENV_FILE` | Yes (in `.env.production`) | `.env.production` | Which file `env_file:` in [docker-compose.yml](docker-compose.yml) loads |
 | `POSTGRES_USER` | Yes | `vsl360` | PostgreSQL username |
 | `POSTGRES_PASSWORD` | Yes | — | PostgreSQL password |
 | `POSTGRES_DB` | Yes | `vsl360` | PostgreSQL database name |
@@ -384,6 +425,11 @@ docker compose exec -T db psql -U vsl360 -d vsl360 < pre_migration_backup.sql
 | `UPLOAD_DIR` | No | `/app/uploads` | Upload directory inside container |
 | `PORT` | No | `3000` | Backend server port |
 | `VITE_API_URL` | Yes | — | API URL baked into frontend at build time |
+| `DOCUMENT_LOGO_PATH` | No | — | Host path inside backend container for invoice/PDF logo (e.g. `/app/assets/logo.png`) |
+| `DOCUMENT_INVOICE_LOGO_PATH` | No | — | Optional alternate logo for some documents |
+| `DOCUMENT_THEME_PATH` | No | — | Optional theme image for templates |
+| `DOCUMENT_LOGO_URL` | No | — | Optional HTTPS URL for logo if not using files |
+| `DOCUMENT_INVOICE_LOGO_URL` | No | — | Optional URL for invoice logo |
 
 ## Automated backups (recommended)
 
@@ -398,7 +444,7 @@ crontab -e
 Add:
 
 ```cron
-0 2 * * * cd /opt/vsl360 && docker compose exec -T db pg_dump -U vsl360 vsl360 | gzip > /opt/backups/vsl360/vsl360_$(date +\%F).sql.gz && find /opt/backups/vsl360 -name "*.sql.gz" -mtime +7 -delete
+0 2 * * * cd /opt/vsl360 && docker compose --env-file .env.production exec -T db pg_dump -U vsl360 vsl360 | gzip > /opt/backups/vsl360/vsl360_$(date +\%F).sql.gz && find /opt/backups/vsl360 -name "*.sql.gz" -mtime +7 -delete
 ```
 
 This runs daily at 2 AM, keeps 7 days of backups.
@@ -417,8 +463,8 @@ This runs daily at 2 AM, keeps 7 days of backups.
 ### Container health
 
 ```bash
-docker compose ps    # all containers should show "Up" / "healthy"
-docker compose logs --tail 20 backend  # no errors
+docker compose --env-file .env.production ps    # all containers should show "Up" / "healthy"
+docker compose --env-file .env.production logs --tail 20 backend  # no errors
 ```
 
 ## Quick reference
@@ -426,12 +472,12 @@ docker compose logs --tail 20 backend  # no errors
 | Action | Command |
 |--------|---------|
 | Deploy (CI/CD) | GitHub Actions → Deploy Production |
-| Deploy (manual) | `cd /opt/vsl360 && git pull && docker compose up -d --build` |
-| Run migrations | `docker compose exec backend npx prisma migrate deploy` |
-| Run seed | `docker compose exec backend npx tsx prisma/seed.ts` |
-| View logs | `docker compose logs -f backend` |
-| Backup DB | `docker compose exec db pg_dump -U vsl360 vsl360 > backup.sql` |
-| DB shell | `docker compose exec db psql -U vsl360 -d vsl360` |
+| Deploy (manual) | `cd /opt/vsl360 && git pull && docker compose --env-file .env.production up -d --build` |
+| Run migrations | `docker compose --env-file .env.production exec backend npx prisma migrate deploy` |
+| Run seed | `docker compose --env-file .env.production exec backend npx tsx prisma/seed.ts` |
+| View logs | `docker compose --env-file .env.production logs -f backend` |
+| Backup DB | `docker compose --env-file .env.production exec db pg_dump -U vsl360 vsl360 > backup.sql` |
+| DB shell | `docker compose --env-file .env.production exec db psql -U vsl360 -d vsl360` |
 | Health check | `curl -i https://api.admin.visitsrilanka360.com/api/health` |
 | Frontend URL | `https://admin.visitsrilanka360.com` |
 | Backend URL | `https://api.admin.visitsrilanka360.com/api` |

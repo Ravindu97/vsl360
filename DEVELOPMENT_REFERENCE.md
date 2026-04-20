@@ -1121,25 +1121,17 @@ VITE_API_URL=http://localhost:3000/api
 | **AWS (ECS + RDS)** | Scalable, managed database |
 | **Vercel (frontend) + Railway (backend)** | Separate frontend/backend hosting |
 
-### Current Production Deployment Approach
+### Current production deployment approach (VPS + Docker)
 
-The current production environment uses cPanel shared hosting, so deployment should be based on a Git repository clone on the server rather than local release artifacts.
+Production runs on a **VPS** with **Docker Compose**: PostgreSQL, backend (Node + Puppeteer/Chromium for PDFs), and frontend (Nginx serving the Vite build). Host Nginx terminates TLS and proxies to the containers.
 
-- The repository is cloned on the server at `/home/adminvisitsrilan/repositories/vsl360`
-- Backend runtime files are synced into `/home/adminvisitsrilan/vsl360-backend`
-- Frontend is built on the server and copied into `/home/adminvisitsrilan/public_html`
-- Environment files must remain outside the destructive sync paths when possible
-- Native Node modules such as `bcrypt` must be installed on the Linux server, not copied from macOS builds
+- App directory on server: `/opt/vsl360`
+- Compose file: `docker-compose.yml` — use **`docker compose --env-file .env.production`** from the app directory so secrets and `VITE_API_URL` interpolate correctly
+- Environment: `.env.production` on the VPS (or generated each deploy from GitHub **Environment** secrets — see workflow)
+- **Canonical operations guide:** [DEPLOYMENT_RUNBOOK.md](DEPLOYMENT_RUNBOOK.md) (provision, DNS, SSL, DB, backups, CI/CD)
+- **CI/CD:** [.github/workflows/deploy.yml](.github/workflows/deploy.yml) — `workflow_dispatch`, environment `production`, SSH via `VPS_HOST` / `VPS_USER` / `VPS_SSH_KEY`
 
-### Recommended Production Automation
-
-Use GitHub Actions to SSH into the server and run version-controlled deploy scripts stored in the repository.
-
-- Backend deploy script: `scripts/deploy-backend.sh`
-- Frontend deploy script: `scripts/deploy-frontend.sh`
-- Workflow entry point: `.github/workflows/deploy.yml`
-
-This keeps deployment logic in source control, avoids drift between manual and automated deploys, and removes the need to upload tarballs from a local machine.
+The former cPanel-based flow is archived under [bin_legacy/](bin_legacy/) (see [bin_legacy/DEVELOPMENT_REFERENCE_cpanel_snippet.md](bin_legacy/DEVELOPMENT_REFERENCE_cpanel_snippet.md)).
 
 ### Docker Setup
 

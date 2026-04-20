@@ -43,17 +43,19 @@ export function BookingDetailPage() {
       </div>
 
       <Tabs defaultValue="overview">
-        <TabsList className="flex-wrap">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="client-pax">Client & Pax</TabsTrigger>
-          <TabsTrigger value="hotels">Hotels</TabsTrigger>
-          <TabsTrigger value="transport">Transport</TabsTrigger>
-          <TabsTrigger value="invoice">Invoice</TabsTrigger>
-          <TabsTrigger value="attachments">Attachments</TabsTrigger>
-          <TabsTrigger value="itinerary-plan">Itinerary Plan</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-        </TabsList>
+        <div className="-mx-1 min-w-0 px-1">
+          <TabsList className="flex h-auto min-h-9 w-full min-w-0 flex-nowrap justify-start gap-1 overflow-x-auto overflow-y-hidden rounded-lg bg-muted p-1 text-muted-foreground [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger className="shrink-0" value="overview">Overview</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="client-pax">Client & Pax</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="hotels">Hotels</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="transport">Transport</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="invoice">Invoice</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="attachments">Attachments</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="itinerary-plan">Itinerary Plan</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="documents">Documents</TabsTrigger>
+            <TabsTrigger className="shrink-0" value="history">History</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="overview"><OverviewTab booking={booking} /></TabsContent>
         <TabsContent value="client-pax"><ClientPaxTab booking={booking} /></TabsContent>
         <TabsContent value="hotels"><HotelsTab booking={booking} /></TabsContent>

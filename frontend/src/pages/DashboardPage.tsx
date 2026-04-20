@@ -34,13 +34,13 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {user?.name}</p>
         </div>
         {user && canCreateBooking(user.role) && (
-          <Button onClick={() => navigate('/bookings/new')}>
+          <Button className="w-full shrink-0 sm:w-auto" onClick={() => navigate('/bookings/new')}>
             <Plus className="mr-2 h-4 w-4" />
             New Booking
           </Button>

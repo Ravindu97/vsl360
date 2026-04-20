@@ -176,11 +176,11 @@ export function OverviewTab({ booking }: Props) {
           <StatusPipeline booking={booking} />
           {canChangeStatus && (nextStatuses.length > 0 || Boolean(revertStatus)) && (
             <div className="border-t mt-5 pt-4">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="space-y-1.5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                <div className="w-full space-y-1.5 sm:w-auto">
                   <Label className="text-xs text-muted-foreground">Advance to</Label>
                   <Select value={newStatus} onValueChange={setNewStatus}>
-                    <SelectTrigger className="w-[220px]">
+                    <SelectTrigger className="w-full sm:w-[220px]">
                       <SelectValue placeholder="Select next status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -196,11 +196,12 @@ export function OverviewTab({ booking }: Props) {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1.5 flex-1 min-w-[200px]">
+                <div className="min-w-0 w-full flex-1 space-y-1.5 sm:min-w-[200px]">
                   <Label className="text-xs text-muted-foreground">Notes (optional)</Label>
                   <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Add a note about this change..." />
                 </div>
                 <Button
+                  className="w-full shrink-0 sm:w-auto"
                   disabled={!newStatus || statusMutation.isPending}
                   onClick={handleStatusUpdate}
                   size="sm"
