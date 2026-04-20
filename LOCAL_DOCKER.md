@@ -21,13 +21,12 @@ Optional:
 
 | File | Purpose |
 |------|---------|
-| **`.env.local`** | Your real local secrets and URLs. **Never commit.** |
-| **`.env.local.example`** | Safe template; copy to `.env.local` and edit. |
+| **`.env.local`** | Your real local secrets and URLs. **Never commit** (env files are not tracked in this repo). |
 | **`.env.production`** | Used only on the VPS / production-style deploys. |
 
 Compose is configured so **one file** drives both **variable substitution** and **container `env_file`**:
 
-1. Put `COMPOSE_ENV_FILE=.env.local` inside `.env.local` (already in the example).
+1. Put `COMPOSE_ENV_FILE=.env.local` inside `.env.local` (included in the block above).
 2. Always pass that file to Compose:  
    `docker compose --env-file .env.local ...`
 
@@ -41,8 +40,23 @@ From the **repository root** (where `docker-compose.yml` lives):
 
 ### 1. Create `.env.local`
 
-```bash
-cp .env.local.example .env.local
+Create `.env.local` at the repo root (same directory as `docker-compose.yml`). A typical starting point:
+
+```env
+COMPOSE_ENV_FILE=.env.local
+
+POSTGRES_USER=vsl360
+POSTGRES_PASSWORD=localdev_change_me
+POSTGRES_DB=vsl360
+
+JWT_SECRET=localdev_change_me_use_openssl_rand_hex_32
+JWT_REFRESH_SECRET=localdev_change_me_use_another_random_string
+CORS_ORIGIN=http://localhost:8080
+CORS_ORIGINS=http://localhost:8080,http://localhost:5173
+UPLOAD_DIR=/app/uploads
+PORT=3000
+
+VITE_API_URL=http://localhost:3000/api
 ```
 
 ### 2. Edit `.env.local`

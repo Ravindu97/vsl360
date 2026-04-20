@@ -95,11 +95,10 @@ git checkout make-ready-for-depployment
 ### 7. Create production env file
 
 ```bash
-cp .env.production.example .env.production
 nano .env.production
 ```
 
-Fill in real values (see [.env.production.example](.env.production.example)):
+Create `/opt/vsl360/.env.production` with at least the following (replace placeholders with real secrets):
 
 ```env
 COMPOSE_ENV_FILE=.env.production
@@ -239,7 +238,7 @@ Use **`docker compose --env-file .env.production`** from `/opt/vsl360` so databa
 
 ### First deploy (manual, env file on disk)
 
-After creating `.env.production` (copy from `.env.production.example` and fill secrets):
+After creating `.env.production` with your real secrets:
 
 ```bash
 cd /opt/vsl360

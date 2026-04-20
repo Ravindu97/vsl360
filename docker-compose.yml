@@ -1,5 +1,5 @@
 # Which env file services load (must match the file passed to: docker compose --env-file <file>)
-# Local: copy .env.local.example → .env.local, then: docker compose --env-file .env.local up -d --build
+# Local: create .env.local (see LOCAL_DOCKER.md), then: docker compose --env-file .env.local up -d --build
 # Production: docker compose --env-file .env.production up -d --build
 services:
   db:
