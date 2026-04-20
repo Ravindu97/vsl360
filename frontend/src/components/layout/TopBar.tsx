@@ -1,4 +1,4 @@
-import { LogOut, User } from 'lucide-react';
+import { LogOut, Menu, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,12 +10,27 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-export function TopBar() {
+interface Props {
+  onOpenMobileNav?: () => void;
+}
+
+export function TopBar({ onOpenMobileNav }: Props) {
   const { user, logout } = useAuth();
 
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-background px-6">
-      <div />
+    <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4 sm:px-6">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={onOpenMobileNav}
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="sm" className="gap-2">
