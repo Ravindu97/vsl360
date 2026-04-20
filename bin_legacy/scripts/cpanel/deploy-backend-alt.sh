@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Alternate backend deploy (no Puppeteer browser install / template copy steps).
+# Archived from former `deploy-backend 2.sh`.
+
 set -e
 
 BRANCH="${1:-make-ready-for-depployment}"

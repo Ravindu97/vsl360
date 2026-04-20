@@ -1,4 +1,7 @@
-# VSL360 Deployment Runbook
+# VSL360 Deployment Runbook (cPanel — archived)
+
+> **Archived:** This document describes the **former** cPanel shared-hosting deployment.  
+> **Current production** uses VPS + Docker — see [DEPLOYMENT_RUNBOOK.md](../DEPLOYMENT_RUNBOOK.md) in the repo root.
 
 ## Production topology
 
@@ -51,8 +54,8 @@ This cPanel shared hosting has several constraints that the deploy scripts work 
 CI/CD is handled by GitHub Actions via SSH. The deploy scripts live in the repository.
 
 - Source of truth: `/home/adminvisitsrilan/repositories/vsl360`
-- Backend deploy script: `scripts/deploy-backend.sh`
-- Frontend deploy script: `scripts/deploy-frontend.sh`
+- Backend deploy script: `scripts/deploy-backend.sh` (archived under `bin_legacy/scripts/cpanel/`)
+- Frontend deploy script: `scripts/deploy-frontend.sh` (archived under `bin_legacy/scripts/cpanel/`)
 - Runtime backend app root: `/home/adminvisitsrilan/vsl360-backend`
 - Runtime frontend root: `/home/adminvisitsrilan/public_html`
 
