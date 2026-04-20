@@ -21,15 +21,33 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
+          CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+          CORS_ORIGINS: ${{ secrets.CORS_ORIGINS }}
+          UPLOAD_DIR: ${{ secrets.UPLOAD_DIR }}
+          PORT: ${{ secrets.PORT }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          DOCUMENT_LOGO_PATH: ${{ secrets.DOCUMENT_LOGO_PATH }}
+          DOCUMENT_INVOICE_LOGO_PATH: ${{ secrets.DOCUMENT_INVOICE_LOGO_PATH }}
+          DOCUMENT_THEME_PATH: ${{ secrets.DOCUMENT_THEME_PATH }}
+          DOCUMENT_LOGO_URL: ${{ secrets.DOCUMENT_LOGO_URL }}
+          DOCUMENT_INVOICE_LOGO_URL: ${{ secrets.DOCUMENT_INVOICE_LOGO_URL }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: 22
           command_timeout: 30m
+          envs: POSTGRES_USER,POSTGRES_PASSWORD,POSTGRES_DB,JWT_SECRET,JWT_REFRESH_SECRET,CORS_ORIGIN,CORS_ORIGINS,UPLOAD_DIR,PORT,VITE_API_URL,DOCUMENT_LOGO_PATH,DOCUMENT_INVOICE_LOGO_PATH,DOCUMENT_THEME_PATH,DOCUMENT_LOGO_URL,DOCUMENT_INVOICE_LOGO_URL
           script: |
             set -e
             BRANCH="${{ github.event.inputs.branch }}"
@@ -44,17 +62,48 @@ jobs:
             git pull origin "$BRANCH"
             echo ">> Code at $(git rev-parse --short HEAD)"
 
+            # Render .env.production from GitHub Environment Secrets
+            for required_var in POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB JWT_SECRET JWT_REFRESH_SECRET CORS_ORIGIN CORS_ORIGINS VITE_API_URL; do
+              if [ -z "${!required_var:-}" ]; then
+                echo ">> ERROR: Missing required secret: $required_var"
+                exit 1
+              fi
+            done
+
+            umask 177
+            cat > .env.production <<EOF
+            COMPOSE_ENV_FILE=.env.production
+            POSTGRES_USER=${POSTGRES_USER}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            POSTGRES_DB=${POSTGRES_DB}
+            JWT_SECRET=${JWT_SECRET}
+            JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+            CORS_ORIGIN=${CORS_ORIGIN}
+            CORS_ORIGINS=${CORS_ORIGINS}
+            UPLOAD_DIR=${UPLOAD_DIR:-/app/uploads}
+            PORT=${PORT:-3000}
+            VITE_API_URL=${VITE_API_URL}
+            EOF
+
+            [ -n "${DOCUMENT_LOGO_PATH:-}" ] && echo "DOCUMENT_LOGO_PATH=${DOCUMENT_LOGO_PATH}" >> .env.production
+            [ -n "${DOCUMENT_INVOICE_LOGO_PATH:-}" ] && echo "DOCUMENT_INVOICE_LOGO_PATH=${DOCUMENT_INVOICE_LOGO_PATH}" >> .env.production
+            [ -n "${DOCUMENT_THEME_PATH:-}" ] && echo "DOCUMENT_THEME_PATH=${DOCUMENT_THEME_PATH}" >> .env.production
+            [ -n "${DOCUMENT_LOGO_URL:-}" ] && echo "DOCUMENT_LOGO_URL=${DOCUMENT_LOGO_URL}" >> .env.production
+            [ -n "${DOCUMENT_INVOICE_LOGO_URL:-}" ] && echo "DOCUMENT_INVOICE_LOGO_URL=${DOCUMENT_INVOICE_LOGO_URL}" >> .env.production
+            chmod 600 .env.production
+            echo ">> Wrote .env.production from GitHub Environment Secrets"
+
             if [ "$TARGET" = "backend" ] || [ "$TARGET" = "both" ]; then
               echo ">> Building backend..."
-              docker compose build backend
-              docker compose up -d backend
+              docker compose --env-file .env.production build backend
+              docker compose --env-file .env.production up -d backend
               echo ">> Backend deployed"
             fi
 
             if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "both" ]; then
               echo ">> Building frontend..."
-              docker compose build frontend
-              docker compose up -d frontend
+              docker compose --env-file .env.production build frontend
+              docker compose --env-file .env.production up -d frontend
               echo ">> Frontend deployed"
             fi
 
