@@ -38,6 +38,7 @@ services:
       - "3000:3000"
     volumes:
       - uploads:/app/uploads
+      - ./assets:/app/assets:ro
     networks:
       - vsl360-net
 

@@ -16,9 +16,16 @@ Handlebars.registerHelper('formatDate', (date: Date | string) => {
 });
 Handlebars.registerHelper('formatCurrency', (amount: number | string, currency?: string) => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  const currencyCode = typeof currency === 'string' ? currency : 'USD';
+  if (!Number.isFinite(num)) return String(amount);
+  const currencyCode = (typeof currency === 'string' ? currency : 'USD').toUpperCase();
   const locale = currencyCode === 'EUR' ? 'de-DE' : currencyCode === 'INR' ? 'en-IN' : 'en-US';
-  return new Intl.NumberFormat(locale, { style: 'currency', currency: currencyCode }).format(num);
+  // Use currency code for rupee currencies to avoid missing symbol glyphs in headless PDF fonts.
+  const forceCodeDisplay = currencyCode === 'LKR' || currencyCode === 'INR';
+  return new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currencyCode,
+    currencyDisplay: forceCodeDisplay ? 'code' : 'symbol',
+  }).format(num);
 });
 Handlebars.registerHelper('eq', (a: unknown, b: unknown) => a === b);
 Handlebars.registerHelper('titleCase', (value: unknown) => {
@@ -176,22 +183,44 @@ export class DocumentGeneratorService {
   }
 
   private loadAssetImage(fileName: string): string | null {
+    const configuredPath =
+      (fileName === 'logo-02.png' && env.DOCUMENT_INVOICE_LOGO_PATH) ||
+      (fileName === 'theme.jpg' && env.DOCUMENT_THEME_PATH) ||
+      (fileName === 'theme.jpeg' && env.DOCUMENT_THEME_PATH) ||
+      (fileName === 'theme.png' && env.DOCUMENT_THEME_PATH) ||
+      env.DOCUMENT_LOGO_PATH;
+
+    const configuredCandidates = configuredPath
+      ? [configuredPath, path.resolve(configuredPath), path.join(process.cwd(), configuredPath)]
+      : [];
     const assetsRoot = path.join(process.cwd(), '..', 'assets');
     const frontendPublicAssets = path.join(process.cwd(), 'frontend', 'public', 'assets');
     const parentFrontendPublicAssets = path.join(process.cwd(), '..', 'frontend', 'public', 'assets');
+    const uploadAssets = path.join(env.UPLOAD_DIR, 'assets');
+    const uploadDocumentsAssets = path.join(env.UPLOAD_DIR, 'documents', 'assets');
     const candidates = [
+      ...configuredCandidates,
       path.join(process.cwd(), 'assets', fileName),
       path.join(assetsRoot, fileName),
+      path.join(process.cwd(), 'dist', 'assets', fileName),
       path.join(frontendPublicAssets, fileName),
       path.join(parentFrontendPublicAssets, fileName),
+      path.join(uploadAssets, fileName),
+      path.join(uploadDocumentsAssets, fileName),
       path.join(process.cwd(), 'assets', fileName.toLowerCase()),
       path.join(assetsRoot, fileName.toLowerCase()),
+      path.join(process.cwd(), 'dist', 'assets', fileName.toLowerCase()),
       path.join(frontendPublicAssets, fileName.toLowerCase()),
       path.join(parentFrontendPublicAssets, fileName.toLowerCase()),
+      path.join(uploadAssets, fileName.toLowerCase()),
+      path.join(uploadDocumentsAssets, fileName.toLowerCase()),
       path.join(process.cwd(), 'assets', fileName.toUpperCase()),
       path.join(assetsRoot, fileName.toUpperCase()),
+      path.join(process.cwd(), 'dist', 'assets', fileName.toUpperCase()),
       path.join(frontendPublicAssets, fileName.toUpperCase()),
       path.join(parentFrontendPublicAssets, fileName.toUpperCase()),
+      path.join(uploadAssets, fileName.toUpperCase()),
+      path.join(uploadDocumentsAssets, fileName.toUpperCase()),
     ];
 
     for (const candidate of candidates) {
@@ -205,6 +234,16 @@ export class DocumentGeneratorService {
   }
 
   private loadThemeImage(): string | null {
+    if (env.DOCUMENT_THEME_PATH) {
+      const configured = [env.DOCUMENT_THEME_PATH, path.resolve(env.DOCUMENT_THEME_PATH), path.join(process.cwd(), env.DOCUMENT_THEME_PATH)];
+      for (const candidate of configured) {
+        if (!fs.existsSync(candidate)) continue;
+        logger.info(`Loaded document theme image from configured path ${candidate}`);
+        return this.encodeImage(candidate);
+      }
+      logger.warn(`Configured DOCUMENT_THEME_PATH was not found: ${env.DOCUMENT_THEME_PATH}`);
+    }
+
     const candidates = [
       path.join(process.cwd(), 'theme.jpg'),
       path.join(process.cwd(), 'theme.jpeg'),
@@ -212,6 +251,9 @@ export class DocumentGeneratorService {
       path.join(process.cwd(), '..', 'theme.jpg'),
       path.join(process.cwd(), '..', 'theme.jpeg'),
       path.join(process.cwd(), '..', 'theme.png'),
+      path.join(env.UPLOAD_DIR, 'assets', 'theme.jpg'),
+      path.join(env.UPLOAD_DIR, 'assets', 'theme.jpeg'),
+      path.join(env.UPLOAD_DIR, 'assets', 'theme.png'),
     ];
 
     for (const candidate of candidates) {
@@ -446,7 +488,7 @@ export class DocumentGeneratorService {
 
     const html = template({
       themeImage: this.themeImage,
-      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
+      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage || env.DOCUMENT_INVOICE_LOGO_URL || env.DOCUMENT_LOGO_URL || null,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
@@ -496,7 +538,7 @@ export class DocumentGeneratorService {
 
     const template = this.loadTemplate('transport');
     const html = template({
-      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
+      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage || env.DOCUMENT_INVOICE_LOGO_URL || env.DOCUMENT_LOGO_URL || null,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
@@ -710,7 +752,7 @@ export class DocumentGeneratorService {
     const html = template({
       themeImage: this.themeImage,
       coverTemplateImage: this.itineraryCoverImage,
-      brandLogoImage: this.brandLogoImage,
+      brandLogoImage: this.brandLogoImage || env.DOCUMENT_LOGO_URL || null,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
@@ -805,7 +847,7 @@ export class DocumentGeneratorService {
 
     const template = this.loadTemplate('travelConfirmation');
     const html = template({
-      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage,
+      brandLogoImage: this.invoiceLogoImage || this.brandLogoImage || env.DOCUMENT_INVOICE_LOGO_URL || env.DOCUMENT_LOGO_URL || null,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
