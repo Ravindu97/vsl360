@@ -30,6 +30,7 @@ const hotelSchema = z.object({
   mealPlan: z.string().min(1, 'Required'),
   mealPreference: z.string().optional(),
   reservationNotes: z.string().optional(),
+  location: z.string().max(200).optional(),
 });
 
 type HotelForm = z.infer<typeof hotelSchema>;
@@ -56,6 +57,7 @@ function buildInitialHotelDraft(nightNumber: number): HotelForm {
     mealPlan: 'BB',
     mealPreference: '',
     reservationNotes: '',
+    location: '',
   };
 }
 
@@ -77,7 +79,7 @@ export function HotelsTab({ booking }: Props) {
 
   const form = useForm<HotelForm>({
     resolver: zodResolver(hotelSchema),
-    defaultValues: { nightNumber: (hotels.length + 1), numberOfRooms: 1, mealPlan: 'BB' },
+    defaultValues: { nightNumber: (hotels.length + 1), numberOfRooms: 1, mealPlan: 'BB', location: '' },
   });
 
   const editForm = useForm<HotelForm>({
@@ -90,7 +92,7 @@ export function HotelsTab({ booking }: Props) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['hotels', booking.id] });
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
-      form.reset({ nightNumber: hotels.length + 2, numberOfRooms: 1, mealPlan: 'BB' });
+      form.reset({ nightNumber: hotels.length + 2, numberOfRooms: 1, mealPlan: 'BB', location: '' });
       setAdding(false);
     },
   });
@@ -162,6 +164,7 @@ export function HotelsTab({ booking }: Props) {
       mealPlan: hotel.mealPlan,
       mealPreference: hotel.mealPreference ?? '',
       reservationNotes: hotel.reservationNotes ?? '',
+      location: hotel.location ?? '',
     });
     setEditingHotelId(hotel.id);
   };
@@ -179,10 +182,14 @@ export function HotelsTab({ booking }: Props) {
       <CardContent>
         {adding && canManage && (
           <form onSubmit={form.handleSubmit((d) => createHotel.mutate(d))} className="mb-4 space-y-4 rounded-md border p-4">
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1">
                 <Label>Night # *</Label>
                 <Input type="number" {...form.register('nightNumber')} />
+              </div>
+              <div className="space-y-1">
+                <Label>Location</Label>
+                <Input placeholder="City or area (optional)" {...form.register('location')} />
               </div>
               <div className="space-y-1">
                 <Label>Hotel Name *</Label>
@@ -242,6 +249,7 @@ export function HotelsTab({ booking }: Props) {
             <TableHeader>
               <TableRow>
                 <TableHead>Night</TableHead>
+                <TableHead>Location</TableHead>
                 <TableHead>Hotel</TableHead>
                 <TableHead>Room</TableHead>
                 <TableHead>Rooms</TableHead>
@@ -256,12 +264,16 @@ export function HotelsTab({ booking }: Props) {
                 .map((h) => (
                   editingHotelId === h.id ? (
                     <TableRow key={h.id}>
-                      <TableCell colSpan={canManage ? 7 : 6}>
+                      <TableCell colSpan={canManage ? 8 : 7}>
                         <form onSubmit={editForm.handleSubmit((data) => updateHotel.mutate({ hotelId: h.id, data }))} className="space-y-4 rounded-md border p-4">
-                          <div className="grid gap-3 sm:grid-cols-3">
+                          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div className="space-y-1">
                               <Label>Night # *</Label>
                               <Input type="number" {...editForm.register('nightNumber')} />
+                            </div>
+                            <div className="space-y-1">
+                              <Label>Location</Label>
+                              <Input placeholder="City or area (optional)" {...editForm.register('location')} />
                             </div>
                             <div className="space-y-1">
                               <Label>Hotel Name *</Label>
@@ -308,6 +320,9 @@ export function HotelsTab({ booking }: Props) {
                   ) : (
                     <TableRow key={h.id}>
                       <TableCell>{h.nightNumber}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {h.location?.trim() ? h.location : '—'}
+                      </TableCell>
                       <TableCell className="font-medium">{h.hotelName}</TableCell>
                       <TableCell>{h.roomCategory}</TableCell>
                       <TableCell>{h.numberOfRooms}</TableCell>

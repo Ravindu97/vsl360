@@ -837,7 +837,7 @@ export class DocumentGeneratorService {
       return {
         dayNumber: idx + 1,
         date,
-        location: this.extractLocation(h.hotelName),
+        location: (h.location && String(h.location).trim()) || this.extractLocation(h.hotelName),
         hotelName: h.hotelName,
         roomCategory: h.roomCategory || '—',
       };
@@ -896,6 +896,7 @@ export class DocumentGeneratorService {
       'hikkaduwa': 'Hikkaduwa',
       'negombo': 'Negombo',
       'jaffna': 'Jaffna',
+      'ahangama': 'Ahangama',
       'arugam bay': 'Arugam Bay',
       'habarana': 'Habarana',
       'pasikuda': 'Pasikuda',

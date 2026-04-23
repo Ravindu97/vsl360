@@ -76,6 +76,8 @@ export interface HotelBooking {
   id: string;
   bookingId: string;
   nightNumber: number;
+  /** City or area; optional — PDF falls back to inferring from hotel name */
+  location?: string | null;
   hotelName: string;
   roomCategory: string;
   numberOfRooms: number;
