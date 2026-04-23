@@ -137,6 +137,8 @@ model HotelBooking {
   booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   nightNumber        Int
+  /// City or area for confirmations; if empty, derived from hotel name in PDFs
+  location           String?
   hotelName          String
   roomCategory       String
   numberOfRooms      Int
