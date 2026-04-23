@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
+/** Aligned with invoice policy: ≤5 infant, 6–11 child, 12+ adult. */
 const inferPaxType = (age: number): 'INFANT' | 'CHILD' | 'ADULT' => {
-  if (age <= 6) return 'INFANT';
-  if (age <= 12) return 'CHILD';
+  if (age <= 5) return 'INFANT';
+  if (age <= 11) return 'CHILD';
   return 'ADULT';
 };
 

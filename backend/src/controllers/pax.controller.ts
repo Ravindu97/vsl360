@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import prisma from '../config/database';
 
 const inferPaxType = (age: number): 'INFANT' | 'CHILD' | 'ADULT' => {
-  if (age <= 6) return 'INFANT';
-  if (age <= 12) return 'CHILD';
+  if (age <= 5) return 'INFANT';
+  if (age <= 11) return 'CHILD';
   return 'ADULT';
 };
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { EmptyState } from '@/components/shared/EmptyState';
 import type { Booking, Pax } from '@/types';
 import { CurrencyCode, PaxType } from '@/types';
+import { inferPaxTypeFromAge } from '@/utils/invoicePolicy';
 
 interface Props {
   booking: Booking;
@@ -39,16 +40,11 @@ const paxSchema = z.object({
 
 type PaxForm = z.infer<typeof paxSchema>;
 
-function inferPaxType(age: number): PaxType {
-  if (age <= 6) return PaxType.INFANT;
-  if (age <= 12) return PaxType.CHILD;
-  return PaxType.ADULT;
-}
-
 export function ClientPaxTab({ booking }: Props) {
   const queryClient = useQueryClient();
   const [editingClient, setEditingClient] = useState(false);
   const [addingPax, setAddingPax] = useState(false);
+  const [editingPaxId, setEditingPaxId] = useState<string | null>(null);
 
   // Client form
   const clientForm = useForm({
@@ -81,21 +77,58 @@ export function ClientPaxTab({ booking }: Props) {
 
   const paxForm = useForm<PaxForm>({
     resolver: zodResolver(paxSchema),
-    defaultValues: { age: undefined },
+    defaultValues: { name: '', relationship: '', age: undefined },
   });
 
   const watchedAge = paxForm.watch('age');
-  const inferredType = inferPaxType(Number.isFinite(Number(watchedAge)) ? Number(watchedAge) : 0);
+  const inferredType = inferPaxTypeFromAge(Number.isFinite(Number(watchedAge)) ? Number(watchedAge) : 0);
+
+  const editPaxForm = useForm<PaxForm>({
+    resolver: zodResolver(paxSchema),
+    defaultValues: { name: '', relationship: '', age: undefined },
+  });
+  const watchedEditAge = editPaxForm.watch('age') as number | string | undefined;
+  const editingPaxRow = editingPaxId ? paxList.find((p) => p.id === editingPaxId) : null;
+  const editAgeNum =
+    watchedEditAge === '' || watchedEditAge == null || watchedEditAge === undefined
+      ? NaN
+      : Number(watchedEditAge);
+  const editInferredType = Number.isFinite(editAgeNum)
+    ? inferPaxTypeFromAge(editAgeNum)
+    : (editingPaxRow?.type ?? PaxType.ADULT);
 
   const createPax = useMutation({
-    mutationFn: (data: PaxForm) => paxApi.create(booking.id, { ...data, type: inferPaxType(data.age) }),
+    mutationFn: (data: PaxForm) => paxApi.create(booking.id, { ...data, type: inferPaxTypeFromAge(data.age) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pax', booking.id] });
       queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
-      paxForm.reset({ age: undefined });
+      paxForm.reset({ name: '', relationship: '', age: undefined });
       setAddingPax(false);
     },
   });
+
+  const updatePax = useMutation({
+    mutationFn: ({ paxId, data }: { paxId: string; data: PaxForm }) =>
+      paxApi.update(booking.id, paxId, { ...data, type: inferPaxTypeFromAge(data.age) }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pax', booking.id] });
+      queryClient.invalidateQueries({ queryKey: ['booking', booking.id] });
+      setEditingPaxId(null);
+    },
+  });
+
+  const startEditPax = useCallback(
+    (pax: Pax) => {
+      setEditingPaxId(pax.id);
+      setAddingPax(false);
+      editPaxForm.reset({
+        name: pax.name,
+        relationship: pax.relationship ?? '',
+        age: pax.age,
+      });
+    },
+    [editPaxForm]
+  );
 
   const deletePax = useMutation({
     mutationFn: (paxId: string) => paxApi.delete(booking.id, paxId),
@@ -183,14 +216,21 @@ export function ClientPaxTab({ booking }: Props) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Passengers ({paxList.length})</CardTitle>
           {!addingPax && (
-            <Button variant="outline" size="sm" onClick={() => setAddingPax(true)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditingPaxId(null);
+                setAddingPax(true);
+              }}
+            >
               <Plus className="mr-2 h-3 w-3" /> Add Pax
             </Button>
           )}
         </CardHeader>
         <CardContent>
           <div className="mb-4 rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-            Passenger policy: 0 to 6 years = Infant (free), 7 to 12 years = Child (50%), above 12 years = Adult (full rate).
+            Passenger policy: age ≤5 = Infant (free), ages 6–11 = Child (50%), age 12+ = Adult (full rate). Invoice uses these age bands; type is set from age.
           </div>
 
           {addingPax && (
@@ -221,7 +261,7 @@ export function ClientPaxTab({ booking }: Props) {
               </div>
               <div className="space-y-1">
                 <Label>Age</Label>
-                <Input type="number" {...paxForm.register('age')} />
+                <Input type="number" min={0} max={120} step={1} {...paxForm.register('age')} />
                 {paxForm.formState.errors.age && (
                   <p className="text-xs text-red-600">{paxForm.formState.errors.age.message}</p>
                 )}
@@ -230,7 +270,15 @@ export function ClientPaxTab({ booking }: Props) {
                 <Button type="submit" size="sm" disabled={createPax.isPending}>
                   <Save className="mr-1 h-3 w-3" /> Add
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setAddingPax(false)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    paxForm.reset({ name: '', relationship: '', age: undefined });
+                    setAddingPax(false);
+                  }}
+                >
                   <X className="h-3 w-3" />
                 </Button>
               </div>
@@ -251,19 +299,99 @@ export function ClientPaxTab({ booking }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paxList.map((pax) => (
-                  <TableRow key={pax.id}>
-                    <TableCell className="font-medium">{pax.name}</TableCell>
-                    <TableCell>{pax.relationship || '—'}</TableCell>
-                    <TableCell>{pax.type}</TableCell>
-                    <TableCell>{pax.age ?? '—'}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" onClick={() => deletePax.mutate(pax.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {paxList.map((pax) =>
+                  editingPaxId === pax.id ? (
+                    <TableRow key={pax.id} className="align-top">
+                      <TableCell colSpan={5} className="p-2">
+                        <form
+                          className="grid gap-2 rounded-md border bg-muted/20 p-3 sm:grid-cols-5"
+                          onSubmit={editPaxForm.handleSubmit((d) => updatePax.mutate({ paxId: pax.id, data: d }))}
+                        >
+                          <div className="space-y-1 sm:col-span-1">
+                            <Label className="text-xs">Name *</Label>
+                            <Input {...editPaxForm.register('name')} />
+                            {editPaxForm.formState.errors.name && (
+                              <p className="text-xs text-red-600">{editPaxForm.formState.errors.name.message}</p>
+                            )}
+                          </div>
+                          <div className="space-y-1 sm:col-span-1">
+                            <Label className="text-xs">Relationship</Label>
+                            <Input {...editPaxForm.register('relationship')} />
+                          </div>
+                          <div className="space-y-1 sm:col-span-1">
+                            <Label className="text-xs">Type (Auto)</Label>
+                            <Select value={editInferredType} disabled>
+                              <SelectTrigger className="h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {Object.values(PaxType).map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {t}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1 sm:col-span-1">
+                            <Label className="text-xs">Age *</Label>
+                            <Input type="number" min={0} max={120} step={1} {...editPaxForm.register('age')} />
+                            {editPaxForm.formState.errors.age && (
+                              <p className="text-xs text-red-600">{editPaxForm.formState.errors.age.message}</p>
+                            )}
+                          </div>
+                          <div className="flex items-end justify-end gap-1 sm:col-span-1">
+                            <Button type="submit" size="sm" disabled={updatePax.isPending}>
+                              <Save className="mr-1 h-3 w-3" />
+                              {updatePax.isPending ? '...' : 'Save'}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingPaxId(null);
+                                editPaxForm.reset();
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </form>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <TableRow key={pax.id}>
+                      <TableCell className="font-medium">{pax.name}</TableCell>
+                      <TableCell>{pax.relationship || '—'}</TableCell>
+                      <TableCell>{pax.type}</TableCell>
+                      <TableCell>{pax.age ?? '—'}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="inline-flex items-center">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => startEditPax(pax)}
+                            title="Edit passenger"
+                            aria-label="Edit passenger"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deletePax.mutate(pax.id)}
+                            title="Delete passenger"
+                            aria-label="Delete passenger"
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                )}
               </TableBody>
             </Table>
           )}
