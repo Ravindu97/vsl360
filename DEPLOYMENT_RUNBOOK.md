@@ -300,7 +300,8 @@ Remove any unused **legacy** repository secrets (e.g. old `CPANEL_*` names) so t
 1. Ensure the branch you want exists on `origin`.
 2. GitHub → **Actions** → **Deploy Production** → **Run workflow**.
 3. Set **branch** and **target** (`backend`, `frontend`, or `both`).
-4. After completion, verify API health and the admin UI.
+4. Optional: enable **Run prisma migrate deploy** when the branch includes new Prisma migrations and you are deploying **backend** or **both** (ignored for **frontend**-only deploys; run `migrate deploy` manually on the VPS if you need DB changes without redeploying backend).
+5. After completion, verify API health and the admin UI.
 
 ### What the workflow does
 
@@ -310,7 +311,8 @@ Remove any unused **legacy** repository secrets (e.g. old `CPANEL_*` names) so t
 4. Write `/opt/vsl360/.env.production` from those secrets (`chmod 600`).
 5. Print optional-variable **set / not set** lines (values are not logged).
 6. `docker compose --env-file .env.production build <target>` and `up -d <target>`.
-7. Health check: `curl -sf http://localhost:3000/api/health`.
+7. If **Run prisma migrate deploy** was enabled and target is `backend` or `both`: `docker compose exec backend npx prisma migrate deploy` after the backend container is up.
+8. Health check: `curl -sf http://localhost:3000/api/health`.
 
 Manual deploys on the VPS can keep a long-lived `.env.production` file instead of relying on step 4–5; CI overwrites the file each run with the latest secrets.
 

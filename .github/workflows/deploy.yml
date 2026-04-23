@@ -17,6 +17,11 @@ on:
         required: true
         default: make-ready-for-depployment
         type: string
+      run_migrations:
+        description: Run prisma migrate deploy (after backend is up; use with backend or both)
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   deploy:
@@ -52,9 +57,10 @@ jobs:
             set -e
             BRANCH="${{ github.event.inputs.branch }}"
             TARGET="${{ github.event.inputs.target }}"
+            RUN_MIGRATIONS="${{ github.event.inputs.run_migrations }}"
             APP_DIR="/opt/vsl360"
 
-            echo ">> Deploy starting: target=$TARGET branch=$BRANCH"
+            echo ">> Deploy starting: target=$TARGET branch=$BRANCH run_migrations=${RUN_MIGRATIONS:-false}"
 
             cd "$APP_DIR"
             git fetch origin
@@ -109,6 +115,14 @@ jobs:
               docker compose --env-file .env.production build backend
               docker compose --env-file .env.production up -d backend
               echo ">> Backend deployed"
+              if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+                echo ">> Running Prisma migrations..."
+                docker compose --env-file .env.production exec -T backend npx prisma migrate deploy
+                echo ">> Migrations complete"
+              fi
+            elif [ "${RUN_MIGRATIONS:-false}" = "true" ]; then
+              echo ">> Skipping migrations: run_migrations is true but target is frontend-only."
+              echo ">>   Use target 'backend' or 'both', or run migrate manually on the VPS."
             fi
 
             if [ "$TARGET" = "frontend" ] || [ "$TARGET" = "both" ]; then
