@@ -80,6 +80,8 @@ model Booking {
   additionalActivities String?
   specialCelebrations  String?
   generalNotes         String?
+  /// Inbound / primary flight reference for this trip (free text)
+  flightNumber         String?
 
   // Sales Owner
   salesOwnerId String
@@ -110,6 +112,8 @@ model Client {
   preferredCurrency  CurrencyCode @default(USD)
   email              String
   contactNumber      String
+  /// Passport id number (free text)
+  passportNumber     String?
   passportCopy       String?
   flightTicket       String?
 

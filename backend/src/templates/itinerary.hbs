@@ -157,6 +157,7 @@
     .kv .k { font-weight: 700; color: #362f2f; }
     .kv .sep { text-align: center; color: #4f4949; }
     .kv .v { color: #342f2f; }
+    .note-text { color: #342f2f; font-size: 12px; line-height: 1.5; }
 
     .accommodation-table {
       width: 100%;
@@ -166,10 +167,17 @@
       background: rgba(250, 250, 250, 0.86);
       font-size: 12px;
     }
+    .accommodation-table th,
     .accommodation-table td {
       border: 1px solid #b8bec8;
       padding: 8px 9px;
       vertical-align: middle;
+    }
+    .accommodation-table th {
+      background: #ece7dd;
+      color: #342f2f;
+      font-weight: 700;
+      text-align: left;
     }
     .accommodation-table td.night {
       width: 110px;
@@ -473,16 +481,18 @@
         <div class="cover-section-title">Trip Overview</div>
         <div class="overview-grid">
           <div class="overview-column">
-            <div class="kv"><span class="k">Group Name</span><span class="sep">:</span><span class="v">{{client.name}}</span></div>
-            <div class="kv"><span class="k">No Of Pax</span><span class="sep">:</span><span class="v">{{guestBreakdown adults children infants}}</span></div>
-            <div class="kv"><span class="k">No of Rooms</span><span class="sep">:</span><span class="v">{{roomSummary hotels}}</span></div>
-            <div class="kv"><span class="k">Meal Plan</span><span class="sep">:</span><span class="v">{{mealPlanSummary hotels}}</span></div>
+            <div class="kv"><span class="k">Lead Traveler</span><span class="sep">:</span><span class="v">{{client.name}}</span></div>
+            <div class="kv"><span class="k">Citizenship</span><span class="sep">:</span><span class="v">{{#if client.citizenship}}{{client.citizenship}}{{else}}—{{/if}}</span></div>
+            <div class="kv"><span class="k">Language</span><span class="sep">:</span><span class="v">{{#if client.languagePreference}}{{client.languagePreference}}{{else}}English{{/if}}</span></div>
+            <div class="kv"><span class="k">Contact</span><span class="sep">:</span><span class="v">{{#if client.contactNumber}}{{client.contactNumber}}{{else}}—{{/if}}</span></div>
+            <div class="kv"><span class="k">Passport No</span><span class="sep">:</span><span class="v">{{#if client.passportNumber}}{{client.passportNumber}}{{else}}—{{/if}}</span></div>
           </div>
           <div class="overview-column">
             <div class="kv"><span class="k">Travel Dates</span><span class="sep">:</span><span class="v">{{formatDate booking.arrivalDate}} to {{formatDate booking.departureDate}}</span></div>
-            <div class="kv"><span class="k">Pick Up Point</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupLocation}}{{transport.arrivalPickupLocation}}{{else}}Airport Arrival Lobby{{/if}}</span></div>
-            <div class="kv"><span class="k">Transfer Type</span><span class="sep">:</span><span class="v">{{#if transport.vehicleModel}}{{transport.vehicleModel}}{{else}}Private Transfer{{/if}}</span></div>
             <div class="kv"><span class="k">Reservation No</span><span class="sep">:</span><span class="v">{{booking.bookingId}}</span></div>
+            <div class="kv"><span class="k">No Of Pax</span><span class="sep">:</span><span class="v">{{guestBreakdown adults children infants}}</span></div>
+            <div class="kv"><span class="k">No of Rooms</span><span class="sep">:</span><span class="v">{{roomSummary hotels}}</span></div>
+            <div class="kv"><span class="k">Meal Plan</span><span class="sep">:</span><span class="v">{{mealPlanSummary hotels}}</span></div>
           </div>
         </div>
       </div>
@@ -492,22 +502,20 @@
         <table class="flight-table">
           <thead>
             <tr>
-              <th>Arrival</th>
-              <th>Flight</th>
-              <th>Time</th>
-              <th>Departure</th>
-              <th>Flight</th>
-              <th>Time</th>
+              <th>Arrival Date</th>
+              <th>Arrival Time</th>
+              <th>Departure Date</th>
+              <th>Departure Time</th>
+              <th>Flight No</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>{{formatDate booking.arrivalDate}}</td>
-              <td>As Per Ticket</td>
               <td>{{booking.arrivalTime}}</td>
               <td>{{formatDate booking.departureDate}}</td>
-              <td>As Per Ticket</td>
               <td>{{booking.departureTime}}</td>
+              <td>{{#if booking.flightNumber}}{{booking.flightNumber}}{{else}}As Per Ticket{{/if}}</td>
             </tr>
           </tbody>
         </table>
@@ -519,14 +527,16 @@
         <div class="cover-panel">
           <div class="cover-panel-grid">
             <div class="overview-column">
-              <div class="kv"><span class="k">Arrival Point</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupLocation}}{{transport.arrivalPickupLocation}}{{else}}To Be Confirmed{{/if}}</span></div>
-              <div class="kv"><span class="k">Arrival Time</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupTime}}{{transport.arrivalPickupTime}}{{else}}To Be Confirmed{{/if}}</span></div>
+              <div class="kv"><span class="k">Arrival Point</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupLocation}}{{transport.arrivalPickupLocation}}{{else}}Airport Arrival Lobby{{/if}}</span></div>
+              <div class="kv"><span class="k">Arrival Time</span><span class="sep">:</span><span class="v">{{#if transport.arrivalPickupTime}}{{transport.arrivalPickupTime}}{{else}}As Per Flight{{/if}}</span></div>
+              <div class="kv"><span class="k">Flight No</span><span class="sep">:</span><span class="v">{{#if booking.flightNumber}}{{booking.flightNumber}}{{else}}As Per Ticket{{/if}}</span></div>
               <div class="kv"><span class="k">Driver</span><span class="sep">:</span><span class="v">{{#if transport.driverName}}{{transport.driverName}}{{else}}Assigned Closer To Arrival{{/if}}</span></div>
             </div>
             <div class="overview-column">
-              <div class="kv"><span class="k">Departure Point</span><span class="sep">:</span><span class="v">{{#if transport.departureDropLocation}}{{transport.departureDropLocation}}{{else}}To Be Confirmed{{/if}}</span></div>
-              <div class="kv"><span class="k">Departure Time</span><span class="sep">:</span><span class="v">{{#if transport.departureDropTime}}{{transport.departureDropTime}}{{else}}To Be Confirmed{{/if}}</span></div>
+              <div class="kv"><span class="k">Departure Point</span><span class="sep">:</span><span class="v">{{#if transport.departureDropLocation}}{{transport.departureDropLocation}}{{else}}Airport Departure Terminal{{/if}}</span></div>
+              <div class="kv"><span class="k">Departure Time</span><span class="sep">:</span><span class="v">{{#if transport.departureDropTime}}{{transport.departureDropTime}}{{else}}As Per Flight{{/if}}</span></div>
               <div class="kv"><span class="k">Vehicle</span><span class="sep">:</span><span class="v">{{#if transport.vehicleModel}}{{transport.vehicleModel}}{{else}}Private Transfer{{/if}}</span></div>
+              <div class="kv"><span class="k">Driver Language</span><span class="sep">:</span><span class="v">{{#if transport.driverLanguage}}{{transport.driverLanguage}}{{else}}English{{/if}}</span></div>
             </div>
           </div>
         </div>
@@ -536,18 +546,57 @@
       <div class="cover-section">
         <div class="cover-section-title">Accommodation (On {{#if hotels.0.mealPlan}}{{titleCase hotels.0.mealPlan}}{{else}}Confirmed Basis{{/if}})</div>
         <table class="accommodation-table">
+          <thead>
+            <tr>
+              <th style="width:110px;">Night</th>
+              <th style="width:170px;">Location</th>
+              <th>Hotel</th>
+              <th>Room</th>
+              <th style="width:100px;">Meal</th>
+              <th style="width:110px;">Status</th>
+            </tr>
+          </thead>
           <tbody>
             {{#each hotels}}
             <tr>
               <td class="night">{{this.nightNumber}} Night</td>
+              <td>{{#if this.location}}{{this.location}}{{else}}—{{/if}}</td>
               <td>{{this.hotelName}}</td>
               <td>{{this.roomCategory}}</td>
               <td>{{#if this.mealPlan}}{{titleCase this.mealPlan}}{{else}}As Confirmed{{/if}}</td>
+              <td>{{#if this.confirmationStatus}}{{titleCase this.confirmationStatus}}{{else}}Pending{{/if}}</td>
             </tr>
             {{/each}}
           </tbody>
         </table>
       </div>
+
+      {{#if booking.additionalActivities}}
+      <div class="cover-section">
+        <div class="cover-section-title">Additional Activities</div>
+        <div class="cover-panel">
+          <div class="note-text">{{booking.additionalActivities}}</div>
+        </div>
+      </div>
+      {{/if}}
+
+      {{#if booking.specialCelebrations}}
+      <div class="cover-section">
+        <div class="cover-section-title">Special Celebrations</div>
+        <div class="cover-panel">
+          <div class="note-text">{{booking.specialCelebrations}}</div>
+        </div>
+      </div>
+      {{/if}}
+
+      {{#if booking.generalNotes}}
+      <div class="cover-section">
+        <div class="cover-section-title">General Notes</div>
+        <div class="cover-panel">
+          <div class="note-text">{{booking.generalNotes}}</div>
+        </div>
+      </div>
+      {{/if}}
     </div>
   </div>
 

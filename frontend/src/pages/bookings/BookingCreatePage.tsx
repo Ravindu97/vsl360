@@ -12,11 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from '@/utils/sessionDraft';
+import { inclusiveTourDayCount } from '@/utils/tourDates';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencyCode } from '@/types';
 
 const createBookingSchema = z.object({
   numberOfDays: z.coerce.number().min(1),
+  flightNumber: z.string().optional(),
   arrivalDate: z.string().min(1, 'Required'),
   arrivalTime: z.string().min(1, 'Required'),
   departureDate: z.string().min(1, 'Required'),
@@ -31,6 +33,7 @@ const createBookingSchema = z.object({
     preferredCurrency: z.nativeEnum(CurrencyCode),
     email: z.string().email('Invalid email'),
     contactNumber: z.string().min(1, 'Required'),
+    passportNumber: z.string().optional(),
   }),
 });
 
@@ -40,6 +43,7 @@ const BOOKING_CREATE_DRAFT_KEY = 'vsl360.booking.create.draft';
 
 const defaultFormValues: CreateBookingForm = {
   numberOfDays: 1,
+  flightNumber: '',
   arrivalDate: '',
   arrivalTime: '',
   departureDate: '',
@@ -54,6 +58,7 @@ const defaultFormValues: CreateBookingForm = {
     preferredCurrency: CurrencyCode.USD,
     email: '',
     contactNumber: '',
+    passportNumber: '',
   },
 };
 
@@ -86,6 +91,16 @@ export function BookingCreatePage() {
 
   const watchedValues = watch();
   const lastAutoDepartureRef = useRef<string | null>(initialValues.departureDate || null);
+
+  // When arrival or departure *dates* change, sync number of days (inclusive). Edits to
+  // "Number of days" alone do not trigger this.
+  useEffect(() => {
+    const arrivalDate = watchedValues.arrivalDate;
+    const departureDate = watchedValues.departureDate;
+    if (!arrivalDate || !departureDate) return;
+    const next = inclusiveTourDayCount(arrivalDate, departureDate);
+    setValue('numberOfDays', next, { shouldDirty: true, shouldValidate: true });
+  }, [watchedValues.arrivalDate, watchedValues.departureDate, setValue]);
 
   useEffect(() => {
     const arrivalDate = watchedValues.arrivalDate;
@@ -212,13 +227,24 @@ export function BookingCreatePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Tour Details</CardTitle>
+            <CardTitle>Identity and Passport</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Number of Days *</Label>
-              <Input type="number" min={1} {...register('numberOfDays')} />
-              {errors.numberOfDays && <p className="text-xs text-destructive">{errors.numberOfDays.message}</p>}
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Passport number</Label>
+              <Input {...register('client.passportNumber')} placeholder="e.g. N1234567" autoComplete="off" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Flight and Transit</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Flight number</Label>
+              <Input {...register('flightNumber')} placeholder="e.g. UL 123" autoComplete="off" />
             </div>
             <div className="space-y-2">
               <Label>Arrival Date *</Label>
@@ -239,6 +265,22 @@ export function BookingCreatePage() {
               <Label>Departure Time *</Label>
               <Input type="time" {...register('departureTime')} />
               {errors.departureTime && <p className="text-xs text-destructive">{errors.departureTime.message}</p>}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tour Details</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Number of Days *</Label>
+              <Input type="number" min={1} {...register('numberOfDays')} />
+              {errors.numberOfDays && <p className="text-xs text-destructive">{errors.numberOfDays.message}</p>}
+              <p className="text-xs text-muted-foreground">
+                Auto-fills from arrival and departure dates; you can change it if needed.
+              </p>
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label>Additional Activities</Label>

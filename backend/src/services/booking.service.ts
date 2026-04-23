@@ -61,6 +61,7 @@ export class BookingService {
         additionalActivities: data.additionalActivities,
         specialCelebrations: data.specialCelebrations,
         generalNotes: data.generalNotes,
+        flightNumber: data.flightNumber?.trim() || null,
         salesOwnerId,
         status: BOOKING_STATUS.CLIENT_PROFILE_CREATED,
         client: {
@@ -71,6 +72,7 @@ export class BookingService {
             preferredCurrency: data.client.preferredCurrency ?? 'USD',
             email: data.client.email,
             contactNumber: data.client.contactNumber,
+            passportNumber: data.client.passportNumber?.trim() || null,
           },
         },
         statusHistory: {
@@ -230,6 +232,9 @@ export class BookingService {
         ...(data.additionalActivities !== undefined && { additionalActivities: data.additionalActivities }),
         ...(data.specialCelebrations !== undefined && { specialCelebrations: data.specialCelebrations }),
         ...(data.generalNotes !== undefined && { generalNotes: data.generalNotes }),
+        ...(data.flightNumber !== undefined && {
+          flightNumber: data.flightNumber === null || data.flightNumber === '' ? null : data.flightNumber,
+        }),
       },
       include: {
         client: true,

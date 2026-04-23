@@ -59,6 +59,7 @@ export interface Client {
   preferredCurrency: CurrencyCode;
   email: string;
   contactNumber: string;
+  passportNumber?: string | null;
   passportCopy?: string;
   flightTicket?: string;
 }
@@ -175,6 +176,8 @@ export interface Booking {
   arrivalTime: string;
   departureDate: string;
   departureTime: string;
+  /** Primary flight / transit reference (free text) */
+  flightNumber?: string | null;
   additionalActivities?: string;
   specialCelebrations?: string;
   generalNotes?: string;

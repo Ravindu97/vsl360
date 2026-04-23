@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,6 +27,7 @@ const clientSchema = z.object({
   preferredCurrency: z.nativeEnum(CurrencyCode),
   email: z.string().email(),
   contactNumber: z.string().min(1),
+  passportNumber: z.string().optional(),
 });
 
 const paxSchema = z.object({
@@ -56,8 +57,32 @@ export function ClientPaxTab({ booking }: Props) {
       preferredCurrency: booking.client?.preferredCurrency ?? CurrencyCode.USD,
       email: booking.client?.email ?? '',
       contactNumber: booking.client?.contactNumber ?? '',
+      passportNumber: booking.client?.passportNumber ?? '',
     },
   });
+
+  useEffect(() => {
+    if (editingClient) return;
+    clientForm.reset({
+      name: booking.client?.name ?? '',
+      citizenship: booking.client?.citizenship ?? '',
+      languagePreference: booking.client?.languagePreference ?? 'English',
+      preferredCurrency: booking.client?.preferredCurrency ?? CurrencyCode.USD,
+      email: booking.client?.email ?? '',
+      contactNumber: booking.client?.contactNumber ?? '',
+      passportNumber: booking.client?.passportNumber ?? '',
+    });
+  }, [
+    editingClient,
+    booking.client?.name,
+    booking.client?.citizenship,
+    booking.client?.languagePreference,
+    booking.client?.preferredCurrency,
+    booking.client?.email,
+    booking.client?.contactNumber,
+    booking.client?.passportNumber,
+    clientForm,
+  ]);
 
   const updateClient = useMutation({
     mutationFn: (data: any) => clientApi.update(booking.id, data),
@@ -189,6 +214,10 @@ export function ClientPaxTab({ booking }: Props) {
                 <Label>Contact Number</Label>
                 <Input {...clientForm.register('contactNumber')} />
               </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Passport number</Label>
+                <Input {...clientForm.register('passportNumber')} autoComplete="off" />
+              </div>
               <div className="sm:col-span-2 flex gap-2">
                 <Button type="submit" size="sm" disabled={updateClient.isPending}>
                   <Save className="mr-2 h-3 w-3" />{updateClient.isPending ? 'Saving...' : 'Save'}
@@ -206,6 +235,7 @@ export function ClientPaxTab({ booking }: Props) {
               <Info label="Preferred Currency" value={booking.client?.preferredCurrency} />
               <Info label="Email" value={booking.client?.email} />
               <Info label="Contact" value={booking.client?.contactNumber} />
+              <Info label="Passport number" value={booking.client?.passportNumber ?? undefined} />
             </div>
           )}
         </CardContent>
