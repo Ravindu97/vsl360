@@ -9,6 +9,7 @@ export const createBookingSchema = z.object({
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),
+  flightNumber: z.string().optional(),
   client: z.object({
     name: z.string().min(1, 'Guest name is required'),
     citizenship: z.string().min(1, 'Citizenship is required'),
@@ -16,6 +17,7 @@ export const createBookingSchema = z.object({
     preferredCurrency: z.enum(['EUR', 'USD', 'INR']).default('USD'),
     email: z.string().email('Invalid email'),
     contactNumber: z.string().min(1, 'Contact number is required'),
+    passportNumber: z.string().optional(),
   }),
 });
 
@@ -28,6 +30,7 @@ export const updateBookingSchema = z.object({
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),
+  flightNumber: z.string().optional().nullable(),
 });
 
 export const updateStatusSchema = z.object({

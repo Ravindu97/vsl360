@@ -459,9 +459,11 @@ export class DocumentGeneratorService {
 
     const totalChars = textBlocks.reduce((sum, text) => sum + text.length, 0);
     const score = dayCount * 12 + Math.ceil(totalChars / 170) * 5;
+    const denseByNights = hotelPlan.length >= 8;
 
-    // Keep itinerary styling readable. Compact mode is only for denser plans.
-    if (score >= 95) {
+    // Keep itinerary styling readable. Compact mode for denser plans,
+    // including medium+ itineraries by night count.
+    if (score >= 95 || denseByNights) {
       return {
         layoutMode: 'compact',
         pdf: {

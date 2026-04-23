@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { inclusiveTourDayCount } from '@/utils/tourDates';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -231,6 +232,7 @@ export function OverviewTab({ booking }: Props) {
             <Row label="Language Preference" value={booking.client?.languagePreference} />
             <Row label="Email" value={booking.client?.email} />
             <Row label="Contact" value={booking.client?.contactNumber} />
+            <Row label="Passport number" value={booking.client?.passportNumber?.trim() || '—'} />
             <Divider />
             <Row label="Total Pax" value={String((booking.paxList?.length ?? 0) + (booking.client ? 1 : 0))} />
             <Row label="Adults" value={String((booking.paxList?.filter(p => p.type === 'ADULT').length ?? 0) + (booking.client ? 1 : 0))} />
@@ -326,6 +328,7 @@ export function OverviewTab({ booking }: Props) {
 
 const tourDetailsSchema = z.object({
   numberOfDays: z.coerce.number().min(1),
+  flightNumber: z.string().optional(),
   arrivalDate: z.string().min(1, 'Required'),
   arrivalTime: z.string().min(1, 'Required'),
   departureDate: z.string().min(1, 'Required'),
@@ -341,6 +344,7 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
     resolver: zodResolver(tourDetailsSchema),
     defaultValues: {
       numberOfDays: booking.numberOfDays,
+      flightNumber: booking.flightNumber ?? '',
       arrivalDate: booking.arrivalDate?.slice(0, 10) ?? '',
       arrivalTime: booking.arrivalTime,
       departureDate: booking.departureDate?.slice(0, 10) ?? '',
@@ -350,6 +354,47 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
       generalNotes: booking.generalNotes ?? '',
     },
   });
+
+  const watchedArrival = form.watch('arrivalDate');
+  const watchedDeparture = form.watch('departureDate');
+
+  useEffect(() => {
+    if (!editing) return;
+    if (!watchedArrival || !watchedDeparture) return;
+    const next = inclusiveTourDayCount(watchedArrival, watchedDeparture);
+    const current = form.getValues('numberOfDays');
+    if (Number(current) !== next) {
+      form.setValue('numberOfDays', next, { shouldValidate: true, shouldDirty: true });
+    }
+  }, [editing, watchedArrival, watchedDeparture, form]);
+
+  useEffect(() => {
+    if (editing) return;
+    form.reset({
+      numberOfDays: booking.numberOfDays,
+      flightNumber: booking.flightNumber ?? '',
+      arrivalDate: booking.arrivalDate?.slice(0, 10) ?? '',
+      arrivalTime: booking.arrivalTime,
+      departureDate: booking.departureDate?.slice(0, 10) ?? '',
+      departureTime: booking.departureTime,
+      additionalActivities: booking.additionalActivities ?? '',
+      specialCelebrations: booking.specialCelebrations ?? '',
+      generalNotes: booking.generalNotes ?? '',
+    });
+  }, [
+    editing,
+    booking.id,
+    booking.numberOfDays,
+    booking.flightNumber,
+    booking.arrivalDate,
+    booking.arrivalTime,
+    booking.departureDate,
+    booking.departureTime,
+    booking.additionalActivities,
+    booking.specialCelebrations,
+    booking.generalNotes,
+    form,
+  ]);
 
   const mutation = useMutation({
     mutationFn: (data: any) => bookingsApi.update(booking.id, data),
@@ -376,6 +421,11 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
               <div className="space-y-1.5">
                 <Label className="text-xs">Number of Days</Label>
                 <Input type="number" min={1} {...form.register('numberOfDays')} />
+                <p className="text-xs text-muted-foreground">Updates from dates when you change arrival or departure; you can still edit.</p>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label className="text-xs">Flight number</Label>
+                <Input {...form.register('flightNumber')} />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Arrival Date</Label>
@@ -418,6 +468,7 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
         ) : (
           <div className="space-y-3 text-sm">
             <Row label="Duration" value={`${booking.numberOfDays} days`} />
+            <Row label="Flight number" value={booking.flightNumber?.trim() || '—'} />
             <Row label="Arrival" value={`${formatDate(booking.arrivalDate)} at ${booking.arrivalTime}`} />
             <Row label="Departure" value={`${formatDate(booking.departureDate)} at ${booking.departureTime}`} />
             <Row label="Sales Owner" value={booking.salesOwner?.name} />

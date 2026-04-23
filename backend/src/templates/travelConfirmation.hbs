@@ -299,6 +299,14 @@
               <div class="overview-value" style="color:#888;">To Be Confirmed</div>
             </div>
             {{/if}}
+            <div class="overview-row">
+              <div class="overview-label">Flight No</div>
+              <div class="overview-value">: {{#if booking.flightNumber}}{{booking.flightNumber}}{{else}}To Be Confirmed{{/if}}</div>
+            </div>
+            <div class="overview-row">
+              <div class="overview-label">Passport No</div>
+              <div class="overview-value">: {{#if client.passportNumber}}{{client.passportNumber}}{{else}}To Be Confirmed{{/if}}</div>
+            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ export const updateClientSchema = z.object({
   preferredCurrency: z.enum(['EUR', 'USD', 'INR']).optional(),
   email: z.string().email().optional(),
   contactNumber: z.string().min(1).optional(),
+  passportNumber: z.string().optional().nullable(),
 });
 
 export type UpdateClientInput = z.infer<typeof updateClientSchema>;
