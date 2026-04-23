@@ -15,8 +15,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { CurrencyCode, PaxType } from '@/types';
+import { CurrencyCode } from '@/types';
 import type { Booking, Invoice } from '@/types';
+import { computePolicyBreakdown, guestCountsByPolicy } from '@/utils/invoicePolicy';
 
 interface Props {
   booking: Booking;
@@ -50,57 +51,6 @@ const invoiceSchema = z.object({
 
 type InvoiceForm = z.infer<typeof invoiceSchema>;
 
-type PolicyBreakdown = {
-  adults: number;
-  children: number;
-  infants: number;
-  adultUnits: number;
-  childUnits: number;
-  totalUnits: number;
-  adultRate: number;
-  childRate: number;
-  infantRate: number;
-  adultSubtotal: number;
-  childSubtotal: number;
-  infantSubtotal: number;
-  computedTotal: number;
-};
-
-function computePolicyBreakdown(booking: Booking, costPerPerson: number): PolicyBreakdown {
-  const adults = (booking.client ? 1 : 0) + booking.paxList.filter((p) => p.type === PaxType.ADULT).length;
-  const children = booking.paxList.filter((p) => p.type === PaxType.CHILD).length;
-  const infants = booking.paxList.filter((p) => p.type === PaxType.INFANT).length;
-
-  const adultUnits = adults;
-  const childUnits = children * 0.5;
-  const totalUnits = adultUnits + childUnits;
-
-  const adultRate = costPerPerson;
-  const childRate = costPerPerson * 0.5;
-  const infantRate = 0;
-
-  const adultSubtotal = adultUnits * costPerPerson;
-  const childSubtotal = children * childRate;
-  const infantSubtotal = 0;
-  const computedTotal = adultSubtotal + childSubtotal;
-
-  return {
-    adults,
-    children,
-    infants,
-    adultUnits,
-    childUnits,
-    totalUnits,
-    adultRate,
-    childRate,
-    infantRate,
-    adultSubtotal,
-    childSubtotal,
-    infantSubtotal,
-    computedTotal,
-  };
-}
-
 export function InvoiceTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
@@ -110,10 +60,7 @@ export function InvoiceTab({ booking }: Props) {
   const [newInclusion, setNewInclusion] = useState('');
   const [autoPolicyMode, setAutoPolicyMode] = useState(true);
 
-  const adults = (booking.client ? 1 : 0) + booking.paxList.filter((p) => p.type === PaxType.ADULT).length;
-  const children = booking.paxList.filter((p) => p.type === PaxType.CHILD).length;
-  const infants = booking.paxList.filter((p) => p.type === PaxType.INFANT).length;
-  const totalGuests = adults + children + infants;
+  const { adults, children, infants, totalGuests } = guestCountsByPolicy(booking);
 
   const { data } = useQuery({
     queryKey: ['invoice', booking.id],
@@ -173,8 +120,7 @@ export function InvoiceTab({ booking }: Props) {
     }
   }, [editing, getValues, invoice?.tourInclusions]);
 
-  // Auto-compute Total using policy rates:
-  // Adult = 100%, Child = 50%, Infant = 0%
+  // Auto-compute total from age policy: ≤5 free, 6–11 half, 12+ full; lead client counts as adult
   useEffect(() => {
     if (!editing || !autoPolicyMode) return;
     const cost = Number(watchedCost) || 0;
@@ -331,7 +277,7 @@ export function InvoiceTab({ booking }: Props) {
                 className={autoPolicyMode ? 'bg-muted text-muted-foreground' : ''}
               />
               {autoPolicyMode ? (
-                <p className="text-xs text-muted-foreground">Auto: Adult full + Child 50% + Infant free</p>
+                <p className="text-xs text-muted-foreground">Auto: ages 12+ full · ages 6–11 half · age ≤5 free (lead client = 1 full fare)</p>
               ) : (
                 <p className={`text-xs ${Math.abs(totalDiff) < 0.01 ? 'text-emerald-700' : 'text-amber-700'}`}>
                   Manual mode: {Math.abs(totalDiff) < 0.01 ? 'matches policy total' : `difference from policy is ${formatCurrency(totalDiff, currencyCode)}`}

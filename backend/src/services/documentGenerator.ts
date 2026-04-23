@@ -109,11 +109,29 @@ type ItineraryPlanDayInput = {
   notes?: string;
 };
 
+const policyTierForPax = (p: { age?: number | null; type: string }): 'infant' | 'child' | 'adult' => {
+  if (p.age != null && Number.isFinite(Number(p.age))) {
+    const age = Number(p.age);
+    if (age <= 5) return 'infant';
+    if (age <= 11) return 'child';
+    return 'adult';
+  }
+  if (p.type === 'INFANT') return 'infant';
+  if (p.type === 'CHILD') return 'child';
+  return 'adult';
+};
+
 const computeInvoiceCostBreakdown = (booking: any): InvoiceCostBreakdown => {
   const costPerPerson = Number(booking.invoice.costPerPerson);
-  const adults = (booking.client ? 1 : 0) + booking.paxList.filter((p: any) => p.type === 'ADULT').length;
-  const children = booking.paxList.filter((p: any) => p.type === 'CHILD').length;
-  const infants = booking.paxList.filter((p: any) => p.type === 'INFANT').length;
+  let adults = booking.client ? 1 : 0;
+  let children = 0;
+  let infants = 0;
+  for (const p of booking.paxList ?? []) {
+    const tier = policyTierForPax(p);
+    if (tier === 'adult') adults += 1;
+    else if (tier === 'child') children += 1;
+    else infants += 1;
+  }
 
   const adultUnits = adults;
   const childUnits = children * 0.5;
