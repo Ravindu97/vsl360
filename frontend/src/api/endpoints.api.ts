@@ -101,6 +101,17 @@ export const reportsApi = {
 export const itineraryApi = {
   listDestinations: (params?: { search?: string; page?: number; pageSize?: number }) =>
     api.get<PaginatedResponse<ItineraryDestination>>('/itinerary/destinations', { params }),
+
+  geocodeDestinations: () =>
+    api.post<{ updated: number; skipped: number; failed: string[] }>('/itinerary/destinations/geocode'),
+
+  getDestinationDistance: (fromId: string, toId: string) =>
+    api.get<{
+      drivingMeters?: number;
+      drivingDurationS?: number;
+      straightMeters: number;
+      source: 'osrm' | 'ors' | 'haversine';
+    }>(`/itinerary/destinations/${fromId}/distance/${toId}`),
   createDestination: (data: { name: string; slug?: string; isActive?: boolean }) =>
     api.post<ItineraryDestination>('/itinerary/destinations', data),
   updateDestination: (destinationId: string, data: { name?: string; slug?: string; isActive?: boolean }) =>
@@ -147,7 +158,15 @@ export const itineraryApi = {
 
   importCatalog: (data: {
     replaceAll?: boolean;
-    destinations: Array<{ id: string; name: string; slug: string; isActive?: boolean; sortOrder: number }>;
+    destinations: Array<{
+      id: string;
+      name: string;
+      slug: string;
+      isActive?: boolean;
+      sortOrder: number;
+      latitude?: number | null;
+      longitude?: number | null;
+    }>;
     activities: Array<{
       id: string;
       destinationId: string;

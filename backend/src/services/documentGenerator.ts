@@ -7,6 +7,8 @@ import { Prisma } from '@prisma/client';
 import prisma from '../config/database';
 import { env } from '../config/env';
 import logger from '../utils/logger';
+import { getLegsForPlan, legTemplateLabels } from './distanceService';
+import type { ItineraryPlanDay } from '../types/itineraryPlan';
 
 // Register Handlebars helpers
 Handlebars.registerHelper('inc', (value: number) => value + 1);
@@ -97,16 +99,6 @@ type InvoiceCostBreakdown = {
   childSubtotal: number;
   infantSubtotal: number;
   computedTotal: number;
-};
-
-type ItineraryPlanDayInput = {
-  dayNumber: number;
-  dateLabel?: string;
-  destinationId?: string;
-  morningActivityId?: string;
-  afternoonActivityId?: string;
-  eveningActivityId?: string;
-  notes?: string;
 };
 
 const policyTierForPax = (p: { age?: number | null; type: string }): 'infant' | 'child' | 'adult' => {
@@ -636,7 +628,7 @@ export class DocumentGeneratorService {
   async generateItinerary(
     bookingId: string,
     generatedBy: string,
-    planDaysInput?: ItineraryPlanDayInput[]
+    planDaysInput?: ItineraryPlanDay[]
   ): Promise<{ filePath: string; docId: string }> {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
@@ -698,6 +690,9 @@ export class DocumentGeneratorService {
     const destinationMap = new Map(destinations.map((destination) => [destination.id, destination]));
     const activityMap = new Map(activities.map((activity) => [activity.id, activity]));
 
+    const planLegs = planDays.length > 0 ? await getLegsForPlan(planDays) : [];
+    const legByToDay = new Map(planLegs.map((leg) => [leg.toDayNumber, leg]));
+
     // Merge hotel, transport, and itinerary plan into day-by-day view
     const days = [];
     for (let i = 1; i <= booking.numberOfDays; i++) {
@@ -743,10 +738,25 @@ export class DocumentGeneratorService {
           : null,
       ].filter(Boolean);
 
+      const planLeg = legByToDay.get(i);
+      const leg = planLeg
+        ? (() => {
+            const { distanceLabel, durationLabel } = legTemplateLabels(planLeg);
+            return {
+              distanceLabel,
+              durationLabel,
+              summary: planLeg.displayLabel,
+              fromName: planLeg.fromDestinationName,
+              toName: planLeg.toDestinationName,
+            };
+          })()
+        : null;
+
       days.push({
         dayNumber: i,
         hotel: hotel || null,
         transport: dayPlan || null,
+        leg,
         itinerary: itineraryPlan
           ? {
               dateLabel: itineraryPlan.dateLabel,

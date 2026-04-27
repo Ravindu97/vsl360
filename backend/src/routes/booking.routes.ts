@@ -3,7 +3,13 @@ import { bookingController } from '../controllers/booking.controller';
 import { authenticate } from '../middleware/auth';
 import { authorize } from '../middleware/authorize';
 import { validate } from '../middleware/validate';
-import { createBookingSchema, updateBookingSchema, updateStatusSchema, saveItineraryPlanSchema } from '../validators/booking.schema';
+import {
+  createBookingSchema,
+  updateBookingSchema,
+  updateStatusSchema,
+  saveItineraryPlanSchema,
+  computeItineraryPlanDistancesSchema,
+} from '../validators/booking.schema';
 
 const router = Router();
 
@@ -29,6 +35,12 @@ router.put(
   (req, res) => bookingController.updateStatus(req, res)
 );
 router.get('/:id/itinerary-plan', (req, res) => bookingController.getItineraryPlan(req, res));
+router.get('/:id/itinerary-plan/distances', (req, res) => bookingController.getItineraryPlanDistances(req, res));
+router.post(
+  '/:id/itinerary-plan/distances',
+  validate(computeItineraryPlanDistancesSchema),
+  (req, res) => bookingController.computeItineraryPlanDistances(req, res)
+);
 router.put(
   '/:id/itinerary-plan',
   authorize('SALES', 'OPS_MANAGER'),

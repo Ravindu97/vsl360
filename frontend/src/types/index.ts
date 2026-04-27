@@ -239,6 +239,24 @@ export interface ItineraryDestination {
   slug: string;
   isActive: boolean;
   sortOrder: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  geocodedAt?: string | null;
+}
+
+/** Leg between two consecutive plan days (from day N to day M). */
+export interface ItineraryPlanLeg {
+  fromDayNumber: number;
+  toDayNumber: number;
+  fromDestinationId: string;
+  toDestinationId: string;
+  fromDestinationName: string;
+  toDestinationName: string;
+  drivingMeters?: number;
+  drivingDurationS?: number;
+  straightMeters: number;
+  source: 'osrm' | 'ors' | 'haversine';
+  displayLabel: string;
 }
 
 export interface ItineraryActivity {

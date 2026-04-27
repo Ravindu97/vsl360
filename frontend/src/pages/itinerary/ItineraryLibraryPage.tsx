@@ -55,6 +55,7 @@ export function ItineraryLibraryPage() {
   const [showImportPanel, setShowImportPanel] = useState(false);
   const [importJson, setImportJson] = useState('');
   const [importError, setImportError] = useState('');
+  const [geocodeMessage, setGeocodeMessage] = useState<string | null>(null);
 
   const [destinationForm, setDestinationForm] = useState({
     name: '',
@@ -191,6 +192,25 @@ export function ItineraryLibraryPage() {
     },
   });
 
+  const geocodeDestinations = useMutation({
+    mutationFn: () => itineraryApi.geocodeDestinations(),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ['itinerary-destinations'] });
+      queryClient.invalidateQueries({ queryKey: ['itinerary-plan-destinations'] });
+      const d = res.data;
+      if (d) {
+        setGeocodeMessage(
+          `Geocoding done. Updated: ${d.updated}, skipped: ${d.skipped}${
+            d.failed.length > 0 ? `, failed: ${d.failed.length} destination(s)` : ''
+          }`
+        );
+      }
+    },
+    onError: () => {
+      setGeocodeMessage('Geocoding failed. Check server logs and try again.');
+    },
+  });
+
   const importCatalog = useMutation({
     mutationFn: (payload: ImportCatalogPayload) =>
       itineraryApi.importCatalog({ replaceAll: true, ...payload }),
@@ -289,7 +309,24 @@ export function ItineraryLibraryPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr,1.25fr]">
         <Card>
           <CardHeader>
-            <CardTitle>Destinations</CardTitle>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle>Destinations</CardTitle>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setGeocodeMessage(null);
+                  geocodeDestinations.mutate();
+                }}
+                disabled={geocodeDestinations.isPending}
+              >
+                {geocodeDestinations.isPending ? 'Geocoding…' : 'Geocode missing coordinates'}
+              </Button>
+            </div>
+            {geocodeMessage && (
+              <p className="text-xs text-muted-foreground">{geocodeMessage}</p>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
@@ -378,6 +415,17 @@ export function ItineraryLibraryPage() {
                   >
                     <p className="font-medium">{destination.name}</p>
                     <p className="text-xs text-muted-foreground">/{destination.slug}</p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {destination.latitude != null && destination.longitude != null ? (
+                        <Badge variant="outline" className="text-[10px] font-normal">
+                          {destination.latitude.toFixed(4)}°, {destination.longitude.toFixed(4)}°
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-[10px] font-normal text-amber-800">
+                          No coordinates — run Geocode
+                        </Badge>
+                      )}
+                    </p>
                   </button>
                   <div className="flex items-center gap-1">
                     <Badge variant={destination.isActive ? 'secondary' : 'outline'}>

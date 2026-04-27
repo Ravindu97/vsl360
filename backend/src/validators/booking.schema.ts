@@ -38,18 +38,22 @@ export const updateStatusSchema = z.object({
   notes: z.string().optional(),
 });
 
+const itineraryPlanDaySchema = z.object({
+  dayNumber: z.number().int().positive(),
+  dateLabel: z.string().optional(),
+  destinationId: z.string().optional(),
+  morningActivityId: z.string().optional(),
+  afternoonActivityId: z.string().optional(),
+  eveningActivityId: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 export const saveItineraryPlanSchema = z.object({
-  days: z.array(
-    z.object({
-      dayNumber: z.number().int().positive(),
-      dateLabel: z.string().optional(),
-      destinationId: z.string().optional(),
-      morningActivityId: z.string().optional(),
-      afternoonActivityId: z.string().optional(),
-      eveningActivityId: z.string().optional(),
-      notes: z.string().optional(),
-    })
-  ),
+  days: z.array(itineraryPlanDaySchema),
+});
+
+export const computeItineraryPlanDistancesSchema = z.object({
+  days: z.array(itineraryPlanDaySchema),
 });
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;

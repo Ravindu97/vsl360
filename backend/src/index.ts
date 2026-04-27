@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
+import { runItineraryMigrations } from './config/runItineraryMigrations';
 import { errorHandler } from './middleware/errorHandler';
 import logger from './utils/logger';
 
@@ -87,9 +88,16 @@ app.get('/api/health', (_req, res) => {
 // Error handler
 app.use(errorHandler);
 
-// Start server
-app.listen(env.PORT, () => {
-  logger.info(`Server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
-});
+// Start server (itinerary raw SQL migrations for existing DBs)
+void runItineraryMigrations()
+  .then(() => {
+    app.listen(env.PORT, () => {
+      logger.info(`Server running on port ${env.PORT} in ${env.NODE_ENV} mode`);
+    });
+  })
+  .catch((err) => {
+    logger.error('Failed to run itinerary migrations', err);
+    process.exit(1);
+  });
 
 export default app;

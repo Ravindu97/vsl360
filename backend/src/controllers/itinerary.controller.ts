@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import prisma from '../config/database';
+import { getLegDistance } from '../services/distanceService';
+import { backfillMissingCoordinates } from '../services/geocodingService';
 
 const slugify = (value: string): string => value
   .trim()
@@ -29,16 +31,54 @@ export class ItineraryController {
         `;
 
     const rows = search
-      ? await prisma.$queryRaw<Array<{ id: string; name: string; slug: string; isActive: boolean; sortOrder: number }>>`
-          SELECT id, name, slug, is_active AS "isActive", sort_order AS "sortOrder"
+      ? await prisma.$queryRaw<
+          Array<{
+            id: string;
+            name: string;
+            slug: string;
+            isActive: boolean;
+            sortOrder: number;
+            latitude: number | null;
+            longitude: number | null;
+            geocodedAt: Date | null;
+          }>
+        >`
+          SELECT
+            id,
+            name,
+            slug,
+            is_active AS "isActive",
+            sort_order AS "sortOrder",
+            latitude,
+            longitude,
+            geocoded_at AS "geocodedAt"
           FROM destinations
           WHERE name ILIKE ${`%${search}%`}
           ORDER BY sort_order ASC
           LIMIT ${pageSize}
           OFFSET ${offset}
         `
-      : await prisma.$queryRaw<Array<{ id: string; name: string; slug: string; isActive: boolean; sortOrder: number }>>`
-          SELECT id, name, slug, is_active AS "isActive", sort_order AS "sortOrder"
+      : await prisma.$queryRaw<
+          Array<{
+            id: string;
+            name: string;
+            slug: string;
+            isActive: boolean;
+            sortOrder: number;
+            latitude: number | null;
+            longitude: number | null;
+            geocodedAt: Date | null;
+          }>
+        >`
+          SELECT
+            id,
+            name,
+            slug,
+            is_active AS "isActive",
+            sort_order AS "sortOrder",
+            latitude,
+            longitude,
+            geocoded_at AS "geocodedAt"
           FROM destinations
           ORDER BY sort_order ASC
           LIMIT ${pageSize}
@@ -63,10 +103,29 @@ export class ItineraryController {
       SELECT COALESCE(MAX(sort_order), 0) + 1 AS "nextSortOrder" FROM destinations
     `;
 
-    const [row] = await prisma.$queryRaw<Array<{ id: string; name: string; slug: string; isActive: boolean; sortOrder: number }>>`
+    const [row] = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        slug: string;
+        isActive: boolean;
+        sortOrder: number;
+        latitude: number | null;
+        longitude: number | null;
+        geocodedAt: Date | null;
+      }>
+    >`
       INSERT INTO destinations (id, name, slug, is_active, sort_order)
       VALUES (${randomUUID()}, ${name}, ${slug}, ${isActive}, ${nextSortOrder})
-      RETURNING id, name, slug, is_active AS "isActive", sort_order AS "sortOrder"
+      RETURNING
+        id,
+        name,
+        slug,
+        is_active AS "isActive",
+        sort_order AS "sortOrder",
+        latitude,
+        longitude,
+        geocoded_at AS "geocodedAt"
     `;
 
     res.status(201).json(row);
@@ -75,8 +134,27 @@ export class ItineraryController {
   async updateDestination(req: Request, res: Response): Promise<void> {
     const id = req.params.destinationId;
 
-    const existing = await prisma.$queryRaw<Array<{ id: string; name: string; slug: string; isActive: boolean; sortOrder: number }>>`
-      SELECT id, name, slug, is_active AS "isActive", sort_order AS "sortOrder"
+    const existing = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        slug: string;
+        isActive: boolean;
+        sortOrder: number;
+        latitude: number | null;
+        longitude: number | null;
+        geocodedAt: Date | null;
+      }>
+    >`
+      SELECT
+        id,
+        name,
+        slug,
+        is_active AS "isActive",
+        sort_order AS "sortOrder",
+        latitude,
+        longitude,
+        geocoded_at AS "geocodedAt"
       FROM destinations
       WHERE id = ${id}
       LIMIT 1
@@ -92,13 +170,32 @@ export class ItineraryController {
     const slug = req.body.slug !== undefined ? String(req.body.slug).trim() : current.slug;
     const isActive = req.body.isActive !== undefined ? Boolean(req.body.isActive) : current.isActive;
 
-    const [row] = await prisma.$queryRaw<Array<{ id: string; name: string; slug: string; isActive: boolean; sortOrder: number }>>`
+    const [row] = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        slug: string;
+        isActive: boolean;
+        sortOrder: number;
+        latitude: number | null;
+        longitude: number | null;
+        geocodedAt: Date | null;
+      }>
+    >`
       UPDATE destinations
       SET name = ${name},
           slug = ${slug},
           is_active = ${isActive}
       WHERE id = ${id}
-      RETURNING id, name, slug, is_active AS "isActive", sort_order AS "sortOrder"
+      RETURNING
+        id,
+        name,
+        slug,
+        is_active AS "isActive",
+        sort_order AS "sortOrder",
+        latitude,
+        longitude,
+        geocoded_at AS "geocodedAt"
     `;
 
     res.json(row);
@@ -312,15 +409,52 @@ export class ItineraryController {
     res.json({ message: 'Activity deleted' });
   }
 
+  async geocodeDestinations(_req: Request, res: Response): Promise<void> {
+    try {
+      const result = await backfillMissingCoordinates();
+      res.json(result);
+    } catch (e: any) {
+      res.status(500).json({ error: e?.message || 'Geocoding failed' });
+    }
+  }
+
+  async getDestinationDistance(req: Request, res: Response): Promise<void> {
+    const fromId = String(req.params.fromId ?? '');
+    const toId = String(req.params.toId ?? '');
+    if (!fromId || !toId) {
+      res.status(400).json({ error: 'from and to destination ids required' });
+      return;
+    }
+    try {
+      const d = await getLegDistance(fromId, toId);
+      res.json(d);
+    } catch (e: any) {
+      res.status(400).json({ error: e?.message || 'Distance lookup failed' });
+    }
+  }
+
   async exportCatalog(_req: Request, res: Response): Promise<void> {
-    const destinations = await prisma.$queryRaw<Array<{
-      id: string;
-      name: string;
-      slug: string;
-      isActive: boolean;
-      sortOrder: number;
-    }>>`
-      SELECT id, name, slug, is_active AS "isActive", sort_order AS "sortOrder"
+    const destinations = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        slug: string;
+        isActive: boolean;
+        sortOrder: number;
+        latitude: number | null;
+        longitude: number | null;
+        geocodedAt: Date | null;
+      }>
+    >`
+      SELECT
+        id,
+        name,
+        slug,
+        is_active AS "isActive",
+        sort_order AS "sortOrder",
+        latitude,
+        longitude,
+        geocoded_at AS "geocodedAt"
       FROM destinations
       ORDER BY sort_order ASC
     `;
@@ -364,6 +498,8 @@ export class ItineraryController {
       slug: string;
       isActive?: boolean;
       sortOrder: number;
+      latitude?: number | null;
+      longitude?: number | null;
     }>;
     const activities = req.body.activities as Array<{
       id: string;
@@ -383,14 +519,33 @@ export class ItineraryController {
       }
 
       for (const destination of destinations) {
+        const lat = destination.latitude != null && Number.isFinite(Number(destination.latitude))
+          ? Number(destination.latitude)
+          : null;
+        const lng = destination.longitude != null && Number.isFinite(Number(destination.longitude))
+          ? Number(destination.longitude)
+          : null;
+        const geocodedAt = lat != null && lng != null ? new Date() : null;
         await tx.$executeRaw`
-          INSERT INTO destinations (id, name, slug, is_active, sort_order)
-          VALUES (${destination.id}, ${destination.name}, ${destination.slug}, ${destination.isActive ?? true}, ${destination.sortOrder})
+          INSERT INTO destinations (id, name, slug, is_active, sort_order, latitude, longitude, geocoded_at)
+          VALUES (
+            ${destination.id},
+            ${destination.name},
+            ${destination.slug},
+            ${destination.isActive ?? true},
+            ${destination.sortOrder},
+            ${lat},
+            ${lng},
+            ${geocodedAt}
+          )
           ON CONFLICT (id) DO UPDATE SET
             name = EXCLUDED.name,
             slug = EXCLUDED.slug,
             is_active = EXCLUDED.is_active,
-            sort_order = EXCLUDED.sort_order
+            sort_order = EXCLUDED.sort_order,
+            latitude = COALESCE(EXCLUDED.latitude, destinations.latitude),
+            longitude = COALESCE(EXCLUDED.longitude, destinations.longitude),
+            geocoded_at = COALESCE(EXCLUDED.geocoded_at, destinations.geocoded_at)
         `;
       }
 

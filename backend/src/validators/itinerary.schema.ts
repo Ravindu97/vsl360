@@ -36,6 +36,8 @@ const importDestinationSchema = z.object({
   slug: z.string().regex(slugRegex, 'Slug must be lowercase kebab-case'),
   isActive: z.boolean().optional().default(true),
   sortOrder: z.number().int().positive(),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
 });
 
 const importActivitySchema = z.object({

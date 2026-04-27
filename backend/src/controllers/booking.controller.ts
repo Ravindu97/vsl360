@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { bookingService } from '../services/booking.service';
 import { AuthRequest } from '../types';
+import { computeItineraryPlanDistancesSchema } from '../validators/booking.schema';
 
 export class BookingController {
   async create(req: AuthRequest, res: Response): Promise<void> {
@@ -74,6 +75,25 @@ export class BookingController {
     try {
       const result = await bookingService.saveItineraryPlan(String(req.params.id), req.body, req.user!.userId);
       res.json(result);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+
+  async getItineraryPlanDistances(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const legs = await bookingService.getItineraryPlanDistances(String(req.params.id));
+      res.json({ legs });
+    } catch (error: any) {
+      res.status(404).json({ error: error.message });
+    }
+  }
+
+  async computeItineraryPlanDistances(req: AuthRequest, res: Response): Promise<void> {
+    try {
+      const parsed = computeItineraryPlanDistancesSchema.parse(req.body);
+      const legs = await bookingService.computeItineraryPlanDistances(String(req.params.id), parsed.days);
+      res.json({ legs });
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
