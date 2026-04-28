@@ -16,6 +16,15 @@ Handlebars.registerHelper('formatDate', (date: Date | string) => {
   const d = new Date(date);
   return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 });
+Handlebars.registerHelper('formatDateColombo', (date: Date | string) => {
+  const d = new Date(date);
+  return d.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Colombo',
+  });
+});
 Handlebars.registerHelper('formatCurrency', (amount: number | string, currency?: string) => {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (!Number.isFinite(num)) return String(amount);
@@ -537,6 +546,7 @@ export class DocumentGeneratorService {
     const sanitizedPaymentNotes = sanitizeTextContent(booking.invoice.paymentNotes);
 
     const template = this.loadTemplate('invoice');
+    const generatedAt = new Date();
     const tourInclusionsList = booking.invoice.tourInclusions
       ? booking.invoice.tourInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean)
       : [];
@@ -548,6 +558,7 @@ export class DocumentGeneratorService {
       booking,
       client: booking.client,
       invoice: booking.invoice,
+      generatedAt,
       sanitizedPaymentNotes,
       currencyCode: booking.client.preferredCurrency ?? 'USD',
       paxCount: booking.paxList.length + 1, // +1 for main guest
