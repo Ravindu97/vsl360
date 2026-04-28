@@ -207,6 +207,7 @@ export interface DashboardData {
     total: number;
     collected: number;
     pending: number;
+    currency?: CurrencyCode;
   };
   recentBookings: Booking[];
 }

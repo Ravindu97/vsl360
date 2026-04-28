@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/shared/StatCard';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { CurrencyCode } from '@/types';
 import type { DashboardData, BookingStatus } from '@/types';
 
 export function DashboardPage() {
@@ -31,6 +32,7 @@ export function DashboardPage() {
   if (isLoading) return <LoadingSpinner />;
 
   const dashboard = data?.data;
+  const revenueCurrency = dashboard?.revenue.currency ?? CurrencyCode.INR;
 
   return (
     <div className="space-y-6">
@@ -57,17 +59,17 @@ export function DashboardPage() {
             />
             <StatCard
               title="Total Revenue"
-              value={formatCurrency(dashboard.revenue.total)}
+              value={formatCurrency(dashboard.revenue.total, revenueCurrency)}
               icon={DollarSign}
             />
             <StatCard
               title="Collected"
-              value={formatCurrency(dashboard.revenue.collected)}
+              value={formatCurrency(dashboard.revenue.collected, revenueCurrency)}
               icon={CheckCircle}
             />
             <StatCard
               title="Pending"
-              value={formatCurrency(dashboard.revenue.pending)}
+              value={formatCurrency(dashboard.revenue.pending, revenueCurrency)}
               icon={Clock}
             />
           </div>
