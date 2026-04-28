@@ -9,6 +9,9 @@ export const createBookingSchema = z.object({
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),
+  includeActivities: z.boolean().default(true),
+  includeTransport: z.boolean().default(true),
+  includeHotel: z.boolean().default(true),
   flightNumber: z.string().optional(),
   client: z.object({
     name: z.string().min(1, 'Guest name is required'),
@@ -19,7 +22,10 @@ export const createBookingSchema = z.object({
     contactNumber: z.string().min(1, 'Contact number is required'),
     passportNumber: z.string().optional(),
   }),
-});
+}).refine(
+  (data) => data.includeActivities || data.includeTransport || data.includeHotel,
+  { message: 'At least one scope option must be selected' }
+);
 
 export const updateBookingSchema = z.object({
   numberOfDays: z.number().int().positive().optional(),
@@ -30,6 +36,9 @@ export const updateBookingSchema = z.object({
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),
+  includeActivities: z.boolean().optional(),
+  includeTransport: z.boolean().optional(),
+  includeHotel: z.boolean().optional(),
   flightNumber: z.string().optional().nullable(),
 });
 

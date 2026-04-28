@@ -80,6 +80,9 @@ model Booking {
   additionalActivities String?
   specialCelebrations  String?
   generalNotes         String?
+  includeActivities    Boolean @default(true)
+  includeTransport     Boolean @default(true)
+  includeHotel         Boolean @default(true)
   /// Inbound / primary flight reference for this trip (free text)
   flightNumber         String?
 

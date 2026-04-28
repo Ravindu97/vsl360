@@ -19,6 +19,30 @@ export interface BookingFilters {
   salesOwnerId?: string;
 }
 
+export interface BookingPayload {
+  numberOfDays?: number;
+  arrivalDate?: string;
+  arrivalTime?: string;
+  departureDate?: string;
+  departureTime?: string;
+  additionalActivities?: string;
+  specialCelebrations?: string;
+  generalNotes?: string;
+  flightNumber?: string | null;
+  includeActivities?: boolean;
+  includeTransport?: boolean;
+  includeHotel?: boolean;
+  client?: {
+    name: string;
+    citizenship: string;
+    languagePreference: string;
+    preferredCurrency: 'EUR' | 'USD' | 'INR';
+    email: string;
+    contactNumber: string;
+    passportNumber?: string;
+  };
+}
+
 export const bookingsApi = {
   list: (filters: BookingFilters = {}, page = 1, pageSize = 10) =>
     api.get<PaginatedResponse<Booking>>('/bookings', {
@@ -31,9 +55,9 @@ export const bookingsApi = {
 
   get: (id: string) => api.get<Booking>(`/bookings/${id}`),
 
-  create: (data: any) => api.post<Booking>('/bookings', data),
+  create: (data: BookingPayload) => api.post<Booking>('/bookings', data),
 
-  update: (id: string, data: any) => api.put<Booking>(`/bookings/${id}`, data),
+  update: (id: string, data: BookingPayload) => api.put<Booking>(`/bookings/${id}`, data),
 
   updateStatus: (id: string, status: string, notes?: string) =>
     api.put(`/bookings/${id}/status`, { status, notes }),

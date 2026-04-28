@@ -181,6 +181,9 @@ export interface Booking {
   additionalActivities?: string;
   specialCelebrations?: string;
   generalNotes?: string;
+  includeActivities: boolean;
+  includeTransport: boolean;
+  includeHotel: boolean;
   salesOwnerId: string;
   salesOwner: Pick<User, 'id' | 'name' | 'email'>;
   client?: Client;

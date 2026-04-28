@@ -53,6 +53,9 @@ export class BookingService {
         additionalActivities: data.additionalActivities,
         specialCelebrations: data.specialCelebrations,
         generalNotes: data.generalNotes,
+        includeActivities: data.includeActivities,
+        includeTransport: data.includeTransport,
+        includeHotel: data.includeHotel,
         flightNumber: data.flightNumber?.trim() || null,
         salesOwnerId,
         status: BOOKING_STATUS.CLIENT_PROFILE_CREATED,
@@ -224,6 +227,9 @@ export class BookingService {
         ...(data.additionalActivities !== undefined && { additionalActivities: data.additionalActivities }),
         ...(data.specialCelebrations !== undefined && { specialCelebrations: data.specialCelebrations }),
         ...(data.generalNotes !== undefined && { generalNotes: data.generalNotes }),
+        ...(data.includeActivities !== undefined && { includeActivities: data.includeActivities }),
+        ...(data.includeTransport !== undefined && { includeTransport: data.includeTransport }),
+        ...(data.includeHotel !== undefined && { includeHotel: data.includeHotel }),
         ...(data.flightNumber !== undefined && {
           flightNumber: data.flightNumber === null || data.flightNumber === '' ? null : data.flightNumber,
         }),
@@ -239,6 +245,8 @@ export class BookingService {
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
+        // Scope flags decide whether hotel/transport validations are required.
+        // Keep validations strict only for included areas.
         invoice: { select: { id: true } },
         hotelPlan: { select: { confirmationStatus: true } },
         transportPlan: { select: { id: true } },
@@ -251,7 +259,7 @@ export class BookingService {
       throw new Error('Invoice must be created before moving to this status');
     }
 
-    if (status === BOOKING_STATUS.RESERVATION_COMPLETED) {
+    if (booking.includeHotel && status === BOOKING_STATUS.RESERVATION_COMPLETED) {
       if (!booking.hotelPlan || booking.hotelPlan.length === 0) {
         throw new Error('Hotel reservations must exist before marking reservation as completed');
       }
@@ -267,7 +275,7 @@ export class BookingService {
       }
     }
 
-    if (status === BOOKING_STATUS.TRANSPORT_COMPLETED && !booking.transportPlan) {
+    if (booking.includeTransport && status === BOOKING_STATUS.TRANSPORT_COMPLETED && !booking.transportPlan) {
       throw new Error('Transport details must be added before marking transport as completed');
     }
 
@@ -293,8 +301,10 @@ export class BookingService {
 
       // Check if booking has been through both completions
       const history = await prisma.statusHistory.findMany({ where: { bookingId: id } });
-      const hasReservationComplete = history.some((h: { toStatus: string }) => h.toStatus === BOOKING_STATUS.RESERVATION_COMPLETED);
-      const hasTransportComplete = history.some((h: { toStatus: string }) => h.toStatus === BOOKING_STATUS.TRANSPORT_COMPLETED);
+      const hasReservationComplete = !booking.includeHotel ||
+        history.some((h: { toStatus: string }) => h.toStatus === BOOKING_STATUS.RESERVATION_COMPLETED);
+      const hasTransportComplete = !booking.includeTransport ||
+        history.some((h: { toStatus: string }) => h.toStatus === BOOKING_STATUS.TRANSPORT_COMPLETED);
 
       if (hasReservationComplete && hasTransportComplete) {
         await prisma.booking.update({
