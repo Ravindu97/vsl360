@@ -72,34 +72,57 @@
     .billing-row {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
+      align-items: stretch;
+      gap: 16px;
+      margin-bottom: 24px;
     }
-    .bill-to {}
+    .bill-to,
+    .invoice-meta {
+      flex: 1;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fafbfc;
+      padding: 12px 14px;
+      min-height: 92px;
+    }
     .bill-to-label {
       font-weight: 700;
-      font-size: 13px;
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #3b3230;
+      margin-bottom: 6px;
+    }
+    .bill-to-name {
+      font-size: 16px;
+      font-weight: 600;
       color: #3b3230;
       margin-bottom: 4px;
     }
-    .bill-to-name {
-      font-size: 12.5px;
-      color: #3b3230;
-      margin-bottom: 2px;
-    }
     .bill-to-detail {
-      font-size: 11px;
-      color: #555;
-      margin-bottom: 1px;
+      font-size: 12px;
+      color: #616161;
+      margin-bottom: 2px;
       line-height: 1.5;
     }
     .invoice-meta {
       text-align: right;
-      font-size: 11.5px;
-      color: #555;
-      line-height: 1.65;
+      font-size: 12px;
+      color: #616161;
+      line-height: 1.5;
     }
-    .invoice-meta strong {
+    .invoice-meta-row {
+      margin-bottom: 4px;
+    }
+    .invoice-meta-row:last-child {
+      margin-bottom: 0;
+    }
+    .invoice-meta-label {
+      color: #6b7280;
+      margin-right: 6px;
+    }
+    .invoice-meta-value {
+      font-weight: 700;
       color: #3b3230;
     }
 
@@ -113,7 +136,7 @@
     .desc-text {
       font-size: 11.5px;
       color: #3b3230;
-      margin-bottom: 18px;
+      margin-bottom: 24px;
       line-height: 1.55;
     }
 
@@ -121,13 +144,13 @@
     .summary-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 0 0 22px 0;
+      margin: 0 0 24px 0;
       font-size: 11px;
     }
     .summary-table th,
     .summary-table td {
-      border: 1px solid #bbb;
-      padding: 10px 8px;
+      border: 1px solid #e5e7eb;
+      padding: 11px 10px;
       text-align: center;
       vertical-align: middle;
     }
@@ -135,17 +158,22 @@
       font-weight: 700;
       font-size: 11px;
       color: #3b3230;
-      background: #f5f5f4;
+      background: #f8fafc;
       line-height: 1.35;
     }
     .summary-table tbody td {
       font-size: 11.5px;
       color: #3b3230;
     }
+    .summary-table tbody td.money {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      padding-right: 12px;
+    }
     .summary-table tbody td.balance {
       font-weight: 700;
-      font-size: 12.5px;
-      color: #3b3230;
+      color: #1f2937;
+      background: #f8fafc;
     }
 
     .breakdown-box {
@@ -263,7 +291,10 @@
     /* ── Compact mode ── */
     body.compact { font-size: 11px; }
     body.compact h1.invoice-title { font-size: 34px; margin-bottom: 14px; }
-    body.compact .billing-row { margin-bottom: 16px; }
+    body.compact .billing-row { margin-bottom: 18px; gap: 12px; }
+    body.compact .bill-to,
+    body.compact .invoice-meta { padding: 10px 12px; min-height: 82px; }
+    body.compact .bill-to-name { font-size: 14px; }
     body.compact .desc-text { margin-bottom: 14px; }
     body.compact .summary-table { margin-bottom: 18px; }
     body.compact .summary-table th,
@@ -306,9 +337,9 @@
           {{#if client.email}}<p class="bill-to-detail">{{client.email}}</p>{{/if}}
         </div>
         <div class="invoice-meta">
-          <p>Invoice No: <strong>{{invoice.invoiceNumber}}</strong></p>
-          <p>Date: <strong>{{formatDate invoice.invoiceDate}}</strong></p>
-          <p>Booking Ref: <strong>{{booking.bookingId}}</strong></p>
+          <p class="invoice-meta-row"><span class="invoice-meta-label">Invoice No:</span><span class="invoice-meta-value">{{invoice.invoiceNumber}}</span></p>
+          <p class="invoice-meta-row"><span class="invoice-meta-label">Date:</span><span class="invoice-meta-value">{{formatDate invoice.invoiceDate}}</span></p>
+          <p class="invoice-meta-row"><span class="invoice-meta-label">Booking Ref:</span><span class="invoice-meta-value">{{booking.bookingId}}</span></p>
         </div>
       </div>
 
@@ -334,10 +365,10 @@
             <td>{{formatDate booking.arrivalDate}}</td>
             <td>{{formatDate booking.departureDate}}</td>
             <td>{{paxCount}}</td>
-            <td>{{formatCurrency invoice.costPerPerson currencyCode}}</td>
-            <td>{{formatCurrency invoice.totalAmount currencyCode}}</td>
-            <td>{{formatCurrency invoice.advancePaid currencyCode}}</td>
-            <td class="balance">{{formatCurrency invoice.balanceAmount currencyCode}}</td>
+            <td class="money">{{formatCurrency invoice.costPerPerson currencyCode}}</td>
+            <td class="money">{{formatCurrency invoice.totalAmount currencyCode}}</td>
+            <td class="money">{{formatCurrency invoice.advancePaid currencyCode}}</td>
+            <td class="money balance">{{formatCurrency invoice.balanceAmount currencyCode}}</td>
           </tr>
         </tbody>
       </table>
