@@ -101,6 +101,25 @@ type InvoiceCostBreakdown = {
   computedTotal: number;
 };
 
+const toFiniteNumber = (value: unknown, fallback = 0): number => {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : fallback;
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value.replace(/,/g, '').trim());
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  if (value && typeof value === 'object') {
+    if ('toNumber' in value && typeof (value as { toNumber?: unknown }).toNumber === 'function') {
+      const parsed = (value as { toNumber: () => number }).toNumber();
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+    if ('toString' in value && typeof (value as { toString?: unknown }).toString === 'function') {
+      const parsed = Number.parseFloat((value as { toString: () => string }).toString());
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+  }
+  return fallback;
+};
+
 const policyTierForPax = (p: { age?: number | null; type: string }): 'infant' | 'child' | 'adult' => {
   if (p.age != null && Number.isFinite(Number(p.age))) {
     const age = Number(p.age);
@@ -114,7 +133,7 @@ const policyTierForPax = (p: { age?: number | null; type: string }): 'infant' | 
 };
 
 const computeInvoiceCostBreakdown = (booking: any): InvoiceCostBreakdown => {
-  const costPerPerson = Number(booking.invoice.costPerPerson);
+  const costPerPerson = toFiniteNumber(booking.invoice.costPerPerson);
   let adults = booking.client ? 1 : 0;
   let children = 0;
   let infants = 0;
@@ -155,9 +174,31 @@ const computeInvoiceCostBreakdown = (booking: any): InvoiceCostBreakdown => {
   };
 };
 
-const isPolicyBasedInvoiceTotal = (invoiceTotal: number, computedTotal: number): boolean => {
-  // Compare at cent precision to avoid floating-point rounding noise.
-  return Math.abs(Math.round(invoiceTotal * 100) - Math.round(computedTotal * 100)) <= 1;
+const EMOJI_REGEX = /[\p{Extended_Pictographic}\u{1F1E6}-\u{1F1FF}]/gu;
+const EMOJI_JOINERS_REGEX = /[\u200D\uFE0F]/g;
+
+const sanitizeTextContent = (value: string | null | undefined): string => {
+  if (typeof value !== 'string') return '';
+  return value
+    .replace(EMOJI_REGEX, '')
+    .replace(EMOJI_JOINERS_REGEX, '')
+    .trim();
+};
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  if (!value || typeof value !== 'object') return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+};
+
+const sanitizeTemplateData = <T>(value: T): T => {
+  if (typeof value === 'string') return sanitizeTextContent(value) as T;
+  if (Array.isArray(value)) return value.map((item) => sanitizeTemplateData(item)) as T;
+  if (isPlainObject(value)) {
+    const sanitizedEntries = Object.entries(value).map(([key, item]) => [key, sanitizeTemplateData(item)]);
+    return Object.fromEntries(sanitizedEntries) as T;
+  }
+  return value;
 };
 
 export class DocumentGeneratorService {
@@ -488,29 +529,33 @@ export class DocumentGeneratorService {
 
     const layout = this.pickInvoiceLayout(booking.invoice);
     const costBreakdown = computeInvoiceCostBreakdown(booking);
-    const showPolicyBreakdown = isPolicyBasedInvoiceTotal(
-      Number(booking.invoice.totalAmount),
-      costBreakdown.computedTotal
-    );
+    const hasChildOrInfant =
+      costBreakdown.children > 0 ||
+      costBreakdown.infants > 0 ||
+      (booking.paxList ?? []).some((p: { type?: string }) => p.type === 'CHILD' || p.type === 'INFANT');
+    const showPolicyBreakdown = hasChildOrInfant;
+    const sanitizedPaymentNotes = sanitizeTextContent(booking.invoice.paymentNotes);
 
     const template = this.loadTemplate('invoice');
     const tourInclusionsList = booking.invoice.tourInclusions
       ? booking.invoice.tourInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean)
       : [];
 
-    const html = template({
+    const templateData = sanitizeTemplateData({
       themeImage: this.themeImage,
       brandLogoImage: this.invoiceLogoImage || this.brandLogoImage || env.DOCUMENT_INVOICE_LOGO_URL || env.DOCUMENT_LOGO_URL || null,
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
       invoice: booking.invoice,
+      sanitizedPaymentNotes,
       currencyCode: booking.client.preferredCurrency ?? 'USD',
       paxCount: booking.paxList.length + 1, // +1 for main guest
       costBreakdown,
       showPolicyBreakdown,
       tourInclusionsList,
     });
+    const html = template(templateData);
 
     const filename = `invoice_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
     const filePath = await this.renderPdf(html, filename, layout.pdf);
@@ -549,7 +594,7 @@ export class DocumentGeneratorService {
     const layout = this.pickTransportLayout(booking.transportPlan);
 
     const template = this.loadTemplate('transport');
-    const html = template({
+    const templateData = sanitizeTemplateData({
       brandLogoImage: this.invoiceLogoImage || this.brandLogoImage || env.DOCUMENT_INVOICE_LOGO_URL || env.DOCUMENT_LOGO_URL || null,
       layoutMode: layout.layoutMode,
       booking,
@@ -560,6 +605,7 @@ export class DocumentGeneratorService {
       infants,
       totalGuests: adults + children + infants,
     });
+    const html = template(templateData);
 
     const filename = `transport_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
     const filePath = await this.renderPdf(html, filename, layout.pdf);
@@ -597,7 +643,7 @@ export class DocumentGeneratorService {
     const layout = this.pickReservationLayout(booking);
 
     const template = this.loadTemplate('reservation');
-    const html = template({
+    const templateData = sanitizeTemplateData({
       themeImage: this.themeImage,
       layoutMode: layout.layoutMode,
       booking,
@@ -608,6 +654,7 @@ export class DocumentGeneratorService {
       infants,
       totalGuests: adults + children + infants,
     });
+    const html = template(templateData);
 
     const filename = `reservation_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
     const filePath = await this.renderPdf(html, filename, layout.pdf);
@@ -779,7 +826,7 @@ export class DocumentGeneratorService {
     const layout = this.pickItineraryLayout(booking);
 
     const template = this.loadTemplate('itinerary');
-    const html = template({
+    const templateData = sanitizeTemplateData({
       themeImage: this.themeImage,
       coverTemplateImage: this.itineraryCoverImage,
       brandLogoImage: this.brandLogoImage || env.DOCUMENT_LOGO_URL || null,
@@ -796,6 +843,7 @@ export class DocumentGeneratorService {
       transport: booking.transportPlan,
       hasItineraryPlan: planDays.length > 0,
     });
+    const html = template(templateData);
 
     const filename = `itinerary_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
     const filePath = await this.renderPdf(html, filename, layout.pdf);
@@ -876,7 +924,7 @@ export class DocumentGeneratorService {
     const layout = this.pickTravelConfirmationLayout(booking);
 
     const template = this.loadTemplate('travelConfirmation');
-    const html = template({
+    const templateData = sanitizeTemplateData({
       brandLogoImage: this.invoiceLogoImage || this.brandLogoImage || env.DOCUMENT_INVOICE_LOGO_URL || env.DOCUMENT_LOGO_URL || null,
       layoutMode: layout.layoutMode,
       booking,
@@ -889,6 +937,7 @@ export class DocumentGeneratorService {
       totalGuests: adults + children + infants,
       days,
     });
+    const html = template(templateData);
 
     const filename = `travel_confirmation_${booking.bookingId}_${randomUUID().slice(0, 8)}.pdf`;
     const filePath = await this.renderPdf(html, filename, layout.pdf);

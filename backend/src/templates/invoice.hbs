@@ -6,7 +6,7 @@
     @page { margin: 12mm 14mm; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Trebuchet MS', 'Lucida Sans', Arial, sans-serif;
+      font-family: Inter, 'Segoe UI', Arial, sans-serif;
       color: #3b3230;
       font-size: 11.5px;
       line-height: 1.5;
@@ -60,7 +60,7 @@
 
     /* ── Invoice title ── */
     h1.invoice-title {
-      font-family: Georgia, 'Times New Roman', serif;
+      font-family: Inter, 'Segoe UI', Arial, sans-serif;
       font-size: 40px;
       font-weight: 700;
       color: #3b3230;
@@ -302,7 +302,6 @@
         <div class="bill-to">
           <p class="bill-to-label">Billed To:</p>
           <p class="bill-to-name">{{client.name}}</p>
-          {{#if client.languagePreference}}<p class="bill-to-detail">Language: {{client.languagePreference}}</p>{{/if}}
           {{#if client.contactNumber}}<p class="bill-to-detail">Phone: {{client.contactNumber}}</p>{{/if}}
           {{#if client.email}}<p class="bill-to-detail">{{client.email}}</p>{{/if}}
         </div>
@@ -315,7 +314,7 @@
 
       <!-- Description -->
       <div class="desc-title">Description</div>
-      <div class="desc-text">{{#if invoice.paymentNotes}}{{invoice.paymentNotes}}{{else}}Advance payment for upcoming {{booking.numberOfDays}} Days tour in Sri Lanka{{/if}}</div>
+      <div class="desc-text">{{#if sanitizedPaymentNotes}}{{sanitizedPaymentNotes}}{{else}}Advance payment for upcoming {{booking.numberOfDays}} Days tour in Sri Lanka{{/if}}</div>
 
       <!-- Summary table -->
       <table class="summary-table">
@@ -324,10 +323,10 @@
             <th>Arrival<br>Date</th>
             <th>Departure<br>Date</th>
             <th>NO. Of<br>Guests</th>
-            <th>Cost Per<br>Person</th>
-            <th>Total<br>Amount</th>
-            <th>Advance<br>Paid</th>
-            <th>Balance<br>Due</th>
+            <th>Cost Per Person<br>({{currencyCode}})</th>
+            <th>Total Amount<br>({{currencyCode}})</th>
+            <th>Advance Paid<br>({{currencyCode}})</th>
+            <th>Balance Due<br>({{currencyCode}})</th>
           </tr>
         </thead>
         <tbody>
