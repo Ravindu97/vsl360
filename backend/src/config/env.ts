@@ -26,4 +26,11 @@ export const env = {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean),
+  /** OpenStreetMap OSRM public router (no key). */
+  OSRM_BASE_URL: (process.env.OSRM_BASE_URL || 'https://router.project-osrm.org').replace(/\/$/, ''),
+  /** If set, OpenRouteService is used instead of OSRM for driving distance. */
+  ORS_API_KEY: (process.env.ORS_API_KEY || '').trim() || undefined,
+  DISTANCE_PROVIDER_TIMEOUT_MS: parseInt(process.env.DISTANCE_PROVIDER_TIMEOUT_MS || '4000', 10),
+  NOMINATIM_USER_AGENT: (process.env.NOMINATIM_USER_AGENT || 'VSL360/1.0 (itinerary geocoding)').trim(),
+  NOMINATIM_EMAIL: (process.env.NOMINATIM_EMAIL || '').trim() || undefined,
 };

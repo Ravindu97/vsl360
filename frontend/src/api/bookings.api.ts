@@ -1,5 +1,15 @@
 import api from './client';
-import type { Booking, PaginatedResponse } from '@/types';
+import type { Booking, ItineraryPlanLeg, PaginatedResponse } from '@/types';
+
+export type ItineraryPlanDayPayload = {
+  dayNumber: number;
+  dateLabel?: string;
+  destinationId?: string;
+  morningActivityId?: string;
+  afternoonActivityId?: string;
+  eveningActivityId?: string;
+  notes?: string;
+};
 
 export interface BookingFilters {
   status?: string;
@@ -32,6 +42,12 @@ export const bookingsApi = {
 
   saveItineraryPlan: (id: string, data: { days: any[] }) =>
     api.put<{ days: any[]; updatedAt: string }>(`/bookings/${id}/itinerary-plan`, data),
+
+  getItineraryPlanDistances: (id: string) =>
+    api.get<{ legs: ItineraryPlanLeg[] }>(`/bookings/${id}/itinerary-plan/distances`),
+
+  computeItineraryPlanDistances: (id: string, data: { days: ItineraryPlanDayPayload[] }) =>
+    api.post<{ legs: ItineraryPlanLeg[] }>(`/bookings/${id}/itinerary-plan/distances`, data),
 
   delete: (id: string) => api.delete(`/bookings/${id}`),
 };

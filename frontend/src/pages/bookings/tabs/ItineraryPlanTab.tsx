@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { documentsApi, itineraryApi } from '@/api/endpoints.api';
+import { bookingsApi } from '@/api/bookings.api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { Booking, ItineraryActivity, ItineraryDestination } from '@/types';
+import type { Booking, ItineraryActivity, ItineraryDestination, ItineraryPlanLeg } from '@/types';
 
 interface Props {
   booking: Booking;
@@ -98,6 +99,38 @@ export function ItineraryPlanTab({ booking }: Props) {
 
   const completedDays = plans.filter((day) => day.destinationId && (day.morningActivityId || day.afternoonActivityId || day.eveningActivityId)).length;
 
+  const legPlanKey = useMemo(
+    () => plans.map((d) => `${d.dayNumber}:${d.destinationId || ''}`).join('|'),
+    [plans]
+  );
+
+  const { data: legsData, isFetching: legsLoading } = useQuery({
+    queryKey: ['itinerary-legs', booking.id, legPlanKey],
+    queryFn: async () =>
+      (await bookingsApi.computeItineraryPlanDistances(booking.id, {
+        days: plans.map((d) => ({
+          dayNumber: d.dayNumber,
+          dateLabel: d.dateLabel,
+          destinationId: d.destinationId || undefined,
+          morningActivityId: d.morningActivityId || undefined,
+          afternoonActivityId: d.afternoonActivityId || undefined,
+          eveningActivityId: d.eveningActivityId || undefined,
+          notes: d.notes || undefined,
+        })),
+      })).data,
+    enabled: plans.filter((d) => d.destinationId).length >= 2,
+  });
+
+  const legByToDay = useMemo(() => {
+    const list = (legsData?.legs ?? []) as ItineraryPlanLeg[];
+    return new Map(list.map((leg) => [leg.toDayNumber, leg]));
+  }, [legsData]);
+
+  const dayDestCount = useMemo(
+    () => plans.filter((d) => d.destinationId).length,
+    [plans]
+  );
+
   const updateDay = (dayNumber: number, patch: Partial<DayPlan>) => {
     setPlans((current) =>
       current.map((day) => {
@@ -181,9 +214,22 @@ export function ItineraryPlanTab({ booking }: Props) {
 
       {plans.map((day) => {
         const dayActivities = activities.filter((activity) => activity.destinationId === day.destinationId);
+        const leg = legByToDay.get(day.dayNumber) ?? null;
 
         return (
-          <Card key={day.dayNumber}>
+          <div key={day.dayNumber} className="space-y-2">
+            {day.dayNumber > 1 && (legsLoading || dayDestCount >= 2) && (
+              <div
+                className="flex min-h-8 items-center justify-center gap-1 rounded-md border border-dashed border-muted-foreground/30 bg-muted/20 px-3 py-1.5 text-center text-xs text-muted-foreground"
+                aria-label={leg ? 'Travel to this day' : 'Travel distance pending'}
+              >
+                {legsLoading && <span>Calculating distances…</span>}
+                {!legsLoading && !leg && <span>—</span>}
+                {!legsLoading && leg && <span>→ {leg.fromDestinationName} to {leg.toDestinationName} · {leg.displayLabel}</span>}
+              </div>
+            )}
+
+            <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Day {day.dayNumber} - {day.dateLabel}</CardTitle>
             </CardHeader>
@@ -280,7 +326,8 @@ export function ItineraryPlanTab({ booking }: Props) {
                 />
               </div>
             </CardContent>
-          </Card>
+            </Card>
+          </div>
         );
       })}
     </div>

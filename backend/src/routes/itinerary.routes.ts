@@ -17,6 +17,8 @@ router.use(authenticate);
 router.use(authorize('OPS_MANAGER'));
 
 router.get('/destinations', (req, res) => itineraryController.listDestinations(req, res));
+router.post('/destinations/geocode', (req, res) => itineraryController.geocodeDestinations(req, res));
+router.get('/destinations/:fromId/distance/:toId', (req, res) => itineraryController.getDestinationDistance(req, res));
 router.post('/destinations', validate(createDestinationSchema), (req, res) => itineraryController.createDestination(req, res));
 router.put('/destinations/:destinationId', validate(updateDestinationSchema), (req, res) => itineraryController.updateDestination(req, res));
 router.delete('/destinations/:destinationId', (req, res) => itineraryController.deleteDestination(req, res));

@@ -35,6 +35,14 @@ Example:
 psql "$DATABASE_URL" -f data/itinerary/schema.sql
 psql "$DATABASE_URL" -f data/itinerary/seed.sql
 
+## Existing databases (coordinates + distance cache)
+
+If the database was created from an older `schema.sql`, add columns and the distance table:
+
+psql "$DATABASE_URL" -f data/itinerary/migration_001_destination_coords_and_distances.sql
+
+The API also runs the same `ALTER`/`CREATE` on server startup (see `runItineraryMigrations` in the backend) when the `destinations` table already exists.
+
 ## Notes
 
 - The converter normalizes destination names into stable slugs.

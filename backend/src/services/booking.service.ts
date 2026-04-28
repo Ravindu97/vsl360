@@ -1,6 +1,8 @@
 import prisma from '../config/database';
 import { generateBookingId } from '../utils/bookingIdGenerator';
 import { CreateBookingInput, UpdateBookingInput } from '../validators/booking.schema';
+import { getLegsForPlan } from './distanceService';
+import type { ItineraryPlanDay } from '../types/itineraryPlan';
 
 type UserRole = 'SALES' | 'RESERVATION' | 'TRANSPORT' | 'OPS_MANAGER';
 type BookingStatusValue =
@@ -32,16 +34,6 @@ const BOOKING_STATUS: Record<BookingStatusValue, BookingStatusValue> = {
   OPS_APPROVED: 'OPS_APPROVED',
   COMPLETED: 'COMPLETED',
   CANCELLED: 'CANCELLED',
-};
-
-type ItineraryPlanDay = {
-  dayNumber: number;
-  dateLabel?: string;
-  destinationId?: string;
-  morningActivityId?: string;
-  afternoonActivityId?: string;
-  eveningActivityId?: string;
-  notes?: string;
 };
 
 const itineraryPlanStore = new Map<string, { days: ItineraryPlanDay[]; updatedAt: string }>();
@@ -335,6 +327,20 @@ export class BookingService {
 
     const stored = itineraryPlanStore.get(id);
     return stored ?? { days: [], updatedAt: undefined };
+  }
+
+  async getItineraryPlanDistances(id: string) {
+    const booking = await prisma.booking.findUnique({ where: { id }, select: { id: true } });
+    if (!booking) {
+      throw new Error('Booking not found');
+    }
+    const stored = itineraryPlanStore.get(id);
+    const days = stored?.days ?? [];
+    return getLegsForPlan(days);
+  }
+
+  async computeItineraryPlanDistances(_id: string, days: ItineraryPlanDay[]) {
+    return getLegsForPlan(Array.isArray(days) ? days : []);
   }
 
   async saveItineraryPlan(
