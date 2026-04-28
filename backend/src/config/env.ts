@@ -33,4 +33,8 @@ export const env = {
   DISTANCE_PROVIDER_TIMEOUT_MS: parseInt(process.env.DISTANCE_PROVIDER_TIMEOUT_MS || '4000', 10),
   NOMINATIM_USER_AGENT: (process.env.NOMINATIM_USER_AGENT || 'VSL360/1.0 (itinerary geocoding)').trim(),
   NOMINATIM_EMAIL: (process.env.NOMINATIM_EMAIL || '').trim() || undefined,
+  REPORT_USD_TO_INR: parseFloat(process.env.REPORT_USD_TO_INR || '83'),
+  REPORT_EUR_TO_INR: parseFloat(process.env.REPORT_EUR_TO_INR || '90'),
+  FX_API_BASE_URL: (process.env.FX_API_BASE_URL || 'https://api.frankfurter.app').replace(/\/$/, ''),
+  FX_CACHE_TTL_MINUTES: parseInt(process.env.FX_CACHE_TTL_MINUTES || '360', 10),
 };

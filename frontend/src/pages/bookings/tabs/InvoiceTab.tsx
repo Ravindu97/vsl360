@@ -51,6 +51,17 @@ const invoiceSchema = z.object({
 
 type InvoiceForm = z.infer<typeof invoiceSchema>;
 
+const COMMON_TOUR_INCLUSIONS = [
+  'Daily water bottle',
+  'Parking fees',
+  'All entrance tickets to activities',
+  'English speaking driver',
+  'Air-conditioned transport',
+  'Airport pickup and drop off',
+  'Handling charges and all taxes',
+  'Breakfast at selected hotels',
+];
+
 export function InvoiceTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
@@ -58,6 +69,7 @@ export function InvoiceTab({ booking }: Props) {
   const [editing, setEditing] = useState(false);
   const [saveError, setSaveError] = useState<string>('');
   const [newInclusion, setNewInclusion] = useState('');
+  const [selectedCommonInclusions, setSelectedCommonInclusions] = useState<string[]>([]);
   const [autoPolicyMode, setAutoPolicyMode] = useState(true);
 
   const { adults, children, infants, totalGuests } = guestCountsByPolicy(booking);
@@ -116,6 +128,7 @@ export function InvoiceTab({ booking }: Props) {
       setSaveError('');
       setInclusions(invoice?.tourInclusions?.split('\n').filter(Boolean) ?? []);
       setNewInclusion('');
+      setSelectedCommonInclusions([]);
       setAutoPolicyMode(true);
     }
   }, [editing, getValues, invoice?.tourInclusions]);
@@ -166,6 +179,23 @@ export function InvoiceTab({ booking }: Props) {
     }
 
     saveMutation.mutate(data);
+  };
+
+  const addInclusions = (items: string[]) => {
+    if (items.length === 0) return;
+    setInclusions((prev) => {
+      const seen = new Set(prev.map((entry) => entry.trim().toLowerCase()));
+      const merged = [...prev];
+      for (const item of items) {
+        const normalized = item.trim();
+        if (!normalized) continue;
+        const key = normalized.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        merged.push(normalized);
+      }
+      return merged;
+    });
   };
 
   return (
@@ -313,6 +343,53 @@ export function InvoiceTab({ booking }: Props) {
             <div className="space-y-2 sm:col-span-2">
               <Label>Tour Inclusions</Label>
               <div className="space-y-2">
+                <div className="rounded-md border bg-muted/20 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Common Selection</p>
+                  <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                    {COMMON_TOUR_INCLUSIONS.map((item) => {
+                      const checked = selectedCommonInclusions.includes(item);
+                      return (
+                        <label key={item} className="flex items-center gap-2 text-xs">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCommonInclusions((prev) => [...prev, item]);
+                                return;
+                              }
+                              setSelectedCommonInclusions((prev) => prev.filter((entry) => entry !== item));
+                            }}
+                          />
+                          <span>{item}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        addInclusions(selectedCommonInclusions);
+                        setSelectedCommonInclusions([]);
+                      }}
+                      disabled={selectedCommonInclusions.length === 0}
+                    >
+                      Add selected
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedCommonInclusions([])}
+                      disabled={selectedCommonInclusions.length === 0}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
                 {inclusions.map((item, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <span className="flex-1 rounded border bg-muted/30 px-3 py-1.5 text-sm">{item}</span>
@@ -335,7 +412,7 @@ export function InvoiceTab({ booking }: Props) {
                       if (e.key === 'Enter') {
                         e.preventDefault();
                         const val = newInclusion.trim();
-                        if (val) { setInclusions([...inclusions, val]); setNewInclusion(''); }
+                        if (val) { addInclusions([val]); setNewInclusion(''); }
                       }
                     }}
                     placeholder="Type an item and press Enter or click +"
@@ -348,7 +425,7 @@ export function InvoiceTab({ booking }: Props) {
                     className="h-9 w-9 p-0"
                     onClick={() => {
                       const val = newInclusion.trim();
-                      if (val) { setInclusions([...inclusions, val]); setNewInclusion(''); }
+                      if (val) { addInclusions([val]); setNewInclusion(''); }
                     }}
                   >
                     <Plus className="h-4 w-4" />
