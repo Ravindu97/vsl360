@@ -255,7 +255,12 @@
     }
 
     /* ── Footer ── */
-    .footer { margin-top: auto; }
+    .footer {
+      margin-top: auto;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      page-break-before: avoid;
+    }
     .footer-thanks {
       text-align: center;
       padding: 18px 0 10px;
@@ -281,6 +286,8 @@
       border-radius: 6px;
       font-size: 11px;
       letter-spacing: 0.2px;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .contact-item {
       display: flex;
@@ -302,6 +309,18 @@
     body.compact .tour-include-list { margin-bottom: 16px; }
     body.compact .payment-terms { padding: 11px 13px; }
     body.compact .footer-thanks { padding: 14px 0 8px; }
+
+    @media print {
+      .summary-table thead,
+      .breakdown-table thead {
+        display: table-header-group;
+      }
+      .summary-table tr,
+      .breakdown-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body class="{{layoutMode}}">

@@ -179,7 +179,12 @@
     }
 
     /* ── Footer ── */
-    .footer { margin-top: auto; }
+    .footer {
+      margin-top: auto;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      page-break-before: avoid;
+    }
     .contact-bar {
       background: #8b6a42;
       color: #fff;
@@ -190,6 +195,8 @@
       border-radius: 6px;
       font-size: 11px;
       letter-spacing: 0.2px;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .contact-item {
       display: flex;
@@ -213,6 +220,33 @@
     body.compact .closing-text { font-size: 11px; margin-bottom: 16px; }
     body.compact .sign-off { font-size: 11px; }
     body.compact .contact-bar { padding: 10px 18px; font-size: 10px; }
+
+    body.ultra { font-size: 10.5px; line-height: 1.4; }
+    body.ultra .greeting { font-size: 17px; margin-bottom: 5px; }
+    body.ultra .intro-text { font-size: 10.5px; margin-bottom: 12px; }
+    body.ultra .section-title { font-size: 12px; margin-bottom: 5px; }
+    body.ultra .tour-overview { margin-bottom: 12px; }
+    body.ultra .overview-grid { gap: 8px; }
+    body.ultra .overview-row { font-size: 10.5px; margin-bottom: 1px; }
+    body.ultra .overview-label { width: 92px; }
+    body.ultra .hotel-table { font-size: 10px; margin-bottom: 14px; }
+    body.ultra .hotel-table thead th { padding: 6px 7px; font-size: 10px; }
+    body.ultra .hotel-table tbody td { padding: 5px 7px; }
+    body.ultra .meal-note { margin-bottom: 10px; }
+    body.ultra .closing-text { font-size: 10.5px; margin-bottom: 12px; }
+    body.ultra .sign-off { font-size: 10.5px; line-height: 1.55; margin-bottom: 8px; }
+    body.ultra .computer-generated-note { margin-top: 10px; font-size: 9px; }
+    body.ultra .contact-bar { padding: 8px 14px; font-size: 9.5px; }
+
+    @media print {
+      .hotel-table thead {
+        display: table-header-group;
+      }
+      .hotel-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body class="{{layoutMode}}">

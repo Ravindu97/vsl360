@@ -873,12 +873,27 @@ export class DocumentGeneratorService {
   }
 
   private pickTravelConfirmationLayout(booking: any): {
-    layoutMode: 'normal' | 'compact';
+    layoutMode: 'normal' | 'compact' | 'ultra';
     pdf: PdfRenderOptions;
   } {
     const hotelCount = booking?.hotelPlan?.length ?? 0;
+    const transportDayCount = booking?.transportPlan?.dayPlans?.length ?? 0;
+    const dayCount = Math.max(hotelCount, transportDayCount, booking?.numberOfDays ?? 0);
 
-    if (hotelCount >= 10) {
+    // Activate denser layouts earlier so medium/long plans avoid awkward
+    // footer orphaning and preserve readability across page breaks.
+    if (dayCount >= 12) {
+      return {
+        layoutMode: 'ultra',
+        pdf: {
+          margin: { top: '8mm', right: '8mm', bottom: '8mm', left: '8mm' },
+          scale: 0.93,
+          preferCSSPageSize: true,
+        },
+      };
+    }
+
+    if (dayCount >= 8) {
       return {
         layoutMode: 'compact',
         pdf: {
