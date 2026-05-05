@@ -46,7 +46,7 @@
     .status-pending { background: #f7ebcf; color: #8a621d; }
     .notes-box { background: #f7f0e3; border-left: 4px solid var(--sunset-gold); padding: 12px; border-radius: 6px; margin-top: 8px; }
     .intro { background: linear-gradient(90deg, #f7f0e3, #f0f0f0); border: 1px solid #e3d6bc; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; color: #3f3a32; }
-    .footer { margin-top: auto; text-align: center; color: var(--muted); font-size: 11.5px; border-top: 1px solid #d9dce3; padding-top: 10px; }
+    .footer { margin-top: auto; text-align: center; color: var(--muted); font-size: 11.5px; border-top: 1px solid #d9dce3; padding-top: 10px; break-inside: avoid; page-break-inside: avoid; page-break-before: avoid; }
     .tagline { color: var(--ocean-blue); font-weight: 600; }
 
     /* Safe adaptive mode: gentle density tweaks for longer reservations */
@@ -64,6 +64,16 @@
     body.compact tbody td { padding: 7px 8px; font-size: 12px; }
     body.compact .status { padding: 2px 8px; font-size: 10.5px; }
     body.compact .footer { margin-top: auto; padding-top: 8px; font-size: 11px; }
+
+    @media print {
+      table thead {
+        display: table-header-group;
+      }
+      table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body class="{{layoutMode}}">

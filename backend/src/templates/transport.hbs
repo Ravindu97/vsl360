@@ -222,7 +222,12 @@
     }
 
     /* ── Footer ── */
-    .footer { margin-top: auto; }
+    .footer {
+      margin-top: auto;
+      break-inside: avoid;
+      page-break-inside: avoid;
+      page-break-before: avoid;
+    }
     .contact-bar {
       background: #8b6a42;
       color: #fff;
@@ -233,6 +238,8 @@
       border-radius: 6px;
       font-size: 11px;
       letter-spacing: 0.2px;
+      break-inside: avoid;
+      page-break-inside: avoid;
     }
     .contact-item {
       display: flex;
@@ -257,6 +264,16 @@
     body.compact .closing-text { font-size: 11px; margin-bottom: 16px; }
     body.compact .sign-off { font-size: 11px; }
     body.compact .contact-bar { padding: 10px 18px; font-size: 10px; }
+
+    @media print {
+      .day-table thead {
+        display: table-header-group;
+      }
+      .day-table tr {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
   </style>
 </head>
 <body class="{{layoutMode}}">
@@ -439,9 +456,9 @@
     <!-- Footer -->
     <div class="footer">
       <div class="contact-bar">
-        <div class="contact-item">&#9742;&nbsp; Tel: +94727715854</div>
-        <div class="contact-item">&#9993;&nbsp; Email: infovsl360@gmail.com</div>
-        <div class="contact-item">&#127760;&nbsp; www.visitsrilanka360.com</div>
+        <div class="contact-item">Tel: +94727715854</div>
+        <div class="contact-item">Email: infovsl360@gmail.com</div>
+        <div class="contact-item">www.visitsrilanka360.com</div>
       </div>
     </div>
   </div>
