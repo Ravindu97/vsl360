@@ -3,9 +3,9 @@ import { z } from 'zod';
 export const createBookingSchema = z.object({
   numberOfDays: z.number().int().positive(),
   arrivalDate: z.string().datetime({ offset: true }).or(z.string().min(1)),
-  arrivalTime: z.string().min(1),
+  arrivalTime: z.string().optional(),
   departureDate: z.string().datetime({ offset: true }).or(z.string().min(1)),
-  departureTime: z.string().min(1),
+  departureTime: z.string().optional(),
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),

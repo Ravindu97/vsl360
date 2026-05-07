@@ -20,9 +20,9 @@ const createBookingSchema = z.object({
   numberOfDays: z.coerce.number().min(1),
   flightNumber: z.string().optional(),
   arrivalDate: z.string().min(1, 'Required'),
-  arrivalTime: z.string().min(1, 'Required'),
+  arrivalTime: z.string().optional(),
   departureDate: z.string().min(1, 'Required'),
-  departureTime: z.string().min(1, 'Required'),
+  departureTime: z.string().optional(),
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),
@@ -252,7 +252,7 @@ export function BookingCreatePage() {
               {errors.arrivalDate && <p className="text-xs text-destructive">{errors.arrivalDate.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Arrival Time *</Label>
+              <Label>Arrival Time</Label>
               <Input type="time" {...register('arrivalTime')} />
               {errors.arrivalTime && <p className="text-xs text-destructive">{errors.arrivalTime.message}</p>}
             </div>
@@ -262,7 +262,7 @@ export function BookingCreatePage() {
               {errors.departureDate && <p className="text-xs text-destructive">{errors.departureDate.message}</p>}
             </div>
             <div className="space-y-2">
-              <Label>Departure Time *</Label>
+              <Label>Departure Time</Label>
               <Input type="time" {...register('departureTime')} />
               {errors.departureTime && <p className="text-xs text-destructive">{errors.departureTime.message}</p>}
             </div>
