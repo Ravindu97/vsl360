@@ -9,6 +9,7 @@ import { env } from '../config/env';
 import logger from '../utils/logger';
 import { getLegsForPlan, legTemplateLabels } from './distanceService';
 import type { ItineraryPlanDay } from '../types/itineraryPlan';
+import type { GenerateInvoiceDocumentInput } from '../validators/document.schema';
 
 // Register Handlebars helpers
 Handlebars.registerHelper('inc', (value: number) => value + 1);
@@ -526,7 +527,33 @@ export class DocumentGeneratorService {
     };
   }
 
-  async generateInvoice(bookingId: string, generatedBy: string): Promise<string> {
+  private resolveInvoiceBilledTo(
+    booking: { client?: any; paxList?: any[] },
+    input: GenerateInvoiceDocumentInput
+  ): { source: 'CLIENT' | 'PAX'; name: string; contactNumber?: string; email?: string } {
+    if (input.billedToType === 'CLIENT') {
+      if (!booking.client) throw new Error('Client data not found');
+      return {
+        source: 'CLIENT',
+        name: booking.client.name,
+        contactNumber: booking.client.contactNumber || undefined,
+        email: booking.client.email || undefined,
+      };
+    }
+
+    const pax = (booking.paxList ?? []).find((p) => p?.id === input.billedToPaxId);
+    if (!pax) throw new Error('Selected passenger was not found for this booking');
+    return {
+      source: 'PAX',
+      name: pax.name,
+    };
+  }
+
+  async generateInvoice(
+    bookingId: string,
+    generatedBy: string,
+    input: GenerateInvoiceDocumentInput
+  ): Promise<string> {
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: { client: true, invoice: true, paxList: true },
@@ -550,6 +577,7 @@ export class DocumentGeneratorService {
     const tourInclusionsList = booking.invoice.tourInclusions
       ? booking.invoice.tourInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean)
       : [];
+    const billedTo = this.resolveInvoiceBilledTo(booking, input);
 
     const templateData = sanitizeTemplateData({
       themeImage: this.themeImage,
@@ -557,6 +585,7 @@ export class DocumentGeneratorService {
       layoutMode: layout.layoutMode,
       booking,
       client: booking.client,
+      billedTo,
       invoice: booking.invoice,
       generatedAt,
       sanitizedPaymentNotes,

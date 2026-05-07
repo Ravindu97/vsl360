@@ -351,9 +351,9 @@
       <div class="billing-row">
         <div class="bill-to">
           <p class="bill-to-label">Billed To:</p>
-          <p class="bill-to-name">{{client.name}}</p>
-          {{#if client.contactNumber}}<p class="bill-to-detail">Phone: {{client.contactNumber}}</p>{{/if}}
-          {{#if client.email}}<p class="bill-to-detail">Email: {{client.email}}</p>{{/if}}
+          <p class="bill-to-name">{{billedTo.name}}</p>
+          {{#if billedTo.contactNumber}}<p class="bill-to-detail">Phone: {{billedTo.contactNumber}}</p>{{/if}}
+          {{#if billedTo.email}}<p class="bill-to-detail">Email: {{billedTo.email}}</p>{{/if}}
         </div>
         <div class="invoice-meta">
           <p class="invoice-meta-row"><span class="invoice-meta-label">Invoice No:</span><span class="invoice-meta-value">{{invoice.invoiceNumber}}</span></p>
