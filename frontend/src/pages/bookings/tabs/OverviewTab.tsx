@@ -53,6 +53,8 @@ const PIPELINE_STEPS = [
 export function OverviewTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
+  const includeTransport = booking.includeTransport ?? true;
+  const includeHotel = booking.includeHotel ?? true;
   const [newStatus, setNewStatus] = useState('');
   const [notes, setNotes] = useState('');
   const [validationError, setValidationError] = useState<string>('');
@@ -99,6 +101,15 @@ export function OverviewTab({ booking }: Props) {
   if (user) {
     nextStatuses = nextStatuses.filter((status) => isStatusAllowedByRole(status));
   }
+  nextStatuses = nextStatuses.filter((status) => {
+    if ((status === BookingStatus.RESERVATION_PENDING || status === BookingStatus.RESERVATION_COMPLETED) && !includeHotel) {
+      return false;
+    }
+    if ((status === BookingStatus.TRANSPORT_PENDING || status === BookingStatus.TRANSPORT_COMPLETED) && !includeTransport) {
+      return false;
+    }
+    return true;
+  });
 
   // Revert one stage: allow going back to the immediate previous status from audit history.
   const latestTransitionIntoCurrent = booking.statusHistory.find(
@@ -145,18 +156,18 @@ export function OverviewTab({ booking }: Props) {
       setValidationError('❌ Invoice must be created before confirming sales. Create an invoice first.');
       return false;
     }
-    if (newStatus === BookingStatus.RESERVATION_COMPLETED && (!booking.hotelPlan || booking.hotelPlan.length === 0)) {
+    if (includeHotel && newStatus === BookingStatus.RESERVATION_COMPLETED && (!booking.hotelPlan || booking.hotelPlan.length === 0)) {
       setValidationError('❌ Hotel reservations must be completed before marking reservation as done. Add and complete hotel bookings first.');
       return false;
     }
-    if (newStatus === BookingStatus.RESERVATION_COMPLETED) {
+    if (includeHotel && newStatus === BookingStatus.RESERVATION_COMPLETED) {
       const unconfirmedHotels = (booking.hotelPlan ?? []).filter((hotel) => hotel.confirmationStatus !== 'CONFIRMED');
       if (unconfirmedHotels.length > 0) {
         setValidationError(`❌ All hotel bookings must be confirmed before marking reservation as complete. ${unconfirmedHotels.length} night(s) still pending.`);
         return false;
       }
     }
-    if (newStatus === BookingStatus.TRANSPORT_COMPLETED && !booking.transportPlan) {
+    if (includeTransport && newStatus === BookingStatus.TRANSPORT_COMPLETED && !booking.transportPlan) {
       setValidationError('❌ Transport details must be added and completed before marking transport as done. Fill in transport details first.');
       return false;
     }
@@ -243,7 +254,9 @@ export function OverviewTab({ booking }: Props) {
       </div>
 
       {/* Row 2: Hotels + Transport */}
+      {(includeHotel || includeTransport) && (
       <div className="grid gap-6 lg:grid-cols-2">
+        {includeHotel && (
         <Card>
           <CardHeader><CardTitle>Hotels</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -268,7 +281,9 @@ export function OverviewTab({ booking }: Props) {
             )}
           </CardContent>
         </Card>
+        )}
 
+        {includeTransport && (
         <Card>
           <CardHeader><CardTitle>Transport</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -291,7 +306,9 @@ export function OverviewTab({ booking }: Props) {
             )}
           </CardContent>
         </Card>
+        )}
       </div>
+      )}
 
       {/* Row 3: Invoice + Docs/Attachments */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -336,7 +353,13 @@ const tourDetailsSchema = z.object({
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),
-});
+  includeActivities: z.boolean(),
+  includeTransport: z.boolean(),
+  includeHotel: z.boolean(),
+}).refine(
+  (data) => data.includeActivities || data.includeTransport || data.includeHotel,
+  { message: 'Select at least one scope option', path: ['includeActivities'] }
+);
 
 function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { booking: Booking; editing: boolean; onEdit: () => void; onClose: () => void; allowEdit: boolean }) {
   const queryClient = useQueryClient();
@@ -352,6 +375,9 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
       additionalActivities: booking.additionalActivities ?? '',
       specialCelebrations: booking.specialCelebrations ?? '',
       generalNotes: booking.generalNotes ?? '',
+      includeActivities: booking.includeActivities ?? true,
+      includeTransport: booking.includeTransport ?? true,
+      includeHotel: booking.includeHotel ?? true,
     },
   });
 
@@ -380,6 +406,9 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
       additionalActivities: booking.additionalActivities ?? '',
       specialCelebrations: booking.specialCelebrations ?? '',
       generalNotes: booking.generalNotes ?? '',
+      includeActivities: booking.includeActivities ?? true,
+      includeTransport: booking.includeTransport ?? true,
+      includeHotel: booking.includeHotel ?? true,
     });
   }, [
     editing,
@@ -393,6 +422,9 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
     booking.additionalActivities,
     booking.specialCelebrations,
     booking.generalNotes,
+    booking.includeActivities,
+    booking.includeTransport,
+    booking.includeHotel,
     form,
   ]);
 
@@ -456,6 +488,36 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
               <Label className="text-xs">General Notes</Label>
               <Textarea rows={2} {...form.register('generalNotes')} />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Booking Scope</Label>
+              <p className="text-xs text-muted-foreground">Select what this booking needs.</p>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { field: 'includeActivities' as const, label: 'Activities' },
+                  { field: 'includeTransport' as const, label: 'Transport' },
+                  { field: 'includeHotel' as const, label: 'Hotel' },
+                ].map((item) => {
+                  const active = form.watch(item.field);
+                  return (
+                    <Button
+                      key={item.field}
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        'rounded-full',
+                        active ? 'border-primary bg-primary/10 text-primary hover:bg-primary/15' : 'text-muted-foreground'
+                      )}
+                      onClick={() => form.setValue(item.field, !active, { shouldDirty: true, shouldValidate: true })}
+                    >
+                      {item.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              {form.formState.errors.includeActivities?.message && (
+                <p className="text-xs text-destructive">{form.formState.errors.includeActivities.message}</p>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button type="submit" size="sm" disabled={mutation.isPending}>
                 <Save className="mr-2 h-3 w-3" />{mutation.isPending ? 'Saving...' : 'Save'}
@@ -469,6 +531,14 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
           <div className="space-y-3 text-sm">
             <Row label="Duration" value={`${booking.numberOfDays} days`} />
             <Row label="Flight number" value={booking.flightNumber?.trim() || '—'} />
+            <Row
+              label="Booking Scope"
+              value={[
+                booking.includeActivities ?? true ? 'Activities' : null,
+                booking.includeTransport ?? true ? 'Transport' : null,
+                booking.includeHotel ?? true ? 'Hotel' : null,
+              ].filter(Boolean).join(', ')}
+            />
             <Row label="Arrival" value={`${formatDate(booking.arrivalDate)} at ${booking.arrivalTime}`} />
             <Row label="Departure" value={`${formatDate(booking.departureDate)} at ${booking.departureTime}`} />
             <Row label="Sales Owner" value={booking.salesOwner?.name} />
@@ -487,16 +557,21 @@ function StatusPipeline({ booking }: { booking: Booking }) {
   const reached = new Set(booking.statusHistory.map(h => h.toStatus));
   reached.add(booking.status);
   const isCancelled = booking.status === BookingStatus.CANCELLED;
+  const includeTransport = booking.includeTransport ?? true;
+  const includeHotel = booking.includeHotel ?? true;
 
-  const steps = PIPELINE_STEPS.map(step => {
-    const isCurrent = step.activeWhen.includes(booking.status);
-    const isDone = step.completedWhen.some(s => reached.has(s));
-    return {
-      label: step.label,
-      state: (isCurrent ? 'active' : isDone ? 'done' : 'upcoming') as 'active' | 'done' | 'upcoming',
-      isDone,
-    };
-  });
+  const steps = PIPELINE_STEPS
+    .filter((step) => (includeHotel ? true : step.label !== 'Hotels'))
+    .filter((step) => (includeTransport ? true : step.label !== 'Transport'))
+    .map(step => {
+      const isCurrent = step.activeWhen.includes(booking.status);
+      const isDone = step.completedWhen.some(s => reached.has(s));
+      return {
+        label: step.label,
+        state: (isCurrent ? 'active' : isDone ? 'done' : 'upcoming') as 'active' | 'done' | 'upcoming',
+        isDone,
+      };
+    });
 
   return (
     <div>

@@ -15,6 +15,7 @@ import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from '@/utils/s
 import { inclusiveTourDayCount } from '@/utils/tourDates';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencyCode } from '@/types';
+import { cn } from '@/lib/utils';
 
 const createBookingSchema = z.object({
   numberOfDays: z.coerce.number().min(1),
@@ -26,6 +27,9 @@ const createBookingSchema = z.object({
   additionalActivities: z.string().optional(),
   specialCelebrations: z.string().optional(),
   generalNotes: z.string().optional(),
+  includeActivities: z.boolean(),
+  includeTransport: z.boolean(),
+  includeHotel: z.boolean(),
   client: z.object({
     name: z.string().min(1, 'Client name is required'),
     citizenship: z.string().min(1, 'Required'),
@@ -35,7 +39,10 @@ const createBookingSchema = z.object({
     contactNumber: z.string().min(1, 'Required'),
     passportNumber: z.string().optional(),
   }),
-});
+}).refine(
+  (data) => data.includeActivities || data.includeTransport || data.includeHotel,
+  { message: 'Select at least one option', path: ['includeActivities'] }
+);
 
 type CreateBookingForm = z.infer<typeof createBookingSchema>;
 
@@ -51,6 +58,9 @@ const defaultFormValues: CreateBookingForm = {
   additionalActivities: '',
   specialCelebrations: '',
   generalNotes: '',
+  includeActivities: true,
+  includeTransport: true,
+  includeHotel: true,
   client: {
     name: '',
     citizenship: '',
@@ -90,6 +100,7 @@ export function BookingCreatePage() {
   });
 
   const watchedValues = watch();
+  const scopeError = errors.includeActivities?.message;
   const lastAutoDepartureRef = useRef<string | null>(initialValues.departureDate || null);
 
   // When arrival or departure *dates* change, sync number of days (inclusive). Edits to
@@ -266,6 +277,39 @@ export function BookingCreatePage() {
               <Input type="time" {...register('departureTime')} />
               {errors.departureTime && <p className="text-xs text-destructive">{errors.departureTime.message}</p>}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Booking Scope</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">Select what this booking needs; you can update later.</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { field: 'includeActivities' as const, label: 'Activities' },
+                { field: 'includeTransport' as const, label: 'Transport' },
+                { field: 'includeHotel' as const, label: 'Hotel' },
+              ].map((item) => {
+                const active = watch(item.field);
+                return (
+                  <Button
+                    key={item.field}
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      'rounded-full',
+                      active ? 'border-primary bg-primary/10 text-primary hover:bg-primary/15' : 'text-muted-foreground'
+                    )}
+                    onClick={() => setValue(item.field, !active, { shouldDirty: true, shouldValidate: true })}
+                  >
+                    {item.label}
+                  </Button>
+                );
+              })}
+            </div>
+            {scopeError && <p className="text-xs text-destructive">{scopeError}</p>}
           </CardContent>
         </Card>
 
