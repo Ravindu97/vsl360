@@ -4,6 +4,7 @@ import prisma from '../config/database';
 import { AuthRequest } from '../types';
 import { documentGeneratorService } from '../services/documentGenerator';
 import logger from '../utils/logger';
+import type { GenerateInvoiceDocumentInput } from '../validators/document.schema';
 
 function docError(res: Response, action: string, error: unknown): void {
   const msg = error instanceof Error ? error.message : String(error);
@@ -39,9 +40,11 @@ export class DocumentController {
 
   async generateInvoice(req: AuthRequest, res: Response): Promise<void> {
     try {
+      const body = req.body as GenerateInvoiceDocumentInput;
       const filePath = await documentGeneratorService.generateInvoice(
         String(req.params.id),
-        req.user!.userId
+        req.user!.userId,
+        body
       );
       res.json({ message: 'Invoice generated', filePath });
     } catch (error: unknown) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, FileText } from 'lucide-react';
 import { documentsApi } from '@/api/endpoints.api';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { DocumentType, Role, type Booking, type GeneratedDocument, type PaginatedResponse } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const PAGE_SIZE = 5;
 const ITINERARY_DRAFT_KEY_PREFIX = 'itinerary-plan-draft';
@@ -43,6 +44,14 @@ export function DocumentsTab({ booking }: Props) {
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
+  const [invoiceBilledToType, setInvoiceBilledToType] = useState<'CLIENT' | 'PAX' | ''>('');
+  const [invoiceBilledToPaxId, setInvoiceBilledToPaxId] = useState<string>('');
+  const [invoiceBilledToError, setInvoiceBilledToError] = useState<string | null>(null);
+
+  const paxOptions = useMemo(
+    () => (booking.paxList ?? []).map((p) => ({ id: p.id, name: p.name })),
+    [booking.paxList]
+  );
 
   const { data } = useQuery<{ data: PaginatedResponse<GeneratedDocument> }>({
     queryKey: ['documents', booking.id, page, PAGE_SIZE],
@@ -89,7 +98,21 @@ export function DocumentsTab({ booking }: Props) {
       })();
 
       switch (type) {
-        case DocumentType.INVOICE: return documentsApi.generateInvoice(booking.id);
+        case DocumentType.INVOICE: {
+          if (!invoiceBilledToType) {
+            setInvoiceBilledToError('Select who the invoice should be billed to.');
+            return Promise.reject(new Error('Missing billed-to selection'));
+          }
+          if (invoiceBilledToType === 'PAX' && !invoiceBilledToPaxId) {
+            setInvoiceBilledToError('Select a passenger to bill the invoice to.');
+            return Promise.reject(new Error('Missing passenger selection'));
+          }
+          setInvoiceBilledToError(null);
+          return documentsApi.generateInvoice(booking.id, {
+            billedToType: invoiceBilledToType,
+            billedToPaxId: invoiceBilledToType === 'PAX' ? invoiceBilledToPaxId : undefined,
+          });
+        }
         case DocumentType.TRANSPORT_DETAILS: return documentsApi.generateTransport(booking.id);
         case DocumentType.HOTEL_RESERVATION: return documentsApi.generateReservation(booking.id);
         case DocumentType.FULL_ITINERARY: return documentsApi.generateItinerary(booking.id, itineraryDraft);
@@ -115,6 +138,7 @@ export function DocumentsTab({ booking }: Props) {
 
   const allowedTypes = user ? ROLE_ALLOWED_TYPES[user.role as Role] ?? [] : [];
   const canGenerate = allowedTypes.length > 0;
+  const canGenerateInvoice = allowedTypes.includes(DocumentType.INVOICE);
 
   return (
     <Card>
@@ -122,6 +146,60 @@ export function DocumentsTab({ booking }: Props) {
         <div className="flex items-center justify-between">
           <CardTitle>Generated Documents ({documents.length})</CardTitle>
         </div>
+        {canGenerateInvoice && (
+          <div className="mt-3 rounded-md border bg-muted/20 p-3">
+            <div className="text-sm font-medium">Billed To (Invoice)</div>
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Recipient</p>
+                <Select
+                  value={invoiceBilledToType || '__none__'}
+                  onValueChange={(value) => {
+                    const next = value === '__none__' ? '' : (value as 'CLIENT' | 'PAX');
+                    setInvoiceBilledToType(next);
+                    setInvoiceBilledToError(null);
+                    if (next !== 'PAX') setInvoiceBilledToPaxId('');
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select billed-to recipient" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__">Select…</SelectItem>
+                    <SelectItem value="CLIENT">Booking Contact (Client)</SelectItem>
+                    <SelectItem value="PAX">Passenger</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {invoiceBilledToType === 'PAX' && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Passenger</p>
+                  <Select
+                    value={invoiceBilledToPaxId || '__none__'}
+                    onValueChange={(value) => {
+                      setInvoiceBilledToPaxId(value === '__none__' ? '' : value);
+                      setInvoiceBilledToError(null);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select passenger" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Select…</SelectItem>
+                      {paxOptions.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            {invoiceBilledToError && (
+              <div className="mt-2 text-xs text-destructive">{invoiceBilledToError}</div>
+            )}
+          </div>
+        )}
         {canGenerate && (
           <div className="flex flex-wrap gap-2 pt-2">
             {allowedTypes.map((type) => (

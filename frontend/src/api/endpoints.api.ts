@@ -69,7 +69,13 @@ export const attachmentsApi = {
 export const documentsApi = {
   list: (bookingId: string, page = 1, pageSize = 5) =>
     api.get<PaginatedResponse<GeneratedDocument>>(`/bookings/${bookingId}/documents`, { params: { page, pageSize } }),
-  generateInvoice: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/invoice`),
+  generateInvoice: (
+    bookingId: string,
+    data: {
+      billedToType: 'CLIENT' | 'PAX';
+      billedToPaxId?: string;
+    }
+  ) => api.post(`/bookings/${bookingId}/documents/invoice`, data),
   generateTransport: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/transport`),
   generateReservation: (bookingId: string) => api.post(`/bookings/${bookingId}/documents/reservation`),
   generateItinerary: (
