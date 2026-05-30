@@ -5,6 +5,7 @@ import {
   Users,
   BarChart3,
   Library,
+  MessageSquare,
 } from 'lucide-react';
 import { Role } from '@/types';
 
@@ -19,6 +20,7 @@ export type AppNavItem = {
 export const APP_NAV_ITEMS: AppNavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: null },
   { name: 'Bookings', href: '/bookings', icon: BookOpen, roles: null },
+  { name: 'Inquiries', href: '/inquiries', icon: MessageSquare, roles: [Role.SALES, Role.OPS_MANAGER] },
   { name: 'Itinerary Library', href: '/itinerary', icon: Library, roles: [Role.OPS_MANAGER] },
   { name: 'Users', href: '/users', icon: Users, roles: [Role.OPS_MANAGER] },
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: [Role.OPS_MANAGER] },

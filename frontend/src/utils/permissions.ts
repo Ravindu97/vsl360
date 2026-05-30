@@ -1,5 +1,9 @@
 import { Role } from '@/types';
 
+export function canViewInquiries(role: Role): boolean {
+  return role === Role.SALES || role === Role.OPS_MANAGER;
+}
+
 export function canCreateBooking(role: Role): boolean {
   return role === Role.SALES || role === Role.OPS_MANAGER;
 }

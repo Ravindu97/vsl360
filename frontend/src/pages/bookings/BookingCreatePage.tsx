@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft } from 'lucide-react';
 import { bookingsApi } from '@/api/bookings.api';
+import { inquiriesApi } from '@/api/inquiries.api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -74,6 +75,18 @@ const defaultFormValues: CreateBookingForm = {
 
 export function BookingCreatePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inquiryId = searchParams.get('inquiryId') ?? undefined;
+  const inquiryPrefilledRef = useRef<string | null>(null);
+
+  const { data: inquiryRow } = useQuery({
+    queryKey: ['inquiry', inquiryId],
+    queryFn: async () => {
+      const { data } = await inquiriesApi.get(inquiryId!);
+      return data;
+    },
+    enabled: !!inquiryId,
+  });
 
   const initialValues = useMemo(() => {
     const draft = loadSessionDraft<CreateBookingForm>(BOOKING_CREATE_DRAFT_KEY);
@@ -93,11 +106,29 @@ export function BookingCreatePage() {
     watch,
     reset,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<CreateBookingForm>({
     resolver: zodResolver(createBookingSchema),
     defaultValues: initialValues,
   });
+
+  useEffect(() => {
+    if (!inquiryRow || !inquiryId) return;
+    if (inquiryPrefilledRef.current === inquiryRow.id) return;
+    inquiryPrefilledRef.current = inquiryRow.id;
+    if (inquiryRow.waProfileName) {
+      setValue('client.name', inquiryRow.waProfileName, { shouldDirty: true });
+    }
+    setValue('client.contactNumber', inquiryRow.fromPhone, { shouldDirty: true });
+    const block = `WhatsApp (${inquiryRow.fromPhone}):\n${inquiryRow.messageBody}`;
+    const currentNotes = getValues('generalNotes')?.trim() ?? '';
+    setValue(
+      'generalNotes',
+      currentNotes ? `${currentNotes}\n\n${block}` : block,
+      { shouldDirty: true }
+    );
+  }, [inquiryRow, inquiryId, setValue, getValues]);
 
   const watchedValues = watch();
   const scopeError = errors.includeActivities?.message;
@@ -156,9 +187,16 @@ export function BookingCreatePage() {
 
   const mutation = useMutation({
     mutationFn: (data: CreateBookingForm) => bookingsApi.create(data),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       clearSessionDraft(BOOKING_CREATE_DRAFT_KEY);
       reset(defaultFormValues);
+      if (inquiryId) {
+        try {
+          await inquiriesApi.update(inquiryId, { convertedBookingId: res.data.id });
+        } catch {
+          // Booking was created; inquiry link can be fixed manually if this fails.
+        }
+      }
       navigate(`/bookings/${res.data.id}`);
     },
   });
@@ -178,6 +216,12 @@ export function BookingCreatePage() {
         </Button>
         <h1 className="text-2xl font-bold">Create New Booking</h1>
       </div>
+
+      {inquiryId && inquiryRow && (
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground">
+          Prefilled from WhatsApp inquiry ({inquiryRow.fromPhone}). Complete the remaining fields, then submit.
+        </div>
+      )}
 
       {mutation.isError && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">

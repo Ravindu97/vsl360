@@ -37,4 +37,13 @@ export const env = {
   REPORT_EUR_TO_INR: parseFloat(process.env.REPORT_EUR_TO_INR || '90'),
   FX_API_BASE_URL: (process.env.FX_API_BASE_URL || 'https://api.frankfurter.app').replace(/\/$/, ''),
   FX_CACHE_TTL_MINUTES: parseInt(process.env.FX_CACHE_TTL_MINUTES || '360', 10),
+  /** Meta WhatsApp Cloud API — GET webhook verification */
+  WHATSAPP_WEBHOOK_VERIFY_TOKEN: (process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN || '').trim(),
+  /** App secret from Meta app — used to verify X-Hub-Signature-256 on POST webhooks */
+  WHATSAPP_APP_SECRET: (process.env.WHATSAPP_APP_SECRET || '').trim(),
+  /**
+   * If true (and NODE_ENV is development), accept POST webhooks without signature verification.
+   * Never enable in production.
+   */
+  WHATSAPP_DEV_SKIP_SIGNATURE: process.env.WHATSAPP_DEV_SKIP_SIGNATURE === 'true',
 };

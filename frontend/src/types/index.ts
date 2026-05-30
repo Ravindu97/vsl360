@@ -215,6 +215,35 @@ export interface DashboardData {
   recentBookings: Booking[];
 }
 
+export enum InquiryStatus {
+  NEW = 'NEW',
+  IN_PROGRESS = 'IN_PROGRESS',
+  CONVERTED = 'CONVERTED',
+  DISCARDED = 'DISCARDED',
+}
+
+export enum InquirySource {
+  WHATSAPP = 'WHATSAPP',
+}
+
+export interface Inquiry {
+  id: string;
+  source: InquirySource;
+  status: InquiryStatus;
+  waMessageId?: string | null;
+  waPhoneNumberId?: string | null;
+  fromPhone: string;
+  waProfileName?: string | null;
+  messageBody: string;
+  receivedAt: string;
+  assignedUserId?: string | null;
+  assignedTo?: Pick<User, 'id' | 'name' | 'email'> | null;
+  convertedBookingId?: string | null;
+  convertedBooking?: Pick<Booking, 'id' | 'bookingId' | 'status'> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface LoginResponse {
   accessToken: string;
   user: User;

@@ -53,6 +53,17 @@ enum CurrencyCode {
   INR
 }
 
+enum InquirySource {
+  WHATSAPP
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  CONVERTED
+  DISCARDED
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -63,7 +74,36 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  bookings Booking[] @relation("SalesOwner")
+  bookings          Booking[] @relation("SalesOwner")
+  assignedInquiries Inquiry[] @relation("InquiryAssignedUser")
+}
+
+model Inquiry {
+  id     String        @id @default(uuid())
+  source InquirySource
+  status InquiryStatus @default(NEW)
+
+  /// WhatsApp Cloud API message id (wamid…); unique for idempotent ingest
+  waMessageId       String? @unique
+  waPhoneNumberId   String?
+  fromPhone         String
+  waProfileName     String?
+  messageBody       String   @db.Text
+  rawPayload        Json?
+
+  receivedAt DateTime @default(now())
+
+  assignedUserId String?
+  assignedTo     User?   @relation("InquiryAssignedUser", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  convertedBookingId String?
+  convertedBooking   Booking? @relation("InquiryConvertedBooking", fields: [convertedBookingId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, receivedAt])
+  @@index([fromPhone])
 }
 
 model Booking {
@@ -99,6 +139,8 @@ model Booking {
   attachments   Attachment[]
   documents     GeneratedDocument[]
   statusHistory StatusHistory[]
+
+  convertedFromInquiries Inquiry[] @relation("InquiryConvertedBooking")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -21,6 +21,8 @@ import attachmentRoutes from './routes/attachment.routes';
 import documentRoutes from './routes/document.routes';
 import reportRoutes from './routes/report.routes';
 import itineraryRoutes from './routes/itinerary.routes';
+import whatsappWebhookRoutes from './routes/whatsappWebhook.routes';
+import inquiryRoutes from './routes/inquiry.routes';
 
 const app = express();
 
@@ -50,16 +52,27 @@ const corsOptions: cors.CorsOptions = {
   },
 };
 
-// Security middleware
-app.use(helmet());
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-app.use(rateLimit({
+const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-}));
+});
+
+// Security middleware
+app.use(helmet());
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
+
+// Meta WhatsApp webhooks (raw JSON body for signature verification; exempt from API rate limit)
+app.use('/webhooks/whatsapp', whatsappWebhookRoutes);
+
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith('/webhooks')) {
+    return next();
+  }
+  return apiLimiter(req, res, next);
+});
 
 // Body parsing
 app.use(express.json());
@@ -79,6 +92,7 @@ app.use('/api/bookings/:id/attachments', attachmentRoutes);
 app.use('/api/bookings/:id/documents', documentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/itinerary', itineraryRoutes);
+app.use('/api/inquiries', inquiryRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

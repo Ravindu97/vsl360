@@ -8,6 +8,7 @@ import { BookingCreatePage } from '@/pages/bookings/BookingCreatePage';
 import { BookingDetailPage } from '@/pages/bookings/BookingDetailPage';
 import { UserListPage } from '@/pages/users/UserListPage';
 import { ItineraryLibraryPage } from '@/pages/itinerary/ItineraryLibraryPage';
+import { InquiryListPage } from '@/pages/inquiries/InquiryListPage';
 import { Role } from '@/types';
 
 export function AppRoutes() {
@@ -25,6 +26,14 @@ export function AppRoutes() {
         <Route path="/bookings" element={<BookingListPage />} />
         <Route path="/bookings/new" element={<BookingCreatePage />} />
         <Route path="/bookings/:id" element={<BookingDetailPage />} />
+        <Route
+          path="/inquiries"
+          element={
+            <ProtectedRoute roles={[Role.SALES, Role.OPS_MANAGER]}>
+              <InquiryListPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/itinerary"
           element={
