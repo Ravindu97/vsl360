@@ -36,7 +36,7 @@ export interface BookingPayload {
     name: string;
     citizenship: string;
     languagePreference: string;
-    preferredCurrency: 'EUR' | 'USD' | 'INR';
+    preferredCurrency: 'EUR' | 'USD' | 'INR' | 'LKR';
     email: string;
     contactNumber: string;
     passportNumber?: string;

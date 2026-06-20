@@ -4,6 +4,7 @@ import logger from '../utils/logger';
 type InrRates = {
   usdToInr: number;
   eurToInr: number;
+  lkrToInr: number;
   source: 'live' | 'cache' | 'fallback';
   asOf: string;
 };
@@ -29,6 +30,7 @@ export class FxRateService {
     return {
       usdToInr: env.REPORT_USD_TO_INR,
       eurToInr: env.REPORT_EUR_TO_INR,
+      lkrToInr: env.REPORT_LKR_TO_INR,
       source: 'fallback',
       asOf: new Date().toISOString(),
     };
@@ -75,12 +77,39 @@ export class FxRateService {
     }
   }
 
+  private async fetchUsdToLkr(): Promise<{ rate: number; asOf: string }> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    try {
+      const url = `${env.FX_API_BASE_URL}/latest?from=USD&to=LKR`;
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error(`FX API request failed with status ${response.status}`);
+      const data = (await response.json()) as FrankfurterLatestResponse;
+      const rate = toFiniteNumber(data.rates?.LKR, NaN);
+      if (!Number.isFinite(rate) || rate <= 0) {
+        throw new Error('Invalid USD->LKR rate from FX API');
+      }
+      return { rate, asOf: data.date || new Date().toISOString() };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   private async fetchLiveRates(): Promise<InrRates> {
-    const [usdToInr, eurToInr] = await Promise.all([this.fetchUsdToInr(), this.fetchEurToInr()]);
-    const asOf = usdToInr.asOf >= eurToInr.asOf ? usdToInr.asOf : eurToInr.asOf;
+    const [usdToInr, eurToInr, usdToLkr] = await Promise.all([
+      this.fetchUsdToInr(),
+      this.fetchEurToInr(),
+      this.fetchUsdToLkr(),
+    ]);
+    const asOf = [usdToInr.asOf, eurToInr.asOf, usdToLkr.asOf].sort().reverse()[0];
+    const lkrToInr = usdToInr.rate / usdToLkr.rate;
+    if (!Number.isFinite(lkrToInr) || lkrToInr <= 0) {
+      throw new Error('Invalid derived LKR->INR rate');
+    }
     return {
       usdToInr: usdToInr.rate,
       eurToInr: eurToInr.rate,
+      lkrToInr,
       source: 'live',
       asOf,
     };

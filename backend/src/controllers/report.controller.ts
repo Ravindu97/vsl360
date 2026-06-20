@@ -50,6 +50,7 @@ export class ReportController {
         const convert = (amount: unknown) => {
           if (currency === CurrencyCode.EUR) return toFiniteNumber(amount, 0) * rates.eurToInr;
           if (currency === CurrencyCode.USD) return toFiniteNumber(amount, 0) * rates.usdToInr;
+          if (currency === CurrencyCode.LKR) return toFiniteNumber(amount, 0) * rates.lkrToInr;
           return toFiniteNumber(amount, 0);
         };
         acc.total += convert(invoice.totalAmount);
@@ -76,6 +77,7 @@ export class ReportController {
           asOf: rates.asOf,
           usdToInr: Number(rates.usdToInr.toFixed(6)),
           eurToInr: Number(rates.eurToInr.toFixed(6)),
+          lkrToInr: Number(rates.lkrToInr.toFixed(6)),
         },
       },
       recentBookings,

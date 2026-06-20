@@ -51,6 +51,7 @@ enum CurrencyCode {
   EUR
   USD
   INR
+  LKR
 }
 
 model User {

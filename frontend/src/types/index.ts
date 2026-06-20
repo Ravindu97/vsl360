@@ -39,6 +39,7 @@ export enum CurrencyCode {
   EUR = 'EUR',
   USD = 'USD',
   INR = 'INR',
+  LKR = 'LKR',
 }
 
 export interface User {
