@@ -4,6 +4,7 @@ const currencyLocaleMap: Record<string, string> = {
   EUR: 'de-DE',
   USD: 'en-US',
   INR: 'en-IN',
+  LKR: 'en-LK',
 };
 
 export function formatDate(date: string | Date): string {
@@ -16,12 +17,14 @@ export function formatDateTime(date: string | Date): string {
   return format(d, 'dd MMM yyyy, HH:mm');
 }
 
-export function formatCurrency(amount: number | string, currency: 'EUR' | 'USD' | 'INR' = 'USD'): string {
+export function formatCurrency(amount: number | string, currency: 'EUR' | 'USD' | 'INR' | 'LKR' = 'USD'): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   const locale = currencyLocaleMap[currency] ?? 'en-US';
+  const forceCodeDisplay = currency === 'LKR' || currency === 'INR';
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
+    currencyDisplay: forceCodeDisplay ? 'code' : 'symbol',
   }).format(num);
 }
 

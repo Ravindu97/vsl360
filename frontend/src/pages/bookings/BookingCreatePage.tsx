@@ -219,6 +219,7 @@ export function BookingCreatePage() {
                   <SelectItem value={CurrencyCode.EUR}>Euro (EUR)</SelectItem>
                   <SelectItem value={CurrencyCode.USD}>US Dollar (USD)</SelectItem>
                   <SelectItem value={CurrencyCode.INR}>Indian Rupee (INR)</SelectItem>
+                  <SelectItem value={CurrencyCode.LKR}>Sri Lankan Rupee (LKR)</SelectItem>
                 </SelectContent>
               </Select>
               {errors.client?.preferredCurrency && <p className="text-xs text-destructive">{errors.client.preferredCurrency.message}</p>}

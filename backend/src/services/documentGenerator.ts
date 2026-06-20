@@ -30,7 +30,8 @@ Handlebars.registerHelper('formatCurrency', (amount: number | string, currency?:
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (!Number.isFinite(num)) return String(amount);
   const currencyCode = (typeof currency === 'string' ? currency : 'USD').toUpperCase();
-  const locale = currencyCode === 'EUR' ? 'de-DE' : currencyCode === 'INR' ? 'en-IN' : 'en-US';
+  const locale =
+    currencyCode === 'EUR' ? 'de-DE' : currencyCode === 'INR' ? 'en-IN' : currencyCode === 'LKR' ? 'en-LK' : 'en-US';
   // Use currency code for rupee currencies to avoid missing symbol glyphs in headless PDF fonts.
   const forceCodeDisplay = currencyCode === 'LKR' || currencyCode === 'INR';
   return new Intl.NumberFormat(locale, {
