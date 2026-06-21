@@ -1,6 +1,37 @@
 import { z } from 'zod';
 
-export const createBookingSchema = z.object({
+function isDepartureOnOrAfterArrival(arrivalDate: string, departureDate: string): boolean {
+  const arrival = new Date(`${arrivalDate.slice(0, 10)}T12:00:00`);
+  const departure = new Date(`${departureDate.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(arrival.getTime()) || Number.isNaN(departure.getTime())) return true;
+  return departure.getTime() >= arrival.getTime();
+}
+
+function isSameDayDepartureTimeValid(data: {
+  arrivalDate: string;
+  departureDate: string;
+  arrivalTime?: string;
+  departureTime?: string;
+}): boolean {
+  const arrivalDay = data.arrivalDate.slice(0, 10);
+  const departureDay = data.departureDate.slice(0, 10);
+  if (arrivalDay !== departureDay) return true;
+  if (!data.arrivalTime || !data.departureTime) return true;
+  return data.departureTime > data.arrivalTime;
+}
+
+const tourScheduleRefinements = <T extends z.ZodTypeAny>(schema: T) =>
+  schema
+    .refine(
+      (data: { arrivalDate: string; departureDate: string }) =>
+        isDepartureOnOrAfterArrival(data.arrivalDate, data.departureDate),
+      { message: 'Departure date must be on or after arrival date' }
+    )
+    .refine(isSameDayDepartureTimeValid, {
+      message: 'Departure time must be after arrival time on the same day',
+    });
+
+export const createBookingSchema = tourScheduleRefinements(z.object({
   numberOfDays: z.number().int().positive(),
   arrivalDate: z.string().datetime({ offset: true }).or(z.string().min(1)),
   arrivalTime: z.string().optional(),
@@ -25,7 +56,7 @@ export const createBookingSchema = z.object({
 }).refine(
   (data) => data.includeActivities || data.includeTransport || data.includeHotel,
   { message: 'At least one scope option must be selected' }
-);
+));
 
 export const updateBookingSchema = z.object({
   numberOfDays: z.number().int().positive().optional(),
@@ -40,7 +71,24 @@ export const updateBookingSchema = z.object({
   includeTransport: z.boolean().optional(),
   includeHotel: z.boolean().optional(),
   flightNumber: z.string().optional().nullable(),
-});
+}).refine(
+  (data) =>
+    !data.arrivalDate ||
+    !data.departureDate ||
+    isDepartureOnOrAfterArrival(data.arrivalDate, data.departureDate),
+  { message: 'Departure date must be on or after arrival date' }
+).refine(
+  (data) =>
+    !data.arrivalDate ||
+    !data.departureDate ||
+    isSameDayDepartureTimeValid({
+      arrivalDate: data.arrivalDate,
+      departureDate: data.departureDate,
+      arrivalTime: data.arrivalTime,
+      departureTime: data.departureTime,
+    }),
+  { message: 'Departure time must be after arrival time on the same day' }
+);
 
 export const updateStatusSchema = z.object({
   status: z.string().min(1),

@@ -1,6 +1,12 @@
 import { useState, useEffect, Fragment } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { inclusiveTourDayCount } from '@/utils/tourDates';
+import { inclusiveTourDayCount, isDepartureOnOrAfterArrival } from '@/utils/tourDates';
+import {
+  departureDateOrderIssue,
+  sameDayDepartureTimeIssue,
+  validateDepartureOnOrAfterArrival,
+  validateSameDayDepartureTime,
+} from '@/utils/bookingTourValidations';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -356,10 +362,13 @@ const tourDetailsSchema = z.object({
   includeActivities: z.boolean(),
   includeTransport: z.boolean(),
   includeHotel: z.boolean(),
-}).refine(
-  (data) => data.includeActivities || data.includeTransport || data.includeHotel,
-  { message: 'Select at least one scope option', path: ['includeActivities'] }
-);
+})
+  .refine(
+    (data) => data.includeActivities || data.includeTransport || data.includeHotel,
+    { message: 'Select at least one scope option', path: ['includeActivities'] }
+  )
+  .refine(validateDepartureOnOrAfterArrival, departureDateOrderIssue)
+  .refine(validateSameDayDepartureTime, sameDayDepartureTimeIssue);
 
 function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { booking: Booking; editing: boolean; onEdit: () => void; onClose: () => void; allowEdit: boolean }) {
   const queryClient = useQueryClient();
@@ -383,16 +392,25 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
 
   const watchedArrival = form.watch('arrivalDate');
   const watchedDeparture = form.watch('departureDate');
+  const watchedArrivalTime = form.watch('arrivalTime');
+  const watchedDepartureTime = form.watch('departureTime');
+  const tourErrors = form.formState.errors;
 
   useEffect(() => {
     if (!editing) return;
     if (!watchedArrival || !watchedDeparture) return;
+    if (!isDepartureOnOrAfterArrival(watchedArrival, watchedDeparture)) return;
     const next = inclusiveTourDayCount(watchedArrival, watchedDeparture);
     const current = form.getValues('numberOfDays');
     if (Number(current) !== next) {
       form.setValue('numberOfDays', next, { shouldValidate: true, shouldDirty: true });
     }
   }, [editing, watchedArrival, watchedDeparture, form]);
+
+  useEffect(() => {
+    if (!editing) return;
+    void form.trigger(['arrivalDate', 'departureDate', 'arrivalTime', 'departureTime']);
+  }, [editing, watchedArrival, watchedDeparture, watchedArrivalTime, watchedDepartureTime, form]);
 
   useEffect(() => {
     if (editing) return;
@@ -462,18 +480,22 @@ function TourDetailsCard({ booking, editing, onEdit, onClose, allowEdit }: { boo
               <div className="space-y-1.5">
                 <Label className="text-xs">Arrival Date</Label>
                 <Input type="date" {...form.register('arrivalDate')} />
+                {tourErrors.arrivalDate && <p className="text-xs text-destructive">{tourErrors.arrivalDate.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Arrival Time</Label>
                 <Input type="time" {...form.register('arrivalTime')} />
+                {tourErrors.arrivalTime && <p className="text-xs text-destructive">{tourErrors.arrivalTime.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Departure Date</Label>
                 <Input type="date" {...form.register('departureDate')} />
+                {tourErrors.departureDate && <p className="text-xs text-destructive">{tourErrors.departureDate.message}</p>}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Departure Time</Label>
                 <Input type="time" {...form.register('departureTime')} />
+                {tourErrors.departureTime && <p className="text-xs text-destructive">{tourErrors.departureTime.message}</p>}
               </div>
             </div>
             <div className="space-y-1.5">

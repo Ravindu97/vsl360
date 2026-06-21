@@ -12,7 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { clearSessionDraft, loadSessionDraft, saveSessionDraft } from '@/utils/sessionDraft';
-import { inclusiveTourDayCount } from '@/utils/tourDates';
+import {
+  departureDateOrderIssue,
+  sameDayDepartureTimeIssue,
+  validateDepartureOnOrAfterArrival,
+  validateSameDayDepartureTime,
+} from '@/utils/bookingTourValidations';
+import { departureDateFromArrival, inclusiveTourDayCount, isDepartureOnOrAfterArrival } from '@/utils/tourDates';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencyCode } from '@/types';
 import { cn } from '@/lib/utils';
@@ -39,10 +45,13 @@ const createBookingSchema = z.object({
     contactNumber: z.string().min(1, 'Required'),
     passportNumber: z.string().optional(),
   }),
-}).refine(
-  (data) => data.includeActivities || data.includeTransport || data.includeHotel,
-  { message: 'Select at least one option', path: ['includeActivities'] }
-);
+})
+  .refine(
+    (data) => data.includeActivities || data.includeTransport || data.includeHotel,
+    { message: 'Select at least one option', path: ['includeActivities'] }
+  )
+  .refine(validateDepartureOnOrAfterArrival, departureDateOrderIssue)
+  .refine(validateSameDayDepartureTime, sameDayDepartureTimeIssue);
 
 type CreateBookingForm = z.infer<typeof createBookingSchema>;
 
@@ -93,54 +102,44 @@ export function BookingCreatePage() {
     watch,
     reset,
     setValue,
+    getValues,
+    trigger,
     formState: { errors },
   } = useForm<CreateBookingForm>({
     resolver: zodResolver(createBookingSchema),
     defaultValues: initialValues,
   });
 
-  const watchedValues = watch();
   const scopeError = errors.includeActivities?.message;
   const lastAutoDepartureRef = useRef<string | null>(initialValues.departureDate || null);
 
-  // When arrival or departure *dates* change, sync number of days (inclusive). Edits to
-  // "Number of days" alone do not trigger this.
-  useEffect(() => {
-    const arrivalDate = watchedValues.arrivalDate;
-    const departureDate = watchedValues.departureDate;
+  const syncDaysFromDates = () => {
+    const arrivalDate = getValues('arrivalDate');
+    const departureDate = getValues('departureDate');
     if (!arrivalDate || !departureDate) return;
+    if (!isDepartureOnOrAfterArrival(arrivalDate, departureDate)) return;
     const next = inclusiveTourDayCount(arrivalDate, departureDate);
-    setValue('numberOfDays', next, { shouldDirty: true, shouldValidate: true });
-  }, [watchedValues.arrivalDate, watchedValues.departureDate, setValue]);
-
-  useEffect(() => {
-    const arrivalDate = watchedValues.arrivalDate;
-    const numberOfDays = watchedValues.numberOfDays;
-    const currentDepartureDate = watchedValues.departureDate;
-
-    if (!arrivalDate || !numberOfDays) {
-      return;
+    const current = getValues('numberOfDays');
+    if (Number(current) !== next) {
+      setValue('numberOfDays', next, { shouldDirty: true });
     }
+  };
 
-    const arrival = new Date(`${arrivalDate}T00:00:00`);
-    if (Number.isNaN(arrival.getTime())) {
-      return;
-    }
+  const syncDepartureFromArrivalAndDays = () => {
+    const arrivalDate = getValues('arrivalDate');
+    const numberOfDays = Number(getValues('numberOfDays'));
+    const currentDepartureDate = getValues('departureDate');
+    if (!arrivalDate || !numberOfDays) return;
 
-    const computedDeparture = new Date(arrival);
-    computedDeparture.setDate(computedDeparture.getDate() + Math.max(0, numberOfDays - 1));
-    const nextDepartureDate = [
-      computedDeparture.getFullYear(),
-      String(computedDeparture.getMonth() + 1).padStart(2, '0'),
-      String(computedDeparture.getDate()).padStart(2, '0'),
-    ].join('-');
+    const nextDepartureDate = departureDateFromArrival(arrivalDate, numberOfDays);
+    if (!nextDepartureDate) return;
 
     const shouldApplyAutoValue =
       !currentDepartureDate ||
       currentDepartureDate === lastAutoDepartureRef.current;
 
     if (shouldApplyAutoValue && currentDepartureDate !== nextDepartureDate) {
-      setValue('departureDate', nextDepartureDate, { shouldDirty: true, shouldValidate: true });
+      setValue('departureDate', nextDepartureDate, { shouldDirty: true });
       lastAutoDepartureRef.current = nextDepartureDate;
       return;
     }
@@ -148,11 +147,48 @@ export function BookingCreatePage() {
     if (currentDepartureDate === nextDepartureDate) {
       lastAutoDepartureRef.current = nextDepartureDate;
     }
-  }, [setValue, watchedValues.arrivalDate, watchedValues.departureDate, watchedValues.numberOfDays]);
+  };
 
   useEffect(() => {
-    saveSessionDraft(BOOKING_CREATE_DRAFT_KEY, watchedValues);
-  }, [watchedValues]);
+    syncDaysFromDates();
+    syncDepartureFromArrivalAndDays();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      saveSessionDraft(BOOKING_CREATE_DRAFT_KEY, values as CreateBookingForm);
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
+
+  const validateTourSchedule = () => {
+    void trigger(['arrivalDate', 'departureDate', 'arrivalTime', 'departureTime']);
+  };
+
+  const handleArrivalDateChange = () => {
+    syncDepartureFromArrivalAndDays();
+    syncDaysFromDates();
+    validateTourSchedule();
+  };
+
+  const handleDepartureDateChange = () => {
+    syncDaysFromDates();
+    validateTourSchedule();
+  };
+
+  const handleNumberOfDaysChange = () => {
+    syncDepartureFromArrivalAndDays();
+    validateTourSchedule();
+  };
+
+  const handleArrivalTimeChange = () => {
+    validateTourSchedule();
+  };
+
+  const handleDepartureTimeChange = () => {
+    validateTourSchedule();
+  };
 
   const mutation = useMutation({
     mutationFn: (data: CreateBookingForm) => bookingsApi.create(data),
@@ -168,6 +204,7 @@ export function BookingCreatePage() {
   const handleClearDraft = () => {
     clearSessionDraft(BOOKING_CREATE_DRAFT_KEY);
     reset(defaultFormValues);
+    lastAutoDepartureRef.current = null;
   };
 
   return (
@@ -260,22 +297,22 @@ export function BookingCreatePage() {
             </div>
             <div className="space-y-2">
               <Label>Arrival Date *</Label>
-              <Input type="date" {...register('arrivalDate')} />
+              <Input type="date" {...register('arrivalDate', { onChange: handleArrivalDateChange })} />
               {errors.arrivalDate && <p className="text-xs text-destructive">{errors.arrivalDate.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Arrival Time</Label>
-              <Input type="time" {...register('arrivalTime')} />
+              <Input type="time" {...register('arrivalTime', { onChange: handleArrivalTimeChange })} />
               {errors.arrivalTime && <p className="text-xs text-destructive">{errors.arrivalTime.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Departure Date *</Label>
-              <Input type="date" {...register('departureDate')} />
+              <Input type="date" {...register('departureDate', { onChange: handleDepartureDateChange })} />
               {errors.departureDate && <p className="text-xs text-destructive">{errors.departureDate.message}</p>}
             </div>
             <div className="space-y-2">
               <Label>Departure Time</Label>
-              <Input type="time" {...register('departureTime')} />
+              <Input type="time" {...register('departureTime', { onChange: handleDepartureTimeChange })} />
               {errors.departureTime && <p className="text-xs text-destructive">{errors.departureTime.message}</p>}
             </div>
           </CardContent>
@@ -321,7 +358,11 @@ export function BookingCreatePage() {
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Number of Days *</Label>
-              <Input type="number" min={1} {...register('numberOfDays')} />
+              <Input
+                type="number"
+                min={1}
+                {...register('numberOfDays', { valueAsNumber: true, onChange: handleNumberOfDaysChange })}
+              />
               {errors.numberOfDays && <p className="text-xs text-destructive">{errors.numberOfDays.message}</p>}
               <p className="text-xs text-muted-foreground">
                 Auto-fills from arrival and departure dates; you can change it if needed.
