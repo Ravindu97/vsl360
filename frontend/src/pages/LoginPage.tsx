@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,12 @@ export function LoginPage() {
           </div>
           <CardTitle className="text-2xl">VSL 360</CardTitle>
           <CardDescription>Tour Operations Management System</CardDescription>
+          <Link
+            to="/"
+            className="mt-2 inline-block text-sm text-muted-foreground hover:text-foreground"
+          >
+            &larr; Back to home
+          </Link>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

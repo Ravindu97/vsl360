@@ -9,11 +9,11 @@ interface SlaBadgeProps {
 export function SlaBadge({ slaStatus, className }: SlaBadgeProps) {
   if (slaStatus === 'none') return null;
 
-  const label = slaStatus === 'overdue' ? 'Overdue' : 'Due within 12h';
+  const label = slaStatus === 'overdue' ? 'Overdue' : 'Within SLA';
   const colors =
     slaStatus === 'overdue'
       ? 'bg-red-100 text-red-800'
-      : 'bg-amber-100 text-amber-800';
+      : 'bg-emerald-100 text-emerald-800';
 
   return (
     <span

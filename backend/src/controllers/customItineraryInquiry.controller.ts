@@ -50,7 +50,7 @@ export class CustomItineraryInquiryController {
   async createPublic(req: Request, res: Response): Promise<void> {
     try {
       const result = await customItineraryInquiryService.create(req.body);
-      logger.info(`Custom itinerary inquiry created: ${result.id}`);
+      logger.info(`Custom itinerary inquiry created: ${result.id} (${result.publicRef})`);
       res.status(201).json(result);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Create failed';
@@ -60,6 +60,24 @@ export class CustomItineraryInquiryController {
       });
       res.status(400).json({ error: message });
     }
+  }
+
+  async trackPublic(req: Request, res: Response): Promise<void> {
+    const reference = String(req.query.reference ?? '').trim();
+    const email = String(req.query.email ?? '').trim();
+
+    if (!reference || !email) {
+      res.status(400).json({ error: 'reference and email are required' });
+      return;
+    }
+
+    const result = await customItineraryInquiryService.trackByReference(reference, email);
+    if (!result) {
+      res.status(404).json({ error: 'Not found' });
+      return;
+    }
+
+    res.json(result);
   }
 }
 

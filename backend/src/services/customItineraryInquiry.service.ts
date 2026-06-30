@@ -1,6 +1,15 @@
 import { Prisma, QuoteStatus } from '@prisma/client';
 import prisma from '../config/database';
 import {
+  accommodationLabel,
+  formatDurationSummary,
+  formatGuestSummary,
+  TIMELINE_STAGE_LABELS,
+  timelineLabelForStatus,
+  travelStyleLabel,
+} from '../utils/inquiryLabels';
+import { generateUniquePublicRef } from '../utils/publicRef';
+import {
   CreateCustomItineraryInquiryInput,
   UpdateCustomItineraryInquiryInput,
 } from '../validators/inquiry.schema';
@@ -24,6 +33,10 @@ const STATUS_ORDER: Record<QuoteStatus, number> = {
   QUOTED: 2,
 };
 
+const timelineInclude = {
+  timelineEvents: { orderBy: { createdAt: 'asc' as const } },
+};
+
 export function computeSlaStatus(
   status: QuoteStatus,
   createdAt: Date,
@@ -44,6 +57,10 @@ function isValidStatusTransition(from: QuoteStatus, to: QuoteStatus): boolean {
   return STATUS_ORDER[to] >= STATUS_ORDER[from];
 }
 
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 export class CustomItineraryInquiryService {
   private buildWhere(filters: CustomItineraryInquiryFilters): Prisma.CustomItineraryRequestWhereInput {
     const conditions: Prisma.CustomItineraryRequestWhereInput[] = [];
@@ -56,6 +73,7 @@ export class CustomItineraryInquiryService {
       const term = filters.search.trim();
       conditions.push({
         OR: [
+          { publicRef: { contains: term, mode: 'insensitive' } },
           { name: { contains: term, mode: 'insensitive' } },
           { email: { contains: term, mode: 'insensitive' } },
           { phone: { contains: term, mode: 'insensitive' } },
@@ -124,7 +142,10 @@ export class CustomItineraryInquiryService {
   }
 
   async findById(id: string) {
-    const record = await prisma.customItineraryRequest.findUnique({ where: { id } });
+    const record = await prisma.customItineraryRequest.findUnique({
+      where: { id },
+      include: timelineInclude,
+    });
     if (!record) {
       throw new Error('Inquiry not found');
     }
@@ -141,52 +162,133 @@ export class CustomItineraryInquiryService {
       throw new Error(`Invalid status transition from ${existing.status} to ${data.status}`);
     }
 
-    const updateData: Prisma.CustomItineraryRequestUpdateInput = {};
+    const statusChanging = data.status !== undefined && data.status !== existing.status;
+    const timelineLabel = statusChanging && data.status ? timelineLabelForStatus(data.status) : null;
+    const timelineStage = statusChanging && data.status && data.status !== 'NEW' ? data.status : null;
 
-    if (data.status !== undefined) {
-      updateData.status = data.status;
-      if (data.status === 'CONTACTED' && !existing.contactedAt) {
-        updateData.contactedAt = new Date();
+    const updated = await prisma.$transaction(async (tx) => {
+      const record = await tx.customItineraryRequest.update({
+        where: { id },
+        data: {
+          ...(data.status !== undefined
+            ? {
+                status: data.status,
+                ...(data.status === 'CONTACTED' && !existing.contactedAt
+                  ? { contactedAt: new Date() }
+                  : {}),
+              }
+            : {}),
+          ...(data.adminNotes !== undefined ? { adminNotes: data.adminNotes } : {}),
+          ...(data.assignedTo !== undefined ? { assignedTo: data.assignedTo } : {}),
+        },
+      });
+
+      if (timelineStage && timelineLabel) {
+        await tx.inquiryTimelineEvent.create({
+          data: {
+            inquiryId: id,
+            stage: timelineStage,
+            label: timelineLabel,
+          },
+        });
       }
-    }
 
-    if (data.adminNotes !== undefined) {
-      updateData.adminNotes = data.adminNotes;
-    }
-
-    if (data.assignedTo !== undefined) {
-      updateData.assignedTo = data.assignedTo;
-    }
-
-    const updated = await prisma.customItineraryRequest.update({
-      where: { id },
-      data: updateData,
+      return record;
     });
 
-    return withSla(updated);
+    return withSla(
+      await prisma.customItineraryRequest.findUniqueOrThrow({
+        where: { id: updated.id },
+        include: timelineInclude,
+      }),
+    );
   }
 
   async create(data: CreateCustomItineraryInquiryInput) {
     const hasDates = Boolean(data.arrivalDate && data.departureDate);
+    const publicRef = await generateUniquePublicRef();
 
-    const created = await prisma.customItineraryRequest.create({
-      data: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone?.trim() || null,
-        adults: data.adults,
-        children: data.children,
-        travelStyles: data.travelStyles,
-        accommodation: data.accommodation,
-        arrivalDate: hasDates ? data.arrivalDate! : null,
-        departureDate: hasDates ? data.departureDate! : null,
-        durationDays: hasDates ? null : data.durationDays ?? null,
-        specialRequests: data.specialRequests?.trim() || null,
-        status: 'NEW',
-      },
+    const created = await prisma.$transaction(async (tx) => {
+      const inquiry = await tx.customItineraryRequest.create({
+        data: {
+          publicRef,
+          name: data.name,
+          email: data.email,
+          phone: data.phone?.trim() || null,
+          adults: data.adults,
+          children: data.children,
+          travelStyles: data.travelStyles,
+          accommodation: data.accommodation,
+          arrivalDate: hasDates ? data.arrivalDate! : null,
+          departureDate: hasDates ? data.departureDate! : null,
+          durationDays: hasDates ? null : data.durationDays ?? null,
+          specialRequests: data.specialRequests?.trim() || null,
+          status: 'NEW',
+        },
+      });
+
+      await tx.inquiryTimelineEvent.create({
+        data: {
+          inquiryId: inquiry.id,
+          stage: 'RECEIVED',
+          label: TIMELINE_STAGE_LABELS.RECEIVED,
+          createdAt: inquiry.createdAt,
+        },
+      });
+
+      return inquiry;
     });
 
-    return { id: created.id };
+    return { id: created.id, publicRef: created.publicRef };
+  }
+
+  async trackByReference(reference: string, email: string) {
+    const normalizedEmail = normalizeEmail(email);
+    const trimmedRef = reference.trim();
+
+    const inquiry =
+      (await prisma.customItineraryRequest.findUnique({
+        where: { publicRef: trimmedRef },
+        include: timelineInclude,
+      })) ??
+      (await prisma.customItineraryRequest.findUnique({
+        where: { id: trimmedRef },
+        include: timelineInclude,
+      }));
+
+    if (!inquiry || normalizeEmail(inquiry.email) !== normalizedEmail) {
+      return null;
+    }
+
+    const dueAt = new Date(inquiry.createdAt.getTime() + SLA_MS);
+    const isOverdue = inquiry.status === 'NEW' && Date.now() > dueAt.getTime();
+
+    return {
+      reference: inquiry.publicRef,
+      type: 'CUSTOM_ITINERARY' as const,
+      status: inquiry.status,
+      submittedAt: inquiry.createdAt.toISOString(),
+      timeline: inquiry.timelineEvents.map((event) => ({
+        stage: event.stage,
+        label: event.label,
+        at: event.createdAt.toISOString(),
+      })),
+      summary: {
+        guests: formatGuestSummary(inquiry.adults, inquiry.children),
+        duration: formatDurationSummary(
+          inquiry.arrivalDate,
+          inquiry.departureDate,
+          inquiry.durationDays,
+        ),
+        travelStyles: inquiry.travelStyles.map(travelStyleLabel),
+        accommodation: accommodationLabel(inquiry.accommodation),
+      },
+      sla: {
+        promisedHours: SLA_HOURS,
+        dueAt: dueAt.toISOString(),
+        isOverdue,
+      },
+    };
   }
 }
 

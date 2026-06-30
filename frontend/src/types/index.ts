@@ -286,6 +286,7 @@ export type InquirySlaStatus = 'none' | 'due' | 'overdue';
 
 export interface CustomItineraryInquiry {
   id: string;
+  publicRef: string;
   arrivalDate: string | null;
   departureDate: string | null;
   durationDays: number | null;
@@ -302,7 +303,17 @@ export interface CustomItineraryInquiry {
   assignedTo: string | null;
   contactedAt: string | null;
   createdAt: string;
+  updatedAt?: string;
   slaStatus: InquirySlaStatus;
+  timelineEvents?: InquiryTimelineEvent[];
+}
+
+export interface InquiryTimelineEvent {
+  id: string;
+  inquiryId: string;
+  stage: string;
+  label: string;
+  createdAt: string;
 }
 
 export interface CustomItineraryInquiryFilters {

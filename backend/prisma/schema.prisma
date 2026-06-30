@@ -274,6 +274,7 @@ enum QuoteStatus {
 
 model CustomItineraryRequest {
   id              String      @id @default(cuid())
+  publicRef       String      @unique
   arrivalDate     String?
   departureDate   String?
   durationDays    Int?
@@ -290,4 +291,17 @@ model CustomItineraryRequest {
   assignedTo      String?
   contactedAt     DateTime?
   createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  timelineEvents  InquiryTimelineEvent[]
+}
+
+model InquiryTimelineEvent {
+  id        String                 @id @default(cuid())
+  inquiryId String
+  inquiry   CustomItineraryRequest @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  stage     String
+  label     String
+  createdAt DateTime               @default(now())
+
+  @@index([inquiryId, createdAt])
 }

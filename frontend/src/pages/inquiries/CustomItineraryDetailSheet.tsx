@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Sheet,
   SheetContent,
@@ -181,9 +182,10 @@ export function CustomItineraryDetailSheet({
 
             <Section title="Meta">
               <div className="grid gap-2 text-sm sm:grid-cols-2">
+              <CopyableField label="Customer reference" value={inquiry.publicRef} />
                 <div>
-                  <p className="text-xs text-muted-foreground">ID</p>
-                  <p className="break-all font-mono text-xs">{inquiry.id}</p>
+                  <p className="text-xs text-muted-foreground">Internal ID</p>
+                  <p className="break-all font-mono text-xs text-muted-foreground">{inquiry.id}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Submitted</p>
@@ -217,29 +219,43 @@ export function CustomItineraryDetailSheet({
               </Button>
             </Section>
 
+            {inquiry.timelineEvents && inquiry.timelineEvents.length > 0 && (
+              <Section title="Timeline">
+                <ol className="space-y-3">
+                  {inquiry.timelineEvents.map((event) => (
+                    <li key={event.id} className="flex gap-3 text-sm">
+                      <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary" />
+                      <div>
+                        <p className="font-medium">{event.label}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDateTime(event.createdAt)}
+                          <span className="ml-2 font-mono text-[10px] uppercase">{event.stage}</span>
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </Section>
+            )}
+
             <section className="space-y-3">
               <h3 className="text-sm font-semibold">Status</h3>
-              <div className="flex flex-wrap gap-2">
-                {inquiry.status === QuoteStatus.NEW && (
-                  <Button
-                    size="sm"
-                    onClick={() => handleStatusUpdate(QuoteStatus.CONTACTED)}
-                    disabled={updateMutation.isPending}
-                  >
-                    Mark as Contacted
-                  </Button>
-                )}
-                {(inquiry.status === QuoteStatus.NEW || inquiry.status === QuoteStatus.CONTACTED) && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handleStatusUpdate(QuoteStatus.QUOTED)}
-                    disabled={updateMutation.isPending}
-                  >
-                    Mark as Quoted
-                  </Button>
-                )}
-              </div>
+              <Select
+                value={inquiry.status}
+                onValueChange={(value) => handleStatusUpdate(value as QuoteStatus)}
+                disabled={updateMutation.isPending}
+              >
+                <SelectTrigger className="w-full sm:w-[220px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(QuoteStatus).map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s.charAt(0) + s.slice(1).toLowerCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </section>
 
             <section className="space-y-3">
@@ -249,7 +265,7 @@ export function CustomItineraryDetailSheet({
                   <>
                     <Button size="sm" variant="outline" asChild>
                       <a
-                        href={whatsappFollowUpUrl(inquiry.name, inquiry.phone)}
+                        href={whatsappFollowUpUrl(inquiry.name, inquiry.phone, inquiry.publicRef)}
                         target="_blank"
                         rel="noopener noreferrer"
                       >

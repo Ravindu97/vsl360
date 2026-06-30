@@ -1,5 +1,7 @@
 import prisma from './database';
 import logger from '../utils/logger';
+import { generateUniquePublicRef } from '../utils/publicRef';
+import { TIMELINE_STAGE_LABELS } from '../utils/inquiryLabels';
 
 /**
  * Idempotent SQL for itinerary raw tables (not Prisma models).
@@ -52,6 +54,7 @@ export async function runItineraryMigrations(): Promise<void> {
     await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS "CustomItineraryRequest" (
         "id" TEXT NOT NULL,
+        "publicRef" TEXT,
         "arrivalDate" TEXT,
         "departureDate" TEXT,
         "durationDays" INTEGER,
@@ -68,6 +71,7 @@ export async function runItineraryMigrations(): Promise<void> {
         "assignedTo" TEXT,
         "contactedAt" TIMESTAMPTZ,
         "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "CustomItineraryRequest_pkey" PRIMARY KEY ("id")
       )
     `);
@@ -78,11 +82,78 @@ export async function runItineraryMigrations(): Promise<void> {
   try {
     await prisma.$executeRawUnsafe(`
       ALTER TABLE "CustomItineraryRequest"
+        ADD COLUMN IF NOT EXISTS "publicRef" TEXT,
         ADD COLUMN IF NOT EXISTS "adminNotes" TEXT,
         ADD COLUMN IF NOT EXISTS "assignedTo" TEXT,
-        ADD COLUMN IF NOT EXISTS "contactedAt" TIMESTAMPTZ
+        ADD COLUMN IF NOT EXISTS "contactedAt" TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
     `);
   } catch (e) {
     logger.warn('Inquiry migration (CustomItineraryRequest columns) skipped or failed', e);
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "InquiryTimelineEvent" (
+        "id" TEXT NOT NULL,
+        "inquiryId" TEXT NOT NULL,
+        "stage" TEXT NOT NULL,
+        "label" TEXT NOT NULL,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "InquiryTimelineEvent_pkey" PRIMARY KEY ("id"),
+        CONSTRAINT "InquiryTimelineEvent_inquiryId_fkey"
+          FOREIGN KEY ("inquiryId") REFERENCES "CustomItineraryRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE
+      )
+    `);
+  } catch (e) {
+    logger.warn('Inquiry migration (InquiryTimelineEvent table) skipped or failed', e);
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "CustomItineraryRequest_publicRef_key"
+        ON "CustomItineraryRequest"("publicRef")
+        WHERE "publicRef" IS NOT NULL
+    `);
+  } catch (e) {
+    logger.warn('Inquiry migration (publicRef unique index) skipped or failed', e);
+  }
+
+  await backfillInquiryPublicRefs();
+}
+
+async function backfillInquiryPublicRefs(): Promise<void> {
+  try {
+    const nullRefs = await prisma.$queryRaw<Array<{ id: string; createdAt: Date }>>`
+      SELECT "id", "createdAt" FROM "CustomItineraryRequest" WHERE "publicRef" IS NULL
+    `;
+
+    for (const row of nullRefs) {
+      const publicRef = await generateUniquePublicRef();
+      await prisma.customItineraryRequest.update({
+        where: { id: row.id },
+        data: { publicRef },
+      });
+
+      const eventCount = await prisma.inquiryTimelineEvent.count({
+        where: { inquiryId: row.id },
+      });
+      if (eventCount === 0) {
+        await prisma.inquiryTimelineEvent.create({
+          data: {
+            inquiryId: row.id,
+            stage: 'RECEIVED',
+            label: TIMELINE_STAGE_LABELS.RECEIVED,
+            createdAt: row.createdAt,
+          },
+        });
+      }
+    }
+
+    if (nullRefs.length > 0) {
+      logger.info(`Backfilled publicRef for ${nullRefs.length} inquiry record(s)`);
+    }
+  } catch (e) {
+    logger.warn('Inquiry backfill (publicRef) skipped or failed', e);
   }
 }

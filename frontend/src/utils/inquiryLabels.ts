@@ -24,8 +24,8 @@ export const QUOTE_STATUS_LABELS: Record<string, string> = {
 };
 
 export const QUOTE_STATUS_COLORS: Record<string, string> = {
-  NEW: 'bg-amber-100 text-amber-800',
-  CONTACTED: 'bg-blue-100 text-blue-800',
+  NEW: 'bg-blue-100 text-blue-800',
+  CONTACTED: 'bg-amber-100 text-amber-800',
   QUOTED: 'bg-green-100 text-green-800',
 };
 
@@ -66,8 +66,9 @@ export function digitsOnlyPhone(phone: string): string {
   return phone.replace(/\D/g, '');
 }
 
-export function whatsappFollowUpUrl(name: string, phone: string): string {
-  const message = `Hi ${name}, thank you for your custom Sri Lanka itinerary request with VSL 360. I'm your travel planner and would love to discuss your trip.`;
+export function whatsappFollowUpUrl(name: string, phone: string, publicRef?: string): string {
+  const refPart = publicRef ? ` (ref: ${publicRef})` : '';
+  const message = `Hi ${name}, thank you for your custom Sri Lanka itinerary request with VSL 360${refPart}. I'm your travel planner and would love to discuss your trip.`;
   return `https://wa.me/${digitsOnlyPhone(phone)}?text=${encodeURIComponent(message)}`;
 }
 
