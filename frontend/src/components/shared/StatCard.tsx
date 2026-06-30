@@ -8,11 +8,12 @@ interface StatCardProps {
   icon: LucideIcon;
   description?: string;
   className?: string;
+  onClick?: () => void;
 }
 
-export function StatCard({ title, value, icon: Icon, description, className }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, description, className, onClick }: StatCardProps) {
   return (
-    <Card className={cn(className)}>
+    <Card className={cn(className)} onClick={onClick}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>

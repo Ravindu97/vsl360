@@ -38,4 +38,6 @@ export const env = {
   REPORT_LKR_TO_INR: parseFloat(process.env.REPORT_LKR_TO_INR || '0.28'),
   FX_API_BASE_URL: (process.env.FX_API_BASE_URL || 'https://api.frankfurter.app').replace(/\/$/, ''),
   FX_CACHE_TTL_MINUTES: parseInt(process.env.FX_CACHE_TTL_MINUTES || '360', 10),
+  /** Shared secret for public-site custom itinerary ingest (X-API-Key header). */
+  INGEST_API_KEY: (process.env.INGEST_API_KEY || '').trim() || undefined,
 };

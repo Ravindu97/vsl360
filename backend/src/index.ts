@@ -21,12 +21,18 @@ import attachmentRoutes from './routes/attachment.routes';
 import documentRoutes from './routes/document.routes';
 import reportRoutes from './routes/report.routes';
 import itineraryRoutes from './routes/itinerary.routes';
+import inquiryRoutes from './routes/inquiry.routes';
+import publicRoutes from './routes/public.routes';
 
 const app = express();
 
 const defaultAllowedOrigins = [
   'https://admin.visitsrilanka360.com',
   'https://www.admin.visitsrilanka360.com',
+  'https://visitsrilanka360.com',
+  'https://www.visitsrilanka360.com',
+  'http://localhost:3002',
+  'http://localhost:5173',
 ];
 
 const allowedOrigins = Array.from(
@@ -79,6 +85,8 @@ app.use('/api/bookings/:id/attachments', attachmentRoutes);
 app.use('/api/bookings/:id/documents', documentRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/itinerary', itineraryRoutes);
+app.use('/api/inquiries', inquiryRoutes);
+app.use('/api/public', publicRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

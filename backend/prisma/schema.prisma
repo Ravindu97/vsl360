@@ -264,3 +264,30 @@ model StatusHistory {
 
   createdAt DateTime @default(now())
 }
+
+// Custom itinerary inquiries — owned by admin API + Postgres only (public site ingests via POST /api/public).
+enum QuoteStatus {
+  NEW
+  CONTACTED
+  QUOTED
+}
+
+model CustomItineraryRequest {
+  id              String      @id @default(cuid())
+  arrivalDate     String?
+  departureDate   String?
+  durationDays    Int?
+  adults          Int
+  children        Int         @default(0)
+  travelStyles    String[]
+  accommodation   String
+  name            String
+  email           String
+  phone           String?
+  specialRequests String?
+  status          QuoteStatus @default(NEW)
+  adminNotes      String?
+  assignedTo      String?
+  contactedAt     DateTime?
+  createdAt       DateTime    @default(now())
+}

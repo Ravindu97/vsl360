@@ -35,4 +35,54 @@ export async function runItineraryMigrations(): Promise<void> {
   }
 
   logger.info('Itinerary DB migrations applied (if tables exist)');
+
+  try {
+    await prisma.$executeRawUnsafe(`
+      DO $$ BEGIN
+        CREATE TYPE "QuoteStatus" AS ENUM ('NEW', 'CONTACTED', 'QUOTED');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$
+    `);
+  } catch (e) {
+    logger.warn('Inquiry migration (QuoteStatus enum) skipped or failed', e);
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "CustomItineraryRequest" (
+        "id" TEXT NOT NULL,
+        "arrivalDate" TEXT,
+        "departureDate" TEXT,
+        "durationDays" INTEGER,
+        "adults" INTEGER NOT NULL,
+        "children" INTEGER NOT NULL DEFAULT 0,
+        "travelStyles" TEXT[] NOT NULL,
+        "accommodation" TEXT NOT NULL,
+        "name" TEXT NOT NULL,
+        "email" TEXT NOT NULL,
+        "phone" TEXT,
+        "specialRequests" TEXT,
+        "status" "QuoteStatus" NOT NULL DEFAULT 'NEW',
+        "adminNotes" TEXT,
+        "assignedTo" TEXT,
+        "contactedAt" TIMESTAMPTZ,
+        "createdAt" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "CustomItineraryRequest_pkey" PRIMARY KEY ("id")
+      )
+    `);
+  } catch (e) {
+    logger.warn('Inquiry migration (CustomItineraryRequest table) skipped or failed', e);
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`
+      ALTER TABLE "CustomItineraryRequest"
+        ADD COLUMN IF NOT EXISTS "adminNotes" TEXT,
+        ADD COLUMN IF NOT EXISTS "assignedTo" TEXT,
+        ADD COLUMN IF NOT EXISTS "contactedAt" TIMESTAMPTZ
+    `);
+  } catch (e) {
+    logger.warn('Inquiry migration (CustomItineraryRequest columns) skipped or failed', e);
+  }
 }

@@ -112,6 +112,8 @@ CORS_ORIGINS=https://admin.visitsrilanka360.com,https://www.admin.visitsrilanka3
 UPLOAD_DIR=/app/uploads
 PORT=3000
 VITE_API_URL=https://api.admin.visitsrilanka360.com/api
+INGEST_API_KEY=<generate-with-openssl-rand-hex-32>
+# Same value as ADMIN_INGEST_API_KEY on the public site deploy
 # Optional — PDF branding (ensure assets exist under repo ./assets)
 # DOCUMENT_LOGO_PATH=/app/assets/logo.png
 ```

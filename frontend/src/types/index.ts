@@ -275,3 +275,45 @@ export interface ItineraryActivity {
   sortOrder: number;
   sourceRow?: number | null;
 }
+
+export enum QuoteStatus {
+  NEW = 'NEW',
+  CONTACTED = 'CONTACTED',
+  QUOTED = 'QUOTED',
+}
+
+export type InquirySlaStatus = 'none' | 'due' | 'overdue';
+
+export interface CustomItineraryInquiry {
+  id: string;
+  arrivalDate: string | null;
+  departureDate: string | null;
+  durationDays: number | null;
+  adults: number;
+  children: number;
+  travelStyles: string[];
+  accommodation: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  specialRequests: string | null;
+  status: QuoteStatus;
+  adminNotes: string | null;
+  assignedTo: string | null;
+  contactedAt: string | null;
+  createdAt: string;
+  slaStatus: InquirySlaStatus;
+}
+
+export interface CustomItineraryInquiryFilters {
+  status?: string;
+  search?: string;
+  submittedFrom?: string;
+  submittedTo?: string;
+  overdueOnly?: boolean;
+}
+
+export interface InquiryStats {
+  newCount: number;
+  overdueCount: number;
+}

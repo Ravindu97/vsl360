@@ -56,6 +56,9 @@ CORS_ORIGINS=http://localhost:8080,http://localhost:5173
 UPLOAD_DIR=/app/uploads
 PORT=3000
 
+# Shared secret with VSL360-UI for public custom itinerary ingest (X-API-Key)
+INGEST_API_KEY=localdev_change_me_match_vsl360_ui_key
+
 VITE_API_URL=http://localhost:3000/api
 ```
 

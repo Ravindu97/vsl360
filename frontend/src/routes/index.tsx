@@ -8,6 +8,7 @@ import { BookingCreatePage } from '@/pages/bookings/BookingCreatePage';
 import { BookingDetailPage } from '@/pages/bookings/BookingDetailPage';
 import { UserListPage } from '@/pages/users/UserListPage';
 import { ItineraryLibraryPage } from '@/pages/itinerary/ItineraryLibraryPage';
+import { CustomItineraryInboxPage } from '@/pages/inquiries/CustomItineraryInboxPage';
 import { Role } from '@/types';
 
 export function AppRoutes() {
@@ -25,6 +26,7 @@ export function AppRoutes() {
         <Route path="/bookings" element={<BookingListPage />} />
         <Route path="/bookings/new" element={<BookingCreatePage />} />
         <Route path="/bookings/:id" element={<BookingDetailPage />} />
+        <Route path="/inquiries/custom-itinerary" element={<CustomItineraryInboxPage />} />
         <Route
           path="/itinerary"
           element={

@@ -6,8 +6,11 @@ import {
   Clock,
   CheckCircle,
   Plus,
+  Inbox,
+  AlertTriangle,
 } from 'lucide-react';
 import { reportsApi } from '@/api/endpoints.api';
+import { inquiriesApi } from '@/api/inquiries.api';
 import { useAuthStore } from '@/store/authStore';
 import { canCreateBooking } from '@/utils/permissions';
 import { formatCurrency, formatDate } from '@/utils/formatters';
@@ -29,9 +32,15 @@ export function DashboardPage() {
     queryFn: () => reportsApi.dashboard(),
   });
 
+  const { data: inquiryStatsData } = useQuery({
+    queryKey: ['inquiry-stats'],
+    queryFn: () => inquiriesApi.stats(),
+  });
+
   if (isLoading) return <LoadingSpinner />;
 
   const dashboard = data?.data;
+  const inquiryStats = inquiryStatsData?.data;
   const revenueCurrency = dashboard?.revenue.currency ?? CurrencyCode.INR;
 
   return (
@@ -73,6 +82,25 @@ export function DashboardPage() {
               icon={Clock}
             />
           </div>
+
+          {inquiryStats && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <StatCard
+                title="New Itinerary Inquiries"
+                value={inquiryStats.newCount}
+                icon={Inbox}
+                className="cursor-pointer transition-colors hover:bg-muted/50"
+                onClick={() => navigate('/inquiries/custom-itinerary')}
+              />
+              <StatCard
+                title="Overdue Inquiries (>12h)"
+                value={inquiryStats.overdueCount}
+                icon={AlertTriangle}
+                className="cursor-pointer transition-colors hover:bg-muted/50"
+                onClick={() => navigate('/inquiries/custom-itinerary?overdue=true')}
+              />
+            </div>
+          )}
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
