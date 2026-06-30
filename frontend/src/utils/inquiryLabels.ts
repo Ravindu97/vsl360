@@ -66,14 +66,39 @@ export function digitsOnlyPhone(phone: string): string {
   return phone.replace(/\D/g, '');
 }
 
-export function whatsappFollowUpUrl(name: string, phone: string, publicRef?: string): string {
+export function whatsappFollowUpUrl(
+  inquiry: Pick<
+    CustomItineraryInquiry,
+    'name' | 'phone' | 'publicRef' | 'arrivalDate' | 'departureDate' | 'durationDays' | 'travelStyles'
+  >,
+): string {
+  const { name, phone, publicRef } = inquiry;
   const refPart = publicRef ? ` (ref: ${publicRef})` : '';
-  const message = `Hi ${name}, thank you for your custom Sri Lanka itinerary request with VSL 360${refPart}. I'm your travel planner and would love to discuss your trip.`;
-  return `https://wa.me/${digitsOnlyPhone(phone)}?text=${encodeURIComponent(message)}`;
+  const trip = formatTripSummary(inquiry);
+  const styles = inquiry.travelStyles.map(travelStyleLabel).join(', ');
+  const tripPart = trip !== '—' ? ` Trip: ${trip}.` : '';
+  const stylesPart = styles ? ` Interests: ${styles}.` : '';
+  const message = `Hi ${name}, thank you for your custom Sri Lanka itinerary request with VSL 360${refPart}.${tripPart}${stylesPart} I'm your travel planner and would love to discuss your trip.`;
+  return `https://wa.me/${digitsOnlyPhone(phone ?? '')}?text=${encodeURIComponent(message)}`;
 }
 
-export function emailFollowUpUrl(name: string, email: string): string {
-  const subject = 'Your VSL 360 Custom Itinerary';
-  const body = `Hi ${name},\n\nThank you for your custom Sri Lanka itinerary request with VSL 360. I'm your travel planner and would love to discuss your trip.\n\nBest regards`;
+export function emailFollowUpUrl(
+  inquiry: Pick<CustomItineraryInquiry, 'name' | 'email' | 'publicRef'>,
+): string {
+  const { name, email, publicRef } = inquiry;
+  const refPart = publicRef ? `\n\nReference: ${publicRef}` : '';
+  const subject = publicRef
+    ? `Your VSL 360 Custom Itinerary — ${publicRef}`
+    : 'Your VSL 360 Custom Itinerary';
+  const body = `Hi ${name},\n\nThank you for your custom Sri Lanka itinerary request with VSL 360. I'm your travel planner and would love to discuss your trip.${refPart}\n\nBest regards`;
   return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+const DEFAULT_PUBLIC_SITE_URL = 'https://visitsrilanka360.com';
+
+export function customerTrackUrl(publicRef: string | null | undefined, email: string): string {
+  const ref = publicRef?.trim() || '';
+  const base = (import.meta.env.VITE_PUBLIC_SITE_URL || DEFAULT_PUBLIC_SITE_URL).replace(/\/$/, '');
+  const params = new URLSearchParams({ ref, email });
+  return `${base}/track?${params}`;
 }

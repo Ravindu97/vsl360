@@ -7,6 +7,7 @@ import { CustomItineraryDetailSheet } from '@/pages/inquiries/CustomItineraryDet
 import { InquiryStatusBadge } from '@/components/shared/InquiryStatusBadge';
 import { SlaBadge } from '@/components/shared/SlaBadge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { CopyRefButton } from '@/components/shared/CopyRefButton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,13 @@ export function CustomItineraryInboxPage() {
     if (id) setSelectedId(id);
     if (searchParams.get('overdue') === 'true') setOverdueOnly(true);
   }, [searchParams]);
+
+  const { data: statsData } = useQuery({
+    queryKey: ['inquiry-stats'],
+    queryFn: () => inquiriesApi.stats(),
+  });
+
+  const overdueCount = statsData?.data?.overdueCount ?? 0;
 
   const filters: CustomItineraryInquiryFilters = {
     ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
@@ -141,15 +149,37 @@ export function CustomItineraryInboxPage() {
           <Button
             key={tab}
             size="sm"
-            variant={statusFilter === tab ? 'default' : 'outline'}
+            variant={statusFilter === tab && !overdueOnly ? 'default' : 'outline'}
             onClick={() => {
               setStatusFilter(tab);
+              setOverdueOnly(false);
               setPage(1);
             }}
           >
             {tab === 'ALL' ? 'All' : tab.charAt(0) + tab.slice(1).toLowerCase()}
           </Button>
         ))}
+        <Button
+          size="sm"
+          variant={overdueOnly ? 'default' : 'outline'}
+          className={overdueOnly ? 'bg-red-600 hover:bg-red-700' : undefined}
+          onClick={() => {
+            setOverdueOnly(true);
+            setStatusFilter('ALL');
+            setPage(1);
+          }}
+        >
+          Overdue
+          {overdueCount > 0 ? (
+            <span
+              className={`ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                overdueOnly ? 'bg-white/20 text-white' : 'bg-red-600 text-white'
+              }`}
+            >
+              {overdueCount}
+            </span>
+          ) : null}
+        </Button>
       </div>
 
       {showFilters && (
@@ -239,7 +269,12 @@ export function CustomItineraryInboxPage() {
                     className={cn('cursor-pointer', rowClassName(inquiry))}
                     onClick={() => openDetail(inquiry.id)}
                   >
-                    <TableCell className="font-mono text-xs font-medium">{inquiry.publicRef}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono text-xs font-medium">{inquiry.publicRef}</span>
+                        <CopyRefButton value={inquiry.publicRef} />
+                      </div>
+                    </TableCell>
                     <TableCell className="whitespace-nowrap text-sm">
                       {formatDateTime(inquiry.createdAt)}
                     </TableCell>

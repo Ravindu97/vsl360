@@ -11,6 +11,8 @@ import {
 } from 'lucide-react';
 import { reportsApi } from '@/api/endpoints.api';
 import { inquiriesApi } from '@/api/inquiries.api';
+import { usersApi } from '@/api/users.api';
+import { DashboardOnboardingChecklist } from '@/components/dashboard/DashboardOnboardingChecklist';
 import { useAuthStore } from '@/store/authStore';
 import { canCreateBooking } from '@/utils/permissions';
 import { formatCurrency, formatDate } from '@/utils/formatters';
@@ -37,6 +39,11 @@ export function DashboardPage() {
     queryFn: () => inquiriesApi.stats(),
   });
 
+  const { data: usersData } = useQuery({
+    queryKey: ['users-count'],
+    queryFn: () => usersApi.list(1, 1),
+  });
+
   if (isLoading) return <LoadingSpinner />;
 
   const dashboard = data?.data;
@@ -60,6 +67,12 @@ export function DashboardPage() {
 
       {dashboard && (
         <>
+          <DashboardOnboardingChecklist
+            totalBookings={dashboard.totalBookings}
+            inquiryTotalCount={inquiryStats?.totalCount ?? 0}
+            teamCount={usersData?.data?.total ?? 1}
+          />
+
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <StatCard
               title="Total Bookings"

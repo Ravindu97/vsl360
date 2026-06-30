@@ -327,4 +327,5 @@ export interface CustomItineraryInquiryFilters {
 export interface InquiryStats {
   newCount: number;
   overdueCount: number;
+  totalCount: number;
 }

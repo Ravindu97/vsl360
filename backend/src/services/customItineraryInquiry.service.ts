@@ -106,10 +106,13 @@ export class CustomItineraryInquiryService {
     const safePageSize = Math.max(1, Math.min(pageSize, 100));
     const where = this.buildWhere(filters);
 
+    const sortOldestFirst =
+      filters.status === 'NEW' || filters.overdueOnly === true;
+
     const [items, total] = await Promise.all([
       prisma.customItineraryRequest.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: sortOldestFirst ? 'asc' : 'desc' },
         skip: (safePage - 1) * safePageSize,
         take: safePageSize,
       }),
@@ -128,7 +131,7 @@ export class CustomItineraryInquiryService {
   async getStats() {
     const overdueCutoff = new Date(Date.now() - SLA_MS);
 
-    const [newCount, overdueCount] = await Promise.all([
+    const [newCount, overdueCount, totalCount] = await Promise.all([
       prisma.customItineraryRequest.count({ where: { status: 'NEW' } }),
       prisma.customItineraryRequest.count({
         where: {
@@ -136,9 +139,10 @@ export class CustomItineraryInquiryService {
           createdAt: { lt: overdueCutoff },
         },
       }),
+      prisma.customItineraryRequest.count(),
     ]);
 
-    return { newCount, overdueCount };
+    return { newCount, overdueCount, totalCount };
   }
 
   async findById(id: string) {

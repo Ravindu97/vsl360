@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Mail, MessageCircle, Phone } from 'lucide-react';
+import { Check, Copy, Mail, MessageCircle, Phone } from 'lucide-react';
 import { inquiriesApi } from '@/api/inquiries.api';
 import { CopyableField } from '@/components/shared/CopyableField';
 import { InquiryStatusBadge } from '@/components/shared/InquiryStatusBadge';
@@ -13,6 +13,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -23,6 +31,7 @@ import { QuoteStatus } from '@/types';
 import { formatDateTime } from '@/utils/formatters';
 import {
   accommodationLabel,
+  customerTrackUrl,
   emailFollowUpUrl,
   formatGuests,
   formatTripSummary,
@@ -54,6 +63,9 @@ export function CustomItineraryDetailSheet({
   const queryClient = useQueryClient();
   const [adminNotes, setAdminNotes] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
+  const [trackLinkOpen, setTrackLinkOpen] = useState(false);
+  const [trackLink, setTrackLink] = useState('');
+  const [trackLinkCopied, setTrackLinkCopied] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['custom-itinerary-inquiry', inquiryId],
@@ -84,7 +96,31 @@ export function CustomItineraryDetailSheet({
   });
 
   const handleStatusUpdate = (status: QuoteStatus) => {
-    updateMutation.mutate({ status });
+    if (!inquiry) return;
+    const markingContacted =
+      inquiry.status !== QuoteStatus.CONTACTED && status === QuoteStatus.CONTACTED;
+    updateMutation.mutate(
+      { status },
+      {
+        onSuccess: () => {
+          if (markingContacted) {
+            setTrackLink(customerTrackUrl(inquiry.publicRef, inquiry.email));
+            setTrackLinkCopied(false);
+            setTrackLinkOpen(true);
+          }
+        },
+      },
+    );
+  };
+
+  const handleCopyTrackLink = async () => {
+    try {
+      await navigator.clipboard.writeText(trackLink);
+      setTrackLinkCopied(true);
+      setTimeout(() => setTrackLinkCopied(false), 2000);
+    } catch {
+      // clipboard may be unavailable
+    }
   };
 
   const handleSaveNotes = () => {
@@ -114,6 +150,8 @@ export function CustomItineraryDetailSheet({
               <InquiryStatusBadge status={inquiry.status} />
               <SlaBadge slaStatus={inquiry.slaStatus} />
             </div>
+
+            <CopyableField label="Customer reference" value={inquiry.publicRef} />
 
             <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
               Contact within 12 hours — promise shown to customer on submission.
@@ -182,7 +220,6 @@ export function CustomItineraryDetailSheet({
 
             <Section title="Meta">
               <div className="grid gap-2 text-sm sm:grid-cols-2">
-              <CopyableField label="Customer reference" value={inquiry.publicRef} />
                 <div>
                   <p className="text-xs text-muted-foreground">Internal ID</p>
                   <p className="break-all font-mono text-xs text-muted-foreground">{inquiry.id}</p>
@@ -265,7 +302,7 @@ export function CustomItineraryDetailSheet({
                   <>
                     <Button size="sm" variant="outline" asChild>
                       <a
-                        href={whatsappFollowUpUrl(inquiry.name, inquiry.phone, inquiry.publicRef)}
+                        href={whatsappFollowUpUrl(inquiry)}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -282,7 +319,7 @@ export function CustomItineraryDetailSheet({
                   </>
                 )}
                 <Button size="sm" variant="outline" asChild>
-                  <a href={emailFollowUpUrl(inquiry.name, inquiry.email)}>
+                  <a href={emailFollowUpUrl(inquiry)}>
                     <Mail className="mr-2 h-4 w-4" />
                     Email
                   </a>
@@ -292,6 +329,36 @@ export function CustomItineraryDetailSheet({
           </div>
         )}
       </SheetContent>
+
+      <Dialog open={trackLinkOpen} onOpenChange={setTrackLinkOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send track link to customer?</DialogTitle>
+            <DialogDescription>
+              Share this link so they can follow their inquiry status online.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border bg-muted/30 px-3 py-2">
+            <p className="break-all font-mono text-xs">{trackLink}</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setTrackLinkOpen(false)}>
+              Done
+            </Button>
+            <Button onClick={handleCopyTrackLink}>
+              {trackLinkCopied ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" /> Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" /> Copy track link
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }
